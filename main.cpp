@@ -1,5 +1,44 @@
 #include <Windows.h>
 #include <cstdint>
+#include <format>
+#include <string>
+
+// string->wstring
+std::wstring ConvertString(const std::string& str)
+{
+    if (str.empty()) {
+        return std::wstring();
+    }
+
+    auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
+    if (sizeNeeded == 0) {
+        return std::wstring();
+    }
+    std::wstring result(sizeNeeded, 0);
+    MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
+    return result;
+}
+
+// wstring->string
+std::string ConvertString(const std::wstring& str)
+{
+    if (str.empty()) {
+        return std::string();
+    }
+
+    auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
+    if (sizeNeeded == 0) {
+        return std::string();
+    }
+    std::string result(sizeNeeded, 0);
+    WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
+    return result;
+}
+
+void Log(const std::string& message)
+{
+    OutputDebugStringA(message.c_str());
+}
 
 // ウィンドウプロ―ジャ
 LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -58,22 +97,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     // ウィンドウを表示する
     ShowWindow(hwnd, SW_SHOW);
+    // 出力ウィンドウへの文字出力
+    Log("Hello,DirectX!\n");
+    Log(ConvertString(std::format(L"clientSize{},{}\n", KClientWidth, KClientHeight)));
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
-    while (msg.message!= WM_QUIT) {
+    while (msg.message != WM_QUIT) {
         // windowにメッセージが来ていたら最優先で処理させる
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         } else {
             // ゲームの処理
-        
         }
     }
 
-    // 出力ウィンドウへの文字出力
-    OutputDebugStringA("Hello,DirectX!\n");
+    // 変数から型を推論してくれる
+    Log(std::format("enemyHP:{},TexturePath:{}\n", 10, 1));
 
     return 0;
 }
