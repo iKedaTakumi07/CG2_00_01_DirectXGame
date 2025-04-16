@@ -1,10 +1,16 @@
 #include <Windows.h>
+#include <cassert>
 #include <chrono>
 #include <cstdint>
+#include <d3d12.h>
+#include <dxgi1_6.h>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <string>
+
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
 
 // string->wstring
 std::wstring ConvertString(const std::string& str)
@@ -123,8 +129,56 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // ウィンドウを表示する
     ShowWindow(hwnd, SW_SHOW);
     // 出力ウィンドウへの文字出力
-    Log(logStream,"Hello,DirectX!\n");
-    Log(logStream,ConvertString(std::format(L"clientSize{},{}\n", KClientWidth, KClientHeight)));
+    Log(logStream, "Hello,DirectX!\n");
+    Log(logStream, ConvertString(std::format(L"clientSize{},{}\n", KClientWidth, KClientHeight)));
+
+    // DXGIファクトリーの生成
+    IDXGIFactory7* dxgiFactory = nullptr;
+    // 関数が成功したかマクロ判定
+    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+    // assertにしておく
+    assert(SUCCEEDED(hr));
+
+    // 使用するアダプタ用の変数
+    IDXGIAdapter4* useAdapter = nullptr;
+    // 良い順にアダプタを頼む
+    for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
+        // アダプターの情報を取得する
+        DXGI_ADAPTER_DESC3 adapterDesc {};
+        hr = useAdapter->GetDesc3(&adapterDesc);
+        assert(SUCCEEDED(hr)); // 取得できないのは一大事
+        // ソフトウェアアダプタでなければ採用
+        if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
+            // ログに出力
+            Log(logStream, ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
+            break;
+        }
+        useAdapter = nullptr;
+    }
+    // 適切なアダプタが見つからなかったので起動できない
+    assert(useAdapter != nullptr);
+
+    ID3D12Device* device = nullptr;
+    // 昨日レベルログ出力に文字列
+    D3D_FEATURE_LEVEL featureLevels[] = {
+        D3D_FEATURE_LEVEL_12_2,
+        D3D_FEATURE_LEVEL_12_1,
+        D3D_FEATURE_LEVEL_12_0
+    };
+    const char* featureLevelStrings[] = { "12.2", "12.1", "12.0" };
+    // 高い順に生成する
+    for (size_t i = 0; i < _countof(featureLevels); ++i) {
+        // 指定したあだぷたーでデバイスを作成
+        hr = D3D12CreateDevice(useAdapter, featureLevels[i], IID_PPV_ARGS(&device));
+        // 　指定したレベルで生成できたか確認
+        if (SUCCEEDED(hr)) {
+            Log(logStream, std::format("FeatureLevel :{}\n", featureLevelStrings[i]));
+            break;
+        }
+    }
+    // デバイスの生成がうまくいかなかったので起動できない
+    assert(device != nullptr);
+    Log(logStream, "Complete create D3D12Device!\n"); // 初期化完了のログを出す
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
@@ -137,9 +191,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // ゲームの処理
         }
     }
-
-    // 変数から型を推論してくれる
-    Log(std::format("enemyHP:{},TexturePath:{}\n", 10, 1));
 
     return 0;
 }
