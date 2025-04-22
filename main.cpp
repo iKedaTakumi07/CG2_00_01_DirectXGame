@@ -106,9 +106,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
     SetUnhandledExceptionFilter(ExportDump);
 
-    uint32_t* p = nullptr;
-    *p = 100;
-
     // ログのディレクトリを用意
     std::filesystem::create_directory("logs");
     // 現在時刻を取得(UTC)
