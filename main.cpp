@@ -1,4 +1,3 @@
-#include <DbgHelp.h>
 #include <Windows.h>
 #include <cassert>
 #include <chrono>
@@ -9,17 +8,34 @@
 #include <format>
 #include <fstream>
 #include <string>
-
+#include <strsafe.h>
+#include <DbgHelp.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "dbghelp.lib")
+#pragma comment(lib, "Dbghelp.lib")
 
 // CrashHandler
-static LONG WINAPI ExportDump(_EXCEPTION_POINTERS* excption)
-{
-    
 
+static LONG WINAPI ExportDump(EXCEPTION_POINTERS* excption)
+{
+    SYSTEMTIME time;
+    GetLocalTime(&time);
+    wchar_t filePath[MAX_PATH] = { 0 };
+    CreateDirectory(L"./Dumps", nullptr);
+    StringCchPrintf(filePath, MAX_PATH, L"./Dumps/%04d-%02d%02d-%02d%02d.dmp", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute);
+    HANDLE dumpFileHandle = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+    // processId とクラッシュの発生したthreadidを取得
+    DWORD processId = GetCurrentProcessId();
+    DWORD threadId = GetCurrentThreadId();
+    // 設定情報を入力
+    MINIDUMP_EXCEPTION_INFORMATION minidumpInformation { 0 };
+    minidumpInformation.ThreadId = threadId;
+    minidumpInformation.ExceptionPointers = excption;
+    minidumpInformation.ClientPointers = TRUE;
+
+    // Dumpを出力
+    MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -89,6 +105,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
     SetUnhandledExceptionFilter(ExportDump);
+
+    uint32_t* p = nullptr;
+    *p = 100;
 
     // ログのディレクトリを用意
     std::filesystem::create_directory("logs");
