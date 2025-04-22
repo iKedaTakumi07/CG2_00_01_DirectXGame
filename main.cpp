@@ -1,4 +1,3 @@
-#include <DbgHelp.h>
 #include <Windows.h>
 #include <cassert>
 #include <chrono>
@@ -9,6 +8,7 @@
 #include <format>
 #include <fstream>
 #include <string>
+#include <DbgHelp.h>
 #include <strsafe.h>
 
 #pragma comment(lib, "d3d12.lib")
