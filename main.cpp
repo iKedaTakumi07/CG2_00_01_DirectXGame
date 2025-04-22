@@ -1,3 +1,4 @@
+#include <DbgHelp.h>
 #include <Windows.h>
 #include <cassert>
 #include <chrono>
@@ -9,8 +10,19 @@
 #include <fstream>
 #include <string>
 
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dbghelp.lib")
+
+// CrashHandler
+static LONG WINAPI ExportDump(_EXCEPTION_POINTERS* excption)
+{
+    
+
+
+    return EXCEPTION_EXECUTE_HANDLER;
+}
 
 // string->wstring
 std::wstring ConvertString(const std::string& str)
@@ -75,6 +87,9 @@ LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 // windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+    // 誰も捕捉しなかった場合に、捕捉する関数を登録
+    SetUnhandledExceptionFilter(ExportDump);
+
     // ログのディレクトリを用意
     std::filesystem::create_directory("logs");
     // 現在時刻を取得(UTC)
