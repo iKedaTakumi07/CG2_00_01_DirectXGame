@@ -208,7 +208,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         }
     }
 
-
     // デバイスの生成がうまくいかなかったので起動できない
     assert(device != nullptr);
     Log(logStream, "Complete create D3D12Device!\n"); // 初期化完了のログを出す
@@ -217,6 +216,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     D3D12_COMMAND_QUEUE_DESC commandQueueDesc {};
     hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
     // コマンドキューの生成がうまくいかなかったから起動できない
+    assert(SUCCEEDED(hr));
+    // コマンドアロケータを生成する
+    ID3D12CommandAllocator* commandAllocator = nullptr;
+    hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+    // コマンドアロケータの生成がうまくいかなかったから起動できない
+    assert(SUCCEEDED(hr));
+    // コマンドリストを生成する
+    ID3D12GraphicsCommandList* commandList = nullptr;
+    hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList));
+    // コマンドリストの生成がうまくいかなかったから起動できない
     assert(SUCCEEDED(hr));
 
     MSG msg {};
