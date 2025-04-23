@@ -1,3 +1,4 @@
+#include <DbgHelp.h>
 #include <Windows.h>
 #include <cassert>
 #include <chrono>
@@ -9,7 +10,6 @@
 #include <fstream>
 #include <string>
 #include <strsafe.h>
-#include <DbgHelp.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -240,14 +240,68 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // コマンドキュー、ウィンドウハンドル、設定をして渡す
     hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
 
+    // デスクリプタヒープの生成
+    ID3D12DescriptorHeap* rtvDescripotrHeap = nullptr;
+    D3D12_DESCRIPTOR_HEAP_DESC rtvDescriptorHeapDesc {};
+    rtvDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV; // レンダーターゲットビュー用
+    rtvDescriptorHeapDesc.NumDescriptors = 2; // ダブルバッファ用に2つ。多くてもかまわない
+    hr = device->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&rtvDescripotrHeap));
+    // ディスクリプタヒープが作れなかったので起動できない
+    assert(SUCCEEDED(hr));
+    // SwapChainからResourceを引っ張てくる
+    ID3D12Resource* swapChainResources[2] = { nullptr };
+    hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+    // うまく起動できなければ起動できない
+    assert(SUCCEEDED(hr));
+    hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
+    assert(SUCCEEDED(hr));
+
+    // RTVの設定
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
+    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をSRGBに変換して書き込む
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして書き込む
+    // 　ディスクリプタの先頭を取得する
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescripotrHeap->GetCPUDescriptorHandleForHeapStart();
+    // RTVを二つ作るのでディスクリプタを2用意
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+    // まず1つ目
+    rtvHandles[0] = rtvStartHandle;
+    device->CreateRenderTargetView(swapChainResources[0], &rtvDesc, rtvHandles[0]);
+    // 2つ目
+    rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    // 作成
+    device->CreateRenderTargetView(swapChainResources[1], &rtvDesc, rtvHandles[1]);
+
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
     while (msg.message != WM_QUIT) {
+
         // windowにメッセージが来ていたら最優先で処理させる
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         } else {
+
+            // バックバッファのインデックス取得
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             // ゲームの処理
         }
     }
