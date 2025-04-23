@@ -231,8 +231,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
         // 警報時に泊まる
         infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-        // 解放
-        infoQueue->Release();
 
         // 制御するメッセージのID
         D3D12_MESSAGE_ID denyids[] = {
@@ -248,6 +246,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         filter.DenyList.pSeverityList = severities;
         // 措定したメッセージの表示を抑制する
         infoQueue->PushStorageFilter(&filter);
+
+        // 解放
+        infoQueue->Release();
     }
 
 #endif // _DEBUG
