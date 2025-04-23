@@ -1,4 +1,3 @@
-#include <DbgHelp.h>
 #include <Windows.h>
 #include <cassert>
 #include <chrono>
@@ -11,6 +10,7 @@
 #include <string>
 #include <strsafe.h>
 
+#include <DbgHelp.h>
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Dbghelp.lib")
@@ -283,24 +283,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         } else {
 
             // バックバッファのインデックス取得
+            UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+            // 描画先のRTVを設定する
+            commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
+            // 指定した色で画面全体をクリアにする
+            float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f }; // 青っぽい色。RGBAの順番
+            commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+            // コマンドリストの内容を確定させる
+            hr = commandList->Close();
+            assert(SUCCEEDED(hr));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            // GPUにコマンドリストの実行を行わせる
+            ID3D12CommandList* commandLists[] = { commandList };
+            commandQueue->ExecuteCommandLists(1, commandLists);
+            // GPUとOSに画面交換を行うように通知する
+            swapChain->Present(1, 0);
+            // 次のフレーム用のコマンドリストを準備
+            hr = commandAllocator->Reset();
+            assert(SUCCEEDED(hr));
+            hr = commandList->Reset(commandAllocator, nullptr);
+            assert(SUCCEEDED(hr));
 
             // ゲームの処理
         }
