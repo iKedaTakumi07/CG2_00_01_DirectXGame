@@ -207,9 +207,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             break;
         }
     }
+
+
     // デバイスの生成がうまくいかなかったので起動できない
     assert(device != nullptr);
     Log(logStream, "Complete create D3D12Device!\n"); // 初期化完了のログを出す
+    // コマンドキュー
+    ID3D12CommandQueue* commandQueue = nullptr;
+    D3D12_COMMAND_QUEUE_DESC commandQueueDesc {};
+    hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
+    // コマンドキューの生成がうまくいかなかったから起動できない
+    assert(SUCCEEDED(hr));
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
