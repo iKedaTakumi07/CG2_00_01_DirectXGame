@@ -751,21 +751,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // ウィンドウの×ボタンが押されるまでループ
     while (msg.message != WM_QUIT) {
 
-        transform.rotate.y += 0.03f;
-        Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-
-        Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
-        Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-        Matrix4x4 projectonMatrix = MakePrespectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-        // WVPを作る
-        Matrix4x4 worldViewProjectionMatrix = Mulyiply(worldMatrix, Mulyiply(viewMatrix, projectonMatrix));
-        *wvpData = worldViewProjectionMatrix;
-
         // windowにメッセージが来ていたら最優先で処理させる
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         } else {
+
+            // update
+            transform.rotate.y += 0.03f;
+            Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+
+            Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
+            Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+            Matrix4x4 projectonMatrix = MakePrespectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
+            // WVPを作る
+            Matrix4x4 worldViewProjectionMatrix = Mulyiply(worldMatrix, Mulyiply(viewMatrix, projectonMatrix));
+            *wvpData = worldViewProjectionMatrix;
+
+            // draw
 
             // バックバッファのインデックス取得
             UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
