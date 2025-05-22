@@ -1,3 +1,6 @@
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
 #include <Windows.h>
 #include <cassert>
 #include <chrono>
@@ -11,9 +14,6 @@
 #include <fstream>
 #include <string>
 #include <strsafe.h>
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #include <DbgHelp.h>
@@ -793,6 +793,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             ImGui::Begin("MaterialColor");
             ImGui::ColorEdit4("Color", &(*materialData).x);
+            ImGui::End();
+
+            ImGui::Begin("object");
+            ImGui::SliderFloat3("scale", &transform.scale.x, 0.0f, 5.0f);
+            ImGui::SliderFloat3("rotate", &transform.rotate.x, 0.0f, 5.0f);
+            ImGui::SliderFloat3("translate", &transform.translate.x, 0.0f, 5.0f);
             ImGui::End();
 
             // update
