@@ -1,3 +1,4 @@
+#include "externals/DirectXTex/DirectXTex.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
@@ -387,9 +388,77 @@ IDxcBlob* CompileShader(
     return shaderBlob;
 };
 
+DirectX::ScratchImage LoadTexture(const std::string& filePath)
+{
+    // テクスチャファイルを読み込んでプログラムで使えるようにする
+    DirectX::ScratchImage image {};
+    std::wstring filePathW = ConvertString(filePath);
+    HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    assert(SUCCEEDED(hr));
+
+    // ミップマップの作成
+    DirectX::ScratchImage mipImages {};
+    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+
+    // ミップマップ月のデータを返す
+    return mipImages;
+}
+
+ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
+{
+    // metadataを基にResourecの設定
+    D3D12_RESOURCE_DESC resourceDesc {};
+    resourceDesc.Width = UINT(metadata.width); // 幅
+    resourceDesc.Height = UINT(metadata.height); // 高さ
+    resourceDesc.MipLevels = UINT16(metadata.mipLevels); // mipmapの数
+    resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize); // 奥行きor配列textureの配列数
+    resourceDesc.Format = metadata.format; // textureのformat
+    resourceDesc.SampleDesc.Count = 1; // サンプリングカウント
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension); // Textureの次元数。普段使っているのは2次元
+
+    // 利用するheapの設定非常に特殊な運用。02_04exで一般的なケース版がある
+    D3D12_HEAP_PROPERTIES heapProperties {};
+    heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM; // 細かい設定をする
+    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK; // writeBackポリシーでCPUアクセス可能
+    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0; // プロセッサの近くに配置
+
+    // resourceの生成
+    ID3D12Resource* resource = nullptr;
+    HRESULT hr = device->CreateCommittedResource(
+        &heapProperties, // Heapの設定
+        D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定
+        &resourceDesc, // Resourceの設定
+        D3D12_RESOURCE_STATE_GENERIC_READ, // 初回のResourcestate
+        nullptr, // clear最適値
+        IID_PPV_ARGS(&resource)); // 作成するResourceポインタへのポインタ
+    assert(SUCCEEDED(hr));
+    return resource;
+}
+
+void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages)
+{
+    // Meta情報
+    const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+    // 全MipMapについて
+    for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
+        // MipMapLevelを指定して書くimageを所得
+        const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
+        // Textureに転送
+        HRESULT hr = texture->WriteToSubresource(
+            UINT(mipLevel),
+            nullptr,
+            img->pixels, // 前領域へコピー
+            UINT(img->rowPitch), // 元データあどれす
+            UINT(img->slicePitch)); // 1ラインサイズ
+        assert(SUCCEEDED(hr) // １毎サイズ
+        );
+    }
+}
+
 // windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+    CoInitializeEx(0, COINIT_MULTITHREADED);
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
     SetUnhandledExceptionFilter(ExportDump);
 
@@ -759,6 +828,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     scissorRect.top = 0;
     scissorRect.bottom = KClientHeight;
 
+    // Textureを読み込み
+    DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
+    const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+    ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
+    UploadTextureData(textureResource, mipImages);
+
     // Transform変数を作る
     Transform transform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameratransform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -5.0f } };
@@ -806,7 +881,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // imguiのUI
             ImGui::ShowDemoWindow();
 
-            transform.rotate.y += 0.03f;
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
@@ -905,6 +979,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // ゲームの処理
         }
     }
+    CoUninitialize();
 
     // ImGuiの終了
     ImGui_ImplDX12_Shutdown();
@@ -936,6 +1011,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     materialResource->Release();
     wvpResource->Release();
     srvDescriptorHeap->Release();
+    textureResource->Release();
 #ifdef _DEBUG
     debugController->Release();
 #endif // _DEBUG
