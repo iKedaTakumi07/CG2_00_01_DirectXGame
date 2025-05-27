@@ -796,9 +796,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::End();
 
             ImGui::Begin("object");
-            ImGui::SliderFloat3("scale", &transform.scale.x, 0.0f, 5.0f);
-            ImGui::SliderFloat3("rotate", &transform.rotate.x, 0.0f, 5.0f);
-            ImGui::SliderFloat3("translate", &transform.translate.x, 0.0f, 5.0f);
+            ImGui::SliderFloat3("scale", &transform.scale.x, -5.0f, 5.0f);
+            ImGui::SliderFloat3("rotate", &transform.rotate.x, -5.0f, 5.0f);
+            ImGui::SliderFloat3("translate", &transform.translate.x, -5.0f, 5.0f);
             ImGui::End();
 
             // update
@@ -806,7 +806,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // imguiのUI
             ImGui::ShowDemoWindow();
 
-            transform.rotate.y += 0.03f;
+            /*  transform.rotate.y += 0.03f;*/
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
