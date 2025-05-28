@@ -38,6 +38,11 @@ struct Vector3 {
     float z;
 };
 
+struct Vector2 {
+    float x;
+    float y;
+};
+
 struct Transform {
     Vector3 scale;
     Vector3 rotate;
@@ -46,6 +51,11 @@ struct Transform {
 
 struct Matrix4x4 {
     float m[4][4];
+};
+
+struct VertexData {
+    Vector4 position;
+    Vector2 texcoord;
 };
 
 Matrix4x4 MakeIdentity4x4()
@@ -722,11 +732,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     assert(SUCCEEDED(hr));
 
     // InputLayout
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[1] = {};
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
     inputElementDescs[0].SemanticName = "POSITION";
     inputElementDescs[0].SemanticIndex = 0;
     inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+    inputElementDescs[1].SemanticName = "TEXCOORD";
+    inputElementDescs[1].SemanticIndex = 0;
+    inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+    inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
     D3D12_INPUT_LAYOUT_DESC inputLayoutDesc {};
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
     inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -782,15 +796,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     vertexBufferView.StrideInBytes = sizeof(Vector4);
 
     // 頂点リソースにデータを書き込む
-    Vector4* vertexData = nullptr;
+    VertexData* vertexData = nullptr;
     // 書き込むためのアドレス獲得
     vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
     // 左下
-    vertexData[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+    vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
+    vertexData[0].texcoord = { 0.0f, 1.0f };
+
     // 上
-    vertexData[1] = { 0.0f, 0.5f, 0.0f, 1.0f };
+    vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
+    vertexData[1].texcoord = { 0.5f, 0.0f };
+
     // 右下
-    vertexData[2] = { 0.5f, -0.5f, 0.0f, 1.0f };
+    vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
+    vertexData[2].texcoord = { 1.0f, 1.0f };
 
     // マテリアル用のリソースを作る
     ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
@@ -828,12 +847,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     scissorRect.top = 0;
     scissorRect.bottom = KClientHeight;
 
-    // Textureを読み込み
-    DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
-    const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-    ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
-    UploadTextureData(textureResource, mipImages);
-
     // Transform変数を作る
     Transform transform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameratransform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -5.0f } };
@@ -852,6 +865,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         srvDescriptorHeap,
         srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
         srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+
+    // Textureを読み込み
+    DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
+    const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+    ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
+    UploadTextureData(textureResource, mipImages);
+
+    // metaDataを基にSRVの設定
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
+    srvDesc.Format = metadata.format;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+    // SRVを作成するDescripotorHeapの場所を決める
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+    // 戦闘はimguiが使っているのでその次を使う
+    textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    // SRVの生成
+    device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
