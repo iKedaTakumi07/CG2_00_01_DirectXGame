@@ -1,8 +1,15 @@
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "Dbghelp.lib")
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "dxcompiler.lib")
+
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+#include <DbgHelp.h>
 #include <Windows.h>
 #include <cassert>
 #include <chrono>
@@ -18,14 +25,6 @@
 #include <strsafe.h>
 #include <vector>
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-#include <DbgHelp.h>
-
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "Dbghelp.lib")
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "dxcompiler.lib")
 
 struct Vector4 {
     float x;
@@ -451,7 +450,9 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
 {
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
-    DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount, mipImages.GetMetadata(), subresources);
+    DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
+    uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
+    ID3D12Resource* intermediateResourec = CreateBufferResource(device, intermediateSize);
 }
 
 // windowsアプリでのエントリーポイント(main関数)
