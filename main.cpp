@@ -1,4 +1,5 @@
 #include "externals/DirectXTex/DirectXTex.h"
+#include "externals/DirectXTex/d3dx12.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
@@ -15,6 +16,7 @@
 #include <fstream>
 #include <string>
 #include <strsafe.h>
+#include <vector>
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #include <DbgHelp.h>
@@ -438,31 +440,18 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
         &heapProperties, // Heapの設定
         D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定
         &resourceDesc, // Resourceの設定
-        D3D12_RESOURCE_STATE_GENERIC_READ, // 初回のResourcestate
+        D3D12_RESOURCE_STATE_COPY_DEST, // 初回のResourcestate
         nullptr, // clear最適値
         IID_PPV_ARGS(&resource)); // 作成するResourceポインタへのポインタ
     assert(SUCCEEDED(hr));
     return resource;
 }
 
-void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages)
+[[nodiscard]]
+ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
 {
-    // Meta情報
-    const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-    // 全MipMapについて
-    for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
-        // MipMapLevelを指定して書くimageを所得
-        const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
-        // Textureに転送
-        HRESULT hr = texture->WriteToSubresource(
-            UINT(mipLevel),
-            nullptr,
-            img->pixels, // 前領域へコピー
-            UINT(img->rowPitch), // 元データあどれす
-            UINT(img->slicePitch)); // 1ラインサイズ
-        assert(SUCCEEDED(hr) // １毎サイズ
-        );
-    }
+    std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+    DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount, mipImages.GetMetadata(), subresources);
 }
 
 // windowsアプリでのエントリーポイント(main関数)
@@ -912,6 +901,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     // SRVの生成
     device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
+
+    // heapの設定
+    D3D12_HEAP_PROPERTIES heapProperties {};
+    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
