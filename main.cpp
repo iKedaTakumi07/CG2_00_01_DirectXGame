@@ -1047,9 +1047,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             hr = commandList->Reset(commandAllocator, nullptr);
             assert(SUCCEEDED(hr));
 
-            // 解放
-            intermediateResource->Release();
-
             // ゲームの処理
         }
     }
@@ -1086,6 +1083,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     wvpResource->Release();
     srvDescriptorHeap->Release();
     textureResource->Release();
+    intermediateResource->Release();
 #ifdef _DEBUG
     debugController->Release();
 #endif // _DEBUG
