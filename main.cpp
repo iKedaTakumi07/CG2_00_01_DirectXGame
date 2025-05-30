@@ -896,7 +896,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
     const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
     ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
-    UploadTextureData(textureResource, mipImages);
+    /*UploadTextureData(textureResource, mipImages);*/
+
+    ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
 
     // metaDataを基にSRVの設定
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
@@ -1044,6 +1046,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             assert(SUCCEEDED(hr));
             hr = commandList->Reset(commandAllocator, nullptr);
             assert(SUCCEEDED(hr));
+
+            // 解放
+            intermediateResource->Release();
 
             // ゲームの処理
         }
