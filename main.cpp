@@ -317,6 +317,12 @@ LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 ID3D12DescriptorHeap* createDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
 {
+    // DSV
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc {};
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    // DSVheapの先頭にDSVを作る
+
     ID3D12DescriptorHeap* DescripotrHeap = nullptr;
     D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc {};
     DescriptorHeapDesc.Type = heapType; // レンダーターゲットビュー用
@@ -481,6 +487,21 @@ ID3D12Resource* CreateDepthSetencilTextureResource(ID3D12Device* device, int32_t
     // 利用するheaoの設定
     D3D12_HEAP_PROPERTIES heapProperties {};
     heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    // 震度値のクリア設定
+    D3D12_CLEAR_VALUE depthClearValue {};
+    depthClearValue.DepthStencil.Depth = 1.0f;
+    depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+    // Resourceの設定
+    ID3D12Resource* resource = nullptr;
+    HRESULT hr = device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &depthClearValue, IID_PPV_ARGS(&resource));
+    assert(SUCCEEDED(hr));
 }
 
 // windowsアプリでのエントリーポイント(main関数)
@@ -926,7 +947,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
     ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
     /*UploadTextureData(textureResource, mipImages);*/
-
     ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
 
     // metaDataを基にSRVの設定
@@ -950,6 +970,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
     heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
     heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+
+    // depthStencilTextureをウィンドウのサイズで作成
+    ID3D12Resource* depthStencilResource = CreateDepthSetencilTextureResource(device, KClientWidth, KClientHeight);
+
+    // DSV用のひーぷでディスクリプタの数は1
+    ID3D12DescriptorHeap* dsvDescriptorHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
