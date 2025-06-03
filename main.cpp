@@ -466,6 +466,23 @@ ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::Scratc
     return intermediateResourec;
 }
 
+ID3D12Resource* CreateDepthSetencilTextureResource(ID3D12Device* device, int32_t width, int32_t height)
+{
+    D3D12_RESOURCE_DESC resourceDesc {};
+    resourceDesc.Width = width;
+    resourceDesc.Height = height;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    // 利用するheaoの設定
+    D3D12_HEAP_PROPERTIES heapProperties {};
+    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+}
+
 // windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -809,13 +826,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     assert(SUCCEEDED(hr));
 
     // 頂点場合はびゅーを作成する
-    ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 3);
+    ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
 
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView {};
     // リソースの先頭のアドレス使う
     vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
     // 使用するリソースのサイズは頂点3つ分のサイズ
-    vertexBufferView.SizeInBytes = sizeof(VertexData) * 3;
+    vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
     // 1頂点当たりのサイズ
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -835,6 +852,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 右下
     vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
     vertexData[2].texcoord = { 1.0f, 1.0f };
+
+    // 左下2
+    vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
+    vertexData[3].texcoord = { 0.0f, 1.0f };
+
+    // 上2
+    vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+    vertexData[4].texcoord = { 0.5f, 0.0f };
+
+    // 右下2
+    vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
+    vertexData[5].texcoord = { 1.0f, 1.0f };
 
     // マテリアル用のリソースを作る
     ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
@@ -950,6 +979,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // imguiのUI
             ImGui::ShowDemoWindow();
 
+            transform.rotate.y += 0.05f;
+
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
@@ -1005,7 +1036,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // SRV
             commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
             // 描画
-            commandList->DrawInstanced(3, 1, 0, 0);
+            commandList->DrawInstanced(6, 1, 0, 0);
 
             // 実際のcommandListのImGuiの描画コマンドを詰む
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
