@@ -497,6 +497,7 @@ ID3D12Resource* CreateDepthSetencilTextureResource(ID3D12Device* device, int32_t
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
         &depthClearValue, IID_PPV_ARGS(&resource));
     assert(SUCCEEDED(hr));
+    return resource;
 }
 
 // windowsアプリでのエントリーポイント(main関数)
@@ -1158,6 +1159,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     textureResource->Release();
     intermediateResource->Release();
     dsvDescriptorHeap->Release();
+    depthStencilResource->Release();
 #ifdef _DEBUG
     debugController->Release();
 #endif // _DEBUG
