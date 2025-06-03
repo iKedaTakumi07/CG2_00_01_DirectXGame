@@ -317,11 +317,6 @@ LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 ID3D12DescriptorHeap* createDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
 {
-    // DSV
-    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc {};
-    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    // DSVheapの先頭にDSVを作る
 
     ID3D12DescriptorHeap* DescripotrHeap = nullptr;
     D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc {};
@@ -977,6 +972,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // DSV用のひーぷでディスクリプタの数は1
     ID3D12DescriptorHeap* dsvDescriptorHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
+    // DSV
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc {};
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    // DSVheapの先頭にDSVを作る
+    device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
+    // depthStencilStateの設定
+    D3D12_DEPTH_STENCIL_DESC depthStencilDesc {};
+    // depthを有効化
+    depthStencilDesc.DepthEnable = true;
+    // 書き込み
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    // 比較関数はLessEqual
+    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+    // DepthStencilの設定
+    graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
+    graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
     while (msg.message != WM_QUIT) {
@@ -1107,6 +1122,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // ゲームの処理
         }
     }
+
     CoUninitialize();
 
     // ImGuiの終了
@@ -1141,6 +1157,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     srvDescriptorHeap->Release();
     textureResource->Release();
     intermediateResource->Release();
+    dsvDescriptorHeap->Release();
 #ifdef _DEBUG
     debugController->Release();
 #endif // _DEBUG
