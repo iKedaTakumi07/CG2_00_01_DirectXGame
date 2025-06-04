@@ -1003,6 +1003,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // DSVheapの先頭にDSVを作る
     device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
+    // Sprite用の頂点リソースを作る
+    ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
+
+    // 頂点バッファビューを作る
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite {};
+    // リソースの先端のアドレスから使う
+    vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
+    // 使用するサイズ
+    vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
+    // 1ツ当たりのサイズ
+    vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
+
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
     while (msg.message != WM_QUIT) {
