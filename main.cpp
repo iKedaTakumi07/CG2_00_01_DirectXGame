@@ -227,6 +227,16 @@ Matrix4x4 MakePrespectiveFovMatrix(float fovY, float aspectRatio, float nearClip
     return num;
 }
 
+// 2.正射影行列
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
+{
+    Matrix4x4 num;
+    num = { 2 / (right - left), 0, 0, 0, 0, 2 / (top - bottom), 0, 0, 0, 0, 1 / (farClip - nearClip), 0, (left + right) / (left - right),
+        (top + bottom) / (bottom - top),
+        nearClip / (nearClip - farClip), 1 };
+    return num;
+}
+
 // CrashHandler
 
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* excption)
