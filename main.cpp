@@ -1015,6 +1015,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 1ツ当たりのサイズ
     vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
 
+    VertexData* vertexDataSprite = nullptr;
+    vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+    // 1枚目
+    vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
+    vertexDataSprite[0].texcoord = { 0.0f, 1.0f };
+    vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+    vertexDataSprite[1].texcoord = { 0.0f, 0.0f };
+    vertexDataSprite[2].position = { 640.0f, 0.0f, 0.0f, 1.0f };
+    vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
+    // 2枚目
+    vertexDataSprite[3].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+    vertexDataSprite[3].texcoord = { 0.0f, 0.0f };
+    vertexDataSprite[4].position = { 640.0f, 0.0f, 0.0f, 1.0f };
+    vertexDataSprite[4].texcoord = { 1.0f, 0.0f };
+    vertexDataSprite[5].position = { 640.0f, 360.0f, 0.0f, 1.0f };
+    vertexDataSprite[5].texcoord = { 1.0f, 1.0f };
+
+    // Sprite用のtransformmatrix用のリソースを作る
+    ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
+    // データを書き込む
+    Matrix4x4* transformationMatrixDataSprite = nullptr;
+    // 書き込むためのアドレス取得
+    transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixResourceSprite));
+    // 単位行列を書き込む
+    *transformationMatrixDataSprite = MakeIdentity4x4();
+
+    // 動かすよう
+    Transform transformSprite { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
     while (msg.message != WM_QUIT) {
@@ -1185,6 +1214,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     intermediateResource->Release();
     dsvDescriptorHeap->Release();
     depthStencilResource->Release();
+    vertexResourceSprite->Release();
+    transformationMatrixResourceSprite->Release();
+
 #ifdef _DEBUG
     debugController->Release();
 #endif // _DEBUG
