@@ -41,10 +41,6 @@ struct Vector4 {
     float z;
     float w;
 };
-struct Sphere {
-    Vector3 center;
-    float radius;
-};
 struct Matrix4x4 {
     float m[4][4];
 };
@@ -185,60 +181,6 @@ Matrix4x4 Inverse(const Matrix4x4& m)
     num.m[3][3] = (m.m[0][0] * m.m[1][1] * m.m[2][2] + m.m[0][1] * m.m[1][2] * m.m[2][0] + m.m[0][2] * m.m[1][0] * m.m[2][1] - m.m[0][2] * m.m[1][1] * m.m[2][0] - m.m[0][1] * m.m[1][0] * m.m[2][2] - m.m[0][0] * m.m[1][2] * m.m[2][1]) / determinant;
 
     return num;
-}
-
-Vector3 TransForm(const Vector3& vector, const Matrix4x4& matrix)
-{
-    Vector3 result;
-    result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];
-    result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + 1.0f * matrix.m[3][1];
-    result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + 1.0f * matrix.m[3][2];
-    float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] + 1.0f * matrix.m[3][3];
-    assert(w != 0.0f);
-    result.x /= w;
-    result.y /= w;
-    result.z /= w;
-
-    return result;
-}
-
-void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
-{
-    const uint32_t kSubdivision = 16;
-
-    const float pi = 3.14f;
-
-    const float KLatEvery = float(2 * pi) / (float)kSubdivision;
-    const float kLonEvery = float(pi) / (float)kSubdivision;
-
-    for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-        float lat = -float(pi) / 2.0f + KLatEvery * float(latIndex);
-        for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-            float lon = lonIndex * float(kLonEvery);
-
-            //  計算
-            Vector3 a {
-                sphere.center.x + sphere.radius * std::cosf(lat) * std::cosf(lon),
-                sphere.center.y + sphere.radius * std::sinf(lat),
-                sphere.center.z + sphere.radius * std::cosf(lat) * std::sinf(lon)
-            };
-            Vector3 b {
-                sphere.center.x + sphere.radius * std::cosf(lat + KLatEvery) * std::cosf(lon),
-                sphere.center.y + sphere.radius * std::sinf(lat + KLatEvery),
-                sphere.center.z + sphere.radius * std::cosf(lat + KLatEvery) * std::sinf(lon)
-            };
-            Vector3 c {
-                sphere.center.x + sphere.radius * std::cosf(lat) * std::cosf(lon + kLonEvery),
-                sphere.center.y + sphere.radius * std::sinf(lat),
-                sphere.center.z + sphere.radius * std::cosf(lat) * std::sinf(lon + kLonEvery)
-            };
-            Vector3 d {
-                sphere.center.x + sphere.radius * std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
-                sphere.center.y + sphere.radius * std::cosf(lat + KLatEvery),
-                sphere.center.z + sphere.radius * std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery)
-            };
-        }
-    }
 }
 
 ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizwInBytes)
@@ -995,6 +937,69 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     float kWindowWidth = 1280.0f;
     float kWindowHeight = 720.0f;
+
+    //
+    // 弾
+    //
+
+    const uint32_t kSubdivision = 16;
+    // 級の頂点崇
+    const uint32_t kSubdivisionSizeInBytes = kSubdivision * kSubdivision * 6;
+
+    // 頂点場合はびゅーを作成する
+    ID3D12Resource* vertexResourcesphere = CreateBufferResource(device, sizeof(VertexData) * kSubdivisionSizeInBytes);
+
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferViewsphere {};
+    // リソースの先頭のアドレス使う
+    vertexBufferViewsphere.BufferLocation = vertexResourcesphere->GetGPUVirtualAddress();
+    // 使用するリソースのサイズ
+    vertexBufferViewsphere.SizeInBytes = sizeof(VertexData) * kSubdivisionSizeInBytes;
+    // 1頂点当たりのサイズ
+    vertexBufferViewsphere.StrideInBytes = sizeof(VertexData);
+
+    // 頂点リソースにデータを書き込む
+    VertexData* vertexDatasphere = nullptr;
+    // 書き込むためのアドレス獲得
+    vertexResourcesphere->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+
+    const float pi = 3.14f;
+
+    const float KLatEvery = float(2 * pi) / (float)kSubdivision;
+    const float kLonEvery = float(pi) / (float)kSubdivision;
+
+    for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+        float lat = -float(pi) / 2.0f + KLatEvery * float(latIndex);
+        for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+            uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+            float lon = lonIndex * float(kLonEvery);
+
+            //  計算
+            VertexData a = {
+                {
+                    std::cosf(lat) * std::cosf(lon),
+                    std::sinf(lat),
+                    std::cosf(lat) * std::sinf(lon),
+                    1.0f,
+                },
+                { float(lonIndex) / float(kSubdivision),
+                    1.0f - float(latIndex) / float(kSubdivision) }
+            };
+            VertexData b
+                = { std::cosf(lat + KLatEvery) * std::cosf(lon), std::sinf(lat + KLatEvery), std::cosf(lat + KLatEvery) * std::sinf(lon), 1.0f };
+            VertexData c {
+                std::cosf(lat) * std::cosf(lon + kLonEvery),
+                std::sinf(lat),
+                std::cosf(lat) * std::sinf(lon + kLonEvery),
+                1.0f
+            };
+            VertexData d {
+                std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
+                std::cosf(lat + KLatEvery),
+                std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
+                1.0f
+            };
+        }
+    }
 
     // ImGui初期化
     IMGUI_CHECKVERSION();
