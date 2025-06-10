@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <numbers>
 #include <string>
 #include <strsafe.h>
 #include <vector>
@@ -964,11 +965,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     const float pi = 3.14f;
 
-    const float KLatEvery = float(2 * pi) / (float)kSubdivision;
-    const float kLonEvery = float(pi) / (float)kSubdivision;
+    const float KLatEvery = 2.0f * std::numbers::pi_v<float> / (float)kSubdivision;
+    const float kLonEvery = std::numbers::pi_v<float> / (float)kSubdivision;
 
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-        float lat = -float(pi) / 2.0f + KLatEvery * float(latIndex);
+        float lat = -std::numbers::pi_v<float> / 2.0f + KLatEvery * float(latIndex);
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
             uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
             float lon = lonIndex * float(kLonEvery);
@@ -984,20 +985,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 { float(lonIndex) / float(kSubdivision),
                     1.0f - float(latIndex) / float(kSubdivision) }
             };
-            VertexData b
-                = { std::cosf(lat + KLatEvery) * std::cosf(lon), std::sinf(lat + KLatEvery), std::cosf(lat + KLatEvery) * std::sinf(lon), 1.0f };
-            VertexData c {
-                std::cosf(lat) * std::cosf(lon + kLonEvery),
-                std::sinf(lat),
-                std::cosf(lat) * std::sinf(lon + kLonEvery),
-                1.0f
+            VertexData b = {
+                { std::cosf(lat + KLatEvery) * std::cosf(lon),
+                    std::sinf(lat + KLatEvery),
+                    std::cosf(lat + KLatEvery) * std::sinf(lon),
+                    1.0f },
+                { float(lonIndex) / float(kSubdivision),
+                    1.0f - float(latIndex) / float(kSubdivision)
+
+                }
             };
-            VertexData d {
-                std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
-                std::cosf(lat + KLatEvery),
-                std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
-                1.0f
+            VertexData c = {
+                { std::cosf(lat) * std::cosf(lon + kLonEvery),
+                    std::sinf(lat),
+                    std::cosf(lat) * std::sinf(lon + kLonEvery),
+                    1.0f },
+                { float(lonIndex) / float(kSubdivision),
+                    1.0f - float(latIndex) / float(kSubdivision)
+
+                }
             };
+            VertexData d = {
+                { std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
+                    std::cosf(lat + KLatEvery),
+                    std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
+                    1.0f },
+                { float(lonIndex) / float(kSubdivision),
+                    1.0f - float(latIndex) / float(kSubdivision) }
+            };
+
+            vertexDatasphere[start + 0] = a;
+            vertexDatasphere[start + 1] = b;
+            vertexDatasphere[start + 2] = c;
+
+            vertexDatasphere[start + 3] = b;
+            vertexDatasphere[start + 4] = c;
+            vertexDatasphere[start + 5] = d;
         }
     }
 
@@ -1286,6 +1309,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     depthStencilResource->Release();
     vertexResourceSprite->Release();
     transformationMatrixResourceSprite->Release();
+    vertexResourcesphere->Release();
 
 #ifdef _DEBUG
     debugController->Release();
