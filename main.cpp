@@ -1125,7 +1125,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 単位行列を書き込む
     *transformationMatrixDatasphere = MakeIdentity4x4();
     // 動かす用のtransform
-    Transform transformsphere { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 10.0f } };
+    Transform transformsphere { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
@@ -1179,9 +1179,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             // 球体
             Matrix4x4 worldMatrixsphere = MakeAffineMatrix(transformsphere.scale, transformsphere.rotate, transformsphere.translate);
-            Matrix4x4 viewMatrixsphere = MakeIdentity4x4();
             Matrix4x4 projectionMatrixsphere = MakePrespectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-            Matrix4x4 worldViewProjectionMatrixsphere = Mulyiply(worldMatrixsphere, Mulyiply(viewMatrixsphere, projectionMatrixsphere));
+            Matrix4x4 worldViewProjectionMatrixsphere = Mulyiply(worldMatrixsphere, Mulyiply(viewMatrix, projectionMatrixsphere));
             *transformationMatrixDatasphere = worldViewProjectionMatrixsphere;
 
             // draw
