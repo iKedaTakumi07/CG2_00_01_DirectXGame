@@ -1038,7 +1038,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 弾
     //
 
-    const uint32_t kSubdivision = 4;
+    const uint32_t kSubdivision = 16;
     // 級の頂点崇
     const uint32_t sphervertexNum = kSubdivision * kSubdivision * 6;
 
@@ -1161,7 +1161,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::ShowDemoWindow();
 
             transform.rotate.y += 0.01f;
-           /* transformsphere.rotate.y += 0.01f;*/
+            transformsphere.rotate.y += 0.01f;
 
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
