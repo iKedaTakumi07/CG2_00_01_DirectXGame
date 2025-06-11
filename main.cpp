@@ -1038,7 +1038,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 弾
     //
 
-    const uint32_t kSubdivision = 16;
+    const uint32_t kSubdivision = 4;
     // 級の頂点崇
     const uint32_t sphervertexNum = kSubdivision * kSubdivision * 6;
 
@@ -1058,8 +1058,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 書き込むためのアドレス獲得
     vertexResourcesphere->Map(0, nullptr, reinterpret_cast<void**>(&vertexDatasphere));
 
-    const float KLatEvery = 2.0f * std::numbers::pi_v<float> / (float)kSubdivision;
-    const float kLonEvery = std::numbers::pi_v<float> / (float)kSubdivision;
+    const float kLonEvery = 2.0f * std::numbers::pi_v<float> / (float)kSubdivision;
+    const float KLatEvery = std::numbers::pi_v<float> / (float)kSubdivision;
 
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
         float lat = -std::numbers::pi_v<float> / 2.0f + KLatEvery * float(latIndex);
@@ -1152,6 +1152,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             ImGui::Begin("sphere");
             ImGui::SliderFloat3("translate", &transformsphere.translate.x, -20.0f, 20.0f);
+            ImGui::SliderFloat3("rotate", &transformsphere.rotate.x, -4.0f, 4.0f);
             ImGui::End();
 
             // update
@@ -1160,7 +1161,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::ShowDemoWindow();
 
             transform.rotate.y += 0.01f;
-            transformsphere.rotate.y += 0.01f;
+           /* transformsphere.rotate.y += 0.01f;*/
 
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
