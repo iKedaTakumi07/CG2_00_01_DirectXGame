@@ -1038,7 +1038,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 弾
     //
 
-    const uint32_t kSubdivision = 4;
+    const uint32_t kSubdivision = 16;
     // 級の頂点崇
     const uint32_t sphervertexNum = kSubdivision * kSubdivision * 6;
 
@@ -1068,12 +1068,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             //  計算
             VertexData a = {
-                {
-                    std::cosf(lat) * std::cosf(lon),
+                { std::cosf(lat) * std::cosf(lon),
                     std::sinf(lat),
                     std::cosf(lat) * std::sinf(lon),
-                    1.0f,
-                },
+                    1.0f },
                 { float(lonIndex) / float(kSubdivision),
                     1.0f - float(latIndex) / float(kSubdivision) }
             };
@@ -1099,7 +1097,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             };
             VertexData d = {
                 { std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
-                    std::cosf(lat + KLatEvery),
+                    std::sinf(lat + KLatEvery),
                     std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
                     1.0f },
                 { float(lonIndex + 1.0f) / float(kSubdivision),
@@ -1127,7 +1125,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 単位行列を書き込む
     *transformationMatrixDatasphere = MakeIdentity4x4();
     // 動かす用のtransform
-    Transform transformsphere { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+    Transform transformsphere { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 10.0f } };
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
@@ -1153,7 +1151,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                ImGui::End();*/
 
             ImGui::Begin("sphere");
-            ImGui::SliderFloat3("translate", &transformsphere.translate.x, -100.0f, 100.0f);
+            ImGui::SliderFloat3("translate", &transformsphere.translate.x, -20.0f, 20.0f);
             ImGui::End();
 
             // update
@@ -1162,6 +1160,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::ShowDemoWindow();
 
             transform.rotate.y += 0.01f;
+            transformsphere.rotate.y += 0.01f;
 
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
@@ -1239,7 +1238,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // transformationMatrixCBufferの場所を設置
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
             // 描画
-            commandList->DrawInstanced(6, 1, 0, 0);
+            /*commandList->DrawInstanced(6, 1, 0, 0);*/
 
             // 球
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewsphere);
