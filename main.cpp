@@ -998,6 +998,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // SRVの生成
     device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
     // heapの設定
     D3D12_HEAP_PROPERTIES heapProperties {};
     heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -1167,12 +1180,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::Begin("MaterialColor");
             ImGui::ColorEdit4("Color", &(*materialData).x);
             ImGui::End();
-
-            /*   ImGui::Begin("object");
-               ImGui::SliderFloat3("scale", &transform.scale.x, -5.0f, 5.0f);
-               ImGui::SliderFloat3("rotate", &transform.rotate.x, -5.0f, 5.0f);
-               ImGui::SliderFloat3("translate", &transform.translate.x, -5.0, 5.0f);
-               ImGui::End();*/
 
             ImGui::Begin("sphere");
             ImGui::SliderFloat3("translate", &transformsphere.translate.x, -20.0f, 20.0f);
