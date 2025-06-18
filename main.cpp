@@ -59,6 +59,15 @@ struct Material {
     Vector4 color;
     int32_t enableLighting;
 };
+struct TransformationMatrix {
+    Matrix4x4 WVP;
+    Matrix4x4 world;
+};
+struct DirectionalLight {
+    Vector4 color;
+    Vector3 direction;
+    float intensity;
+};
 
 Matrix4x4 MakeIdentity4x4()
 {
@@ -767,7 +776,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     // RootParameter作成
-    D3D12_ROOT_PARAMETER rootParameters[3] = {};
+    D3D12_ROOT_PARAMETER rootParameters[4] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -778,6 +787,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
     rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[3].Descriptor.ShaderRegister = 1;
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -1221,6 +1233,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     // 切り替えフラグ
     bool useMonsterBall = true;
+
+    // デフォルト値
+    DirectionalLight* directionalLightData = nullptr;
+    directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+    directionalLightData->intensity = 1.0f;
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ

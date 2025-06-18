@@ -3,8 +3,18 @@
 struct TransformationMatrix
 {
     float32_t4x4 WVP;
+    float32_t4x4 World;
 };
+struct DirectionalLight
+{
+    float32_t4 color;
+    float32_t3 direction;
+    float intensity;
+};
+
+
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
+ConstantBuffer<DirectionalLight> gDirectionalLight :register(b1);
 
 struct VertexShaderInput
 {
