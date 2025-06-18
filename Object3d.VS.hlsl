@@ -14,7 +14,7 @@ struct DirectionalLight
 
 
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
-ConstantBuffer<DirectionalLight> gDirectionalLight :register(b1);
+ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
 struct VertexShaderInput
 {
@@ -28,5 +28,6 @@ VertexShaderOutput main(VertexShaderInput input)
     VertexShaderOutput output;
     output.position = mul(input.position, gTransformationMatrix.WVP);
     output.texcoord = input.texcoord;
+    output.normal = input.normal;
     return output;
 }

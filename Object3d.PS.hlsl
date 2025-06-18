@@ -14,6 +14,7 @@ SamplerState gSampler : register(s0);
 struct PixelShaderOutput
 {
     float32_t4 color : SV_TARGET0;
+    float32_t3 normal : NORMAL0;
 };
 
 PixelShaderOutput main(VertexShaderOutput input)
@@ -22,7 +23,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     output.color = gMaterial.coler;
     float32_t4 textureColor = gTexture.Sample(gSampler, input.texcoord);
     output.color = gMaterial.coler * textureColor;
-    
+    output.normal = normalize(mul(input.normal, (float32_t3x3) gTransfomationMatrix.World));
 
     return output;
 }

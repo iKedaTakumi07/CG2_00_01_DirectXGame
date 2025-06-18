@@ -1080,23 +1080,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 1枚目
     vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
     vertexDataSprite[0].texcoord = { 0.0f, 1.0f };
-    vertexDataSprite[0].normal = { 0.0f, 0.0f, -1.0f };
+    vertexDataSprite[0].normal = { 0.0f, 0.0f, 1.0f };
     vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
     vertexDataSprite[1].texcoord = { 0.0f, 0.0f };
-    vertexDataSprite[1].normal = { 0.0f, 0.0f, -1.0f };
+    vertexDataSprite[1].normal = { 0.0f, 0.0f, 1.0f };
     vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
     vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
-    vertexDataSprite[2].normal = { 0.0f, 0.0f, -1.0f };
+    vertexDataSprite[2].normal = { 0.0f, 0.0f, 1.0f };
     // 2枚目
     vertexDataSprite[3].position = { 0.0f, 0.0f, 0.0f, 1.0f };
     vertexDataSprite[3].texcoord = { 0.0f, 0.0f };
-    vertexDataSprite[3].normal = { 0.0f, 0.0f, -1.0f };
+    vertexDataSprite[3].normal = { 0.0f, 0.0f, 1.0f };
     vertexDataSprite[4].position = { 640.0f, 0.0f, 0.0f, 1.0f };
     vertexDataSprite[4].texcoord = { 1.0f, 0.0f };
-    vertexDataSprite[4].normal = { 0.0f, 0.0f, -1.0f };
+    vertexDataSprite[4].normal = { 0.0f, 0.0f, 1.0f };
     vertexDataSprite[5].position = { 640.0f, 360.0f, 0.0f, 1.0f };
     vertexDataSprite[5].texcoord = { 1.0f, 1.0f };
-    vertexDataSprite[5].normal = { 0.0f, 0.0f, -1.0f };
+    vertexDataSprite[5].normal = { 0.0f, 0.0f, 1.0f };
 
     // Sprite用のマテリアルリソースを作る
     ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
@@ -1163,9 +1163,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 { float(lonIndex) / float(kSubdivision),
                     1.0f - float(latIndex) / float(kSubdivision) },
                 {
-                    a.normal.x = a.position.x,
-                    a.normal.y = a.position.y,
-                    a.normal.z = a.position.y,
+                    std::cosf(lat) * std::cosf(lon),
+                    std::sinf(lat),
+                    std::cosf(lat) * std::sinf(lon),
                 }
             };
             VertexData b = {
@@ -1176,9 +1176,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 { float(lonIndex) / float(kSubdivision),
                     1.0f - float(latIndex + 1.0f) / float(kSubdivision) },
                 {
-                    b.normal.x = b.position.x,
-                    b.normal.y = b.position.y,
-                    b.normal.z = b.position.y,
+                    std::cosf(lat + KLatEvery) * std::cosf(lon),
+                    std::sinf(lat + KLatEvery),
+                    std::cosf(lat + KLatEvery) * std::sinf(lon),
                 }
             };
             VertexData c = {
@@ -1189,9 +1189,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 { float(lonIndex + 1.0f) / float(kSubdivision),
                     1.0f - float(latIndex) / float(kSubdivision) },
                 {
-                    c.normal.x = c.position.x,
-                    c.normal.y = c.position.y,
-                    c.normal.z = c.position.y,
+                    std::cosf(lat) * std::cosf(lon + kLonEvery),
+                    std::sinf(lat),
+                    std::cosf(lat) * std::sinf(lon + kLonEvery),
                 }
             };
             VertexData d = {
@@ -1202,9 +1202,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 { float(lonIndex + 1.0f) / float(kSubdivision),
                     1.0f - float(latIndex + 1.0f) / float(kSubdivision) },
                 {
-                    d.normal.x = d.position.x,
-                    d.normal.y = d.position.y,
-                    d.normal.z = d.position.y,
+                    std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
+                    std::sinf(lat + KLatEvery),
+                    std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
                 }
             };
 
@@ -1235,7 +1235,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     bool useMonsterBall = true;
 
     // デフォルト値
-    DirectionalLight* directionalLightData = nullptr;
+    DirectionalLight* directionalLightData;
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
     directionalLightData->intensity = 1.0f;
@@ -1261,7 +1261,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::SliderFloat3("translate", &transformsphere.translate.x, -20.0f, 20.0f);
             ImGui::SliderFloat3("rotate", &transformsphere.rotate.x, -4.0f, 4.0f);
             ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+            ImGui::End();
 
+            ImGui::Begin("DirectionalLight");
+            ImGui::SliderFloat4("color", &directionalLightData->color.x, -20.0f, 20.0f);
+            ImGui::SliderFloat3("direction", &directionalLightData->direction.x, -4.0f, 4.0f);
             ImGui::End();
 
             // update
