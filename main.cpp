@@ -1095,7 +1095,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 今回は白を書き込んでみる
     /** = Vector4(1.0f, 1.0f, 1.0f, 1.0f);*/
 
-    materialResourceSprite->enableLighting = false;
+  /*  materialResourceSprite->enableLighting = false;*/
 
     // Sprite用のtransformmatrix用のリソースを作る
     ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
