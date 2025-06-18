@@ -1089,13 +1089,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // Sprite用のマテリアルリソースを作る
     ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
 
+    Material* materialDataSprite = nullptr;
     // mapして書き込み
-    materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+    materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
 
     // 今回は白を書き込んでみる
-    /** = Vector4(1.0f, 1.0f, 1.0f, 1.0f);*/
+    materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-    materialResourceSprite->enableLighting = false;
+    materialDataSprite->enableLighting = false;
 
     // Sprite用のtransformmatrix用のリソースを作る
     ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
@@ -1424,8 +1425,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     dsvDescriptorHeap->Release();
     depthStencilResource->Release();
+
     vertexResourceSprite->Release();
     transformationMatrixResourceSprite->Release();
+    materialResourceSprite->Release();
+
     vertexResourcesphere->Release();
     transformationMatrixResourcesphere->Release();
 
