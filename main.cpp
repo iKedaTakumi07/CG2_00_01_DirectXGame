@@ -53,6 +53,11 @@ struct Transform {
 struct VertexData {
     Vector4 position;
     Vector2 texcoord;
+    Vector3 normal;
+};
+struct Material {
+    Vector4 color;
+    int32_t enableLighting;
 };
 
 Matrix4x4 MakeIdentity4x4()
@@ -804,7 +809,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     assert(SUCCEEDED(hr));
 
     // InputLayout
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
     inputElementDescs[0].SemanticName = "POSITION";
     inputElementDescs[0].SemanticIndex = 0;
     inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -813,6 +818,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     inputElementDescs[1].SemanticIndex = 0;
     inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
     inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
+    inputElementDescs[2].SemanticName = "NORMAL";
+    inputElementDescs[2].SemanticIndex = 0;
+    inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
     D3D12_INPUT_LAYOUT_DESC inputLayoutDesc {};
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
     inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -888,6 +899,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 左下
     vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
     vertexData[0].texcoord = { 0.0f, 1.0f };
+    /* vertexData[0].normal.x = vertexData[0].position.x;
+     vertexData[0].normal.y = vertexData[0].position.y;
+     vertexData[0].normal.z = vertexData[0].position.z;*/
 
     // 上
     vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
@@ -1054,17 +1068,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 1枚目
     vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
     vertexDataSprite[0].texcoord = { 0.0f, 1.0f };
+    vertexDataSprite[0].normal = { 0.0f, 0.0f, -1.0f };
     vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
     vertexDataSprite[1].texcoord = { 0.0f, 0.0f };
+    vertexDataSprite[1].normal = { 0.0f, 0.0f, -1.0f };
     vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
     vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
+    vertexDataSprite[2].normal = { 0.0f, 0.0f, -1.0f };
     // 2枚目
     vertexDataSprite[3].position = { 0.0f, 0.0f, 0.0f, 1.0f };
     vertexDataSprite[3].texcoord = { 0.0f, 0.0f };
+    vertexDataSprite[3].normal = { 0.0f, 0.0f, -1.0f };
     vertexDataSprite[4].position = { 640.0f, 0.0f, 0.0f, 1.0f };
     vertexDataSprite[4].texcoord = { 1.0f, 0.0f };
+    vertexDataSprite[4].normal = { 0.0f, 0.0f, -1.0f };
     vertexDataSprite[5].position = { 640.0f, 360.0f, 0.0f, 1.0f };
     vertexDataSprite[5].texcoord = { 1.0f, 1.0f };
+    vertexDataSprite[5].normal = { 0.0f, 0.0f, -1.0f };
+
+    // Sprite用のマテリアルリソースを作る
+    ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
+
+    // mapして書き込み
+    materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+
+    // 今回は白を書き込んでみる
+    /** = Vector4(1.0f, 1.0f, 1.0f, 1.0f);*/
+
+    materialResourceSprite->enableLighting = false;
 
     // Sprite用のtransformmatrix用のリソースを作る
     ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
@@ -1117,7 +1148,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     std::cosf(lat) * std::sinf(lon),
                     1.0f },
                 { float(lonIndex) / float(kSubdivision),
-                    1.0f - float(latIndex) / float(kSubdivision) }
+                    1.0f - float(latIndex) / float(kSubdivision) },
+                {
+                    a.normal.x = a.position.x,
+                    a.normal.y = a.position.y,
+                    a.normal.z = a.position.y,
+                }
             };
             VertexData b = {
                 { std::cosf(lat + KLatEvery) * std::cosf(lon),
@@ -1125,8 +1161,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     std::cosf(lat + KLatEvery) * std::sinf(lon),
                     1.0f },
                 { float(lonIndex) / float(kSubdivision),
-                    1.0f - float(latIndex + 1.0f) / float(kSubdivision)
-
+                    1.0f - float(latIndex + 1.0f) / float(kSubdivision) },
+                {
+                    b.normal.x = b.position.x,
+                    b.normal.y = b.position.y,
+                    b.normal.z = b.position.y,
                 }
             };
             VertexData c = {
@@ -1135,8 +1174,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     std::cosf(lat) * std::sinf(lon + kLonEvery),
                     1.0f },
                 { float(lonIndex + 1.0f) / float(kSubdivision),
-                    1.0f - float(latIndex) / float(kSubdivision)
-
+                    1.0f - float(latIndex) / float(kSubdivision) },
+                {
+                    c.normal.x = c.position.x,
+                    c.normal.y = c.position.y,
+                    c.normal.z = c.position.y,
                 }
             };
             VertexData d = {
@@ -1145,7 +1187,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
                     1.0f },
                 { float(lonIndex + 1.0f) / float(kSubdivision),
-                    1.0f - float(latIndex + 1.0f) / float(kSubdivision) }
+                    1.0f - float(latIndex + 1.0f) / float(kSubdivision) },
+                {
+                    d.normal.x = d.position.x,
+                    d.normal.y = d.position.y,
+                    d.normal.z = d.position.y,
+                }
             };
 
             uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;

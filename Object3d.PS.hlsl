@@ -3,6 +3,7 @@
 struct Material
 {
     float32_t4 coler;
+    int32_t enableLighting;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);
