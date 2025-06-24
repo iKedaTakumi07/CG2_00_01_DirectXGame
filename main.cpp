@@ -936,14 +936,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     vertexData[5].texcoord = { 1.0f, 1.0f };
 
     // マテリアル用のリソースを作る
-    ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
+    ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Material));
     // マテリアルにデータを書き込む
-    Vector4* materialData = nullptr;
+    Material* materialData = nullptr;
     // 書き込むためのアドレスを取得
     materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
     // 今回は赤を書き込んでみる
-    *materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
     // wvp用のリソースを作る
     ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
@@ -1231,14 +1231,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 動かす用のtransform
     Transform transformsphere { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
 
+    // Sprite用のマテリアルリソースを作る
+    ID3D12Resource* materialResourcesphere = CreateBufferResource(device, sizeof(Material));
+
+    Material* materialDatasphere = nullptr;
+
+    // mapして書き込み
+    materialResourcesphere->Map(0, nullptr, reinterpret_cast<void**>(&materialDatasphere));
+
+    // 今回は白を書き込んでみる
+    materialDatasphere->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
     // 切り替えフラグ
     bool useMonsterBall = true;
 
     // デフォルト値
-  /*  DirectionalLight* directionalLightData = nullptr;
-    directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-    directionalLightData->intensity = 1.0f;*/
+    /*  DirectionalLight* directionalLightData = nullptr;
+      directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+      directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+      directionalLightData->intensity = 1.0f;*/
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
@@ -1254,7 +1265,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::NewFrame();
 
             ImGui::Begin("MaterialColor");
-            ImGui::ColorEdit4("Color", &(*materialData).x);
+            ImGui::ColorEdit4("Color", &(materialData->color).x);
             ImGui::End();
 
             ImGui::Begin("sphere");
@@ -1263,18 +1274,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::Checkbox("useMonsterBall", &useMonsterBall);
             ImGui::End();
 
-          /*  ImGui::Begin("DirectionalLight");
-            ImGui::SliderFloat4("color", &directionalLightData->color.x, -20.0f, 20.0f);
-            ImGui::SliderFloat3("direction", &directionalLightData->direction.x, -4.0f, 4.0f);
-            ImGui::End();*/
+            /*  ImGui::Begin("DirectionalLight");
+              ImGui::SliderFloat4("color", &directionalLightData->color.x, -20.0f, 20.0f);
+              ImGui::SliderFloat3("direction", &directionalLightData->direction.x, -4.0f, 4.0f);
+              ImGui::End();*/
 
             // update
 
             // imguiのUI
-           /* ImGui::ShowDemoWindow();*/
+            /* ImGui::ShowDemoWindow();*/
 
             transform.rotate.y += 0.01f;
-            transformsphere.rotate.y += 1.0f/60.0f;
+            transformsphere.rotate.y += 1.0f / 60.0f;
 
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
@@ -1345,12 +1356,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
             // 描画
             /*commandList->DrawInstanced(6, 1, 0, 0);*/
-
             // 球
+            commandList->SetGraphicsRootConstantBufferView(0, materialResourcesphere->GetGPUVirtualAddress());
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewsphere);
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourcesphere->GetGPUVirtualAddress());
             commandList->DrawInstanced(sphervertexNum, 1, 0, 0);
 
+            commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
             commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
             // Spriteの描画
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
