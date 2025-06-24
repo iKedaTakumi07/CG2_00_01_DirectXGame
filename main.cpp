@@ -1235,10 +1235,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     bool useMonsterBall = true;
 
     // デフォルト値
-    DirectionalLight* directionalLightData;
+  /*  DirectionalLight* directionalLightData = nullptr;
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-    directionalLightData->intensity = 1.0f;
+    directionalLightData->intensity = 1.0f;*/
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
@@ -1259,22 +1259,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             ImGui::Begin("sphere");
             ImGui::SliderFloat3("translate", &transformsphere.translate.x, -20.0f, 20.0f);
-            ImGui::SliderFloat3("rotate", &transformsphere.rotate.x, -4.0f, 4.0f);
+            ImGui::SliderFloat3("rotate", &transformsphere.rotate.x, -10.0f, 10.0f);
             ImGui::Checkbox("useMonsterBall", &useMonsterBall);
             ImGui::End();
 
-            ImGui::Begin("DirectionalLight");
+          /*  ImGui::Begin("DirectionalLight");
             ImGui::SliderFloat4("color", &directionalLightData->color.x, -20.0f, 20.0f);
             ImGui::SliderFloat3("direction", &directionalLightData->direction.x, -4.0f, 4.0f);
-            ImGui::End();
+            ImGui::End();*/
 
             // update
 
             // imguiのUI
-            ImGui::ShowDemoWindow();
+           /* ImGui::ShowDemoWindow();*/
 
             transform.rotate.y += 0.01f;
-            transformsphere.rotate.y += 0.01f;
+            transformsphere.rotate.y += 1.0f/60.0f;
 
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
