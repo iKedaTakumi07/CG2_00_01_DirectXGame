@@ -956,6 +956,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     transformationMatrixData->WVP = MakeIdentity4x4();
     transformationMatrixData->world = MakeIdentity4x4();
 
+    // 平行光源
+    ID3D12Resource* directionalLightMatrixResource = CreateBufferResource(device, sizeof(DirectionalLight));
+    // データを書き込み
+    DirectionalLight* directionalLightData = nullptr;
+    // アドレスを取得
+    directionalLightMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+    // 書き込み
+    directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+    directionalLightData->intensity = 1.0f;
+
     // びゅーポート
     D3D12_VIEWPORT viewport {};
     // クライアント領域のサイズと一緒にして画面全体に表示
@@ -1122,6 +1133,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     transformationMatrixDataSprite->WVP = MakeIdentity4x4();
     transformationMatrixDataSprite->world = MakeIdentity4x4();
 
+    // 平行光源
+    ID3D12Resource* directionalLightMatrixResourceSprite = CreateBufferResource(device, sizeof(DirectionalLight));
+    // データを書き込み
+    DirectionalLight* directionalLightDataSprite = nullptr;
+    // アドレスを取得
+    directionalLightMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightDataSprite));
+    // 書き込み
+    directionalLightDataSprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    directionalLightDataSprite->direction = { 0.0f, -1.0f, 0.0f };
+    directionalLightDataSprite->intensity = 1.0f;
+
     // 動かす用のtransform
     Transform transformSprite { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
 
@@ -1242,20 +1264,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     // mapして書き込み
     materialResourcesphere->Map(0, nullptr, reinterpret_cast<void**>(&materialDatasphere));
-
     // 今回は白を書き込んでみる
     materialDatasphere->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
     materialDatasphere->enableLighting = true;
 
+    // 平行光源
+    ID3D12Resource* directionalLightMatrixResourcesphere = CreateBufferResource(device, sizeof(DirectionalLight));
+    // データを書き込み
+    DirectionalLight* directionalLightDatasphere = nullptr;
+    // アドレスを取得
+    directionalLightMatrixResourcesphere->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightDatasphere));
+    // 書き込み
+    directionalLightDatasphere->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    directionalLightDatasphere->direction = { 0.0f, -1.0f, 0.0f };
+    directionalLightDatasphere->intensity = 1.0f;
+
     // 切り替えフラグ
     bool useMonsterBall = true;
-
-    // デフォルト値
-    DirectionalLight directionalLightData;
-    directionalLightData.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData.direction = { 0.0f, -1.0f, 0.0f };
-    directionalLightData.intensity = 1.0f;
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
@@ -1281,8 +1307,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::End();
 
             ImGui::Begin("DirectionalLight");
-            ImGui::SliderFloat4("color", &directionalLightData.color.x, -20.0f, 20.0f);
-            ImGui::SliderFloat3("direction", &directionalLightData.direction.x, -4.0f, 4.0f);
+            ImGui::SliderFloat4("color", &directionalLightDatasphere->color.x, -20.0f, 20.0f);
+            ImGui::SliderFloat3("direction", &directionalLightDatasphere->direction.x, -4.0f, 4.0f);
             ImGui::End();
 
             // update
@@ -1361,6 +1387,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
             // wvp用のCBufferの場所を設定
             commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+            commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
             // SRV
             commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
             // 描画
@@ -1368,17 +1395,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             // 球
 
-            commandList->SetGraphicsRootConstantBufferView(0, materialResourcesphere->GetGPUVirtualAddress());
+            // Spriteの描画
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewsphere);
+            // transformationMatrixCBufferの場所を設置
+            commandList->SetGraphicsRootConstantBufferView(0, materialResourcesphere->GetGPUVirtualAddress());
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourcesphere->GetGPUVirtualAddress());
+            commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourcesphere->GetGPUVirtualAddress());
             commandList->DrawInstanced(sphervertexNum, 1, 0, 0);
 
+            /*sprit*/
+
             commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+            commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourceSprite->GetGPUVirtualAddress());
             commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
             // Spriteの描画
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
             // transformationMatrixCBufferの場所を設置
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+
             // 描画
             commandList->DrawInstanced(6, 1, 0, 0);
 
@@ -1458,7 +1492,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     rootSignature->Release();
     pixeShaderBlob->Release();
     vertexShaderBlob->Release();
-    materialResource->Release();
     wvpResource->Release();
     srvDescriptorHeap->Release();
 
@@ -1470,13 +1503,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     dsvDescriptorHeap->Release();
     depthStencilResource->Release();
+    materialResource->Release();
+    directionalLightMatrixResource->Release();
 
     vertexResourceSprite->Release();
     transformationMatrixResourceSprite->Release();
     materialResourceSprite->Release();
+    directionalLightMatrixResourceSprite->Release();
 
     vertexResourcesphere->Release();
     transformationMatrixResourcesphere->Release();
+    materialResourcesphere->Release();
+    directionalLightMatrixResourcesphere->Release();
 
 #ifdef _DEBUG
     debugController->Release();
