@@ -241,6 +241,17 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
     return num;
 }
 
+// 正規化
+Vector3 Normalize(const Vector3& v)
+{
+    float Normalize;
+    Vector3 num;
+    Normalize = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    num.x = v.x / Normalize;
+    num.y = v.y / Normalize;
+    num.z = v.z / Normalize;
+    return num;
+}
 // CrashHandler
 
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* excption)
@@ -1308,7 +1319,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             ImGui::Begin("DirectionalLight");
             ImGui::SliderFloat4("color", &directionalLightDatasphere->color.x, -20.0f, 20.0f);
-            ImGui::SliderFloat3("direction", &directionalLightDatasphere->direction.x, -4.0f, 4.0f);
+            ImGui::SliderFloat3("direction", &directionalLightDatasphere->direction.x, -1.0f, 1.0f);
             ImGui::End();
 
             // update
@@ -1328,6 +1339,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             transformationMatrixData->WVP = worldViewProjectionMatrix;
             transformationMatrixData->world = worldMatrix;
 
+            directionalLightData->direction = Normalize(directionalLightData->direction);
+
             // sprite用
             Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
             Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
@@ -1336,12 +1349,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
             transformationMatrixDataSprite->world = worldMatrixSprite;
 
+            directionalLightDataSprite->direction = Normalize(directionalLightDataSprite->direction);
+
             // 球体
             Matrix4x4 worldMatrixsphere = MakeAffineMatrix(transformsphere.scale, transformsphere.rotate, transformsphere.translate);
             Matrix4x4 projectionMatrixsphere = MakePrespectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
             Matrix4x4 worldViewProjectionMatrixsphere = Mulyiply(worldMatrixsphere, Mulyiply(viewMatrix, projectionMatrixsphere));
             transformationMatrixDatasphere->WVP = worldViewProjectionMatrixsphere;
             transformationMatrixDatasphere->world = worldMatrixsphere;
+
+            directionalLightDatasphere->direction = Normalize(directionalLightDatasphere->direction);
 
             // draw
             ImGui::Render();

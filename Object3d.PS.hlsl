@@ -34,8 +34,11 @@ PixelShaderOutput main(VertexShaderOutput input)
    
     if (gMaterial.enableLighting != 0)
     {
+         // half lambert
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+        
+        
         output.color = gMaterial.coler * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
     }
     else
