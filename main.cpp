@@ -1431,7 +1431,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
             // 描画
-            commandList->DrawInstanced(6, 1, 0, 0);
+           /* commandList->DrawInstanced(6, 1, 0, 0);*/
 
             // 実際のcommandListのImGuiの描画コマンドを詰む
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
