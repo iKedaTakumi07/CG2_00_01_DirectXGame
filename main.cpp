@@ -1088,14 +1088,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
     // Sprite用の頂点リソースを作る
-    ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
+    ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 4);
 
     // 頂点バッファビューを作る
     D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite {};
     // リソースの先端のアドレスから使う
     vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
     // 使用するサイズ
-    vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
+    vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 4;
     // 1ツ当たりのサイズ
     vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
 
@@ -1111,16 +1111,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
     vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
     vertexDataSprite[2].normal = { 0.0f, 0.0f, 1.0f };
-    // 2枚目
-    vertexDataSprite[3].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[3].texcoord = { 0.0f, 0.0f };
+    vertexDataSprite[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };
+    vertexDataSprite[3].texcoord = { 1.0f, 0.0f };
     vertexDataSprite[3].normal = { 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[4].position = { 640.0f, 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[4].texcoord = { 1.0f, 0.0f };
-    vertexDataSprite[4].normal = { 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[5].position = { 640.0f, 360.0f, 0.0f, 1.0f };
-    vertexDataSprite[5].texcoord = { 1.0f, 1.0f };
-    vertexDataSprite[5].normal = { 0.0f, 0.0f, 1.0f };
+
+    // インデックスリソースにデータを書き込む
+    ID3D12Resource* indexResourceSprite = CreateBufferResource(device, sizeof(uint32_t) * 6);
+
+    D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite {};
+    // リソースの先頭のアドレスから使う
+    indexBufferViewSprite.BufferLocation = indexResourceSprite->GetGPUVirtualAddress();
+    // 使用するリソースのサイズはインデックス6つ分のサイズ
+    indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+    // インデックスはuint32_Tとする
+    indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
+
+    uint32_t* indexDataSprite = nullptr;
+    indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+    indexDataSprite[0] = 0;
+    indexDataSprite[1] = 1;
+    indexDataSprite[2] = 2;
+    indexDataSprite[3] = 1;
+    indexDataSprite[4] = 3;
+    indexDataSprite[5] = 2;
 
     // Sprite用のマテリアルリソースを作る
     ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
@@ -1429,9 +1442,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
             // transformationMatrixCBufferの場所を設置
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+            commandList->IASetIndexBuffer(&indexBufferViewSprite);
 
             // 描画
-           /* commandList->DrawInstanced(6, 1, 0, 0);*/
+            commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
             // 実際のcommandListのImGuiの描画コマンドを詰む
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1527,6 +1541,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     transformationMatrixResourceSprite->Release();
     materialResourceSprite->Release();
     directionalLightMatrixResourceSprite->Release();
+    indexResourceSprite->Release();
 
     vertexResourcesphere->Release();
     transformationMatrixResourcesphere->Release();
