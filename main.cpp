@@ -1176,8 +1176,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     //
 
     const uint32_t kSubdivision = 16;
-    // 級の頂点崇
-    const uint32_t sphervertexNum = kSubdivision * kSubdivision * 6;
+    // 球の頂点数
+    const uint32_t sphervertexNum = (kSubdivision + 1) * (kSubdivision + 1);
+    const uint32_t spherindexNum = kSubdivision * kSubdivision * 6;
 
     // 頂点場合はびゅーを作成する
     ID3D12Resource* vertexResourcesphere = CreateBufferResource(device, sizeof(VertexData) * sphervertexNum);
@@ -1195,12 +1196,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 書き込むためのアドレス獲得
     vertexResourcesphere->Map(0, nullptr, reinterpret_cast<void**>(&vertexDatasphere));
 
+    // インデックスリソースにデータを書き込む
+    ID3D12Resource* indexResourcesphere = CreateBufferResource(device, sizeof(uint32_t) * spherindexNum);
+
+    D3D12_INDEX_BUFFER_VIEW indexBufferViewsphere {};
+    // リソースの先頭のアドレスから使う
+    indexBufferViewsphere.BufferLocation = indexResourcesphere->GetGPUVirtualAddress();
+    // 使用するリソースのサイズはインデックス6つ分のサイズ
+    indexBufferViewsphere.SizeInBytes = sizeof(uint32_t) * spherindexNum;
+    // インデックスはuint32_Tとする
+    indexBufferViewsphere.Format = DXGI_FORMAT_R32_UINT;
+
+    uint32_t* indexDatasphere = nullptr;
+    indexResourcesphere->Map(0, nullptr, reinterpret_cast<void**>(&indexDatasphere));
+
     const float kLonEvery = 2.0f * std::numbers::pi_v<float> / (float)kSubdivision;
     const float KLatEvery = std::numbers::pi_v<float> / (float)kSubdivision;
 
-    for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+    for (uint32_t latIndex = 0; latIndex < (kSubdivision + 1); ++latIndex) {
         float lat = -std::numbers::pi_v<float> / 2.0f + KLatEvery * float(latIndex);
-        for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+        for (uint32_t lonIndex = 0; lonIndex < (kSubdivision + 1); ++lonIndex) {
             float lon = lonIndex * float(kLonEvery);
 
             //  計算
@@ -1217,55 +1232,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     std::cosf(lat) * std::sinf(lon),
                 }
             };
-            VertexData b = {
-                { std::cosf(lat + KLatEvery) * std::cosf(lon),
-                    std::sinf(lat + KLatEvery),
-                    std::cosf(lat + KLatEvery) * std::sinf(lon),
-                    1.0f },
-                { float(lonIndex) / float(kSubdivision),
-                    1.0f - float(latIndex + 1.0f) / float(kSubdivision) },
-                {
-                    std::cosf(lat + KLatEvery) * std::cosf(lon),
-                    std::sinf(lat + KLatEvery),
-                    std::cosf(lat + KLatEvery) * std::sinf(lon),
-                }
-            };
-            VertexData c = {
-                { std::cosf(lat) * std::cosf(lon + kLonEvery),
-                    std::sinf(lat),
-                    std::cosf(lat) * std::sinf(lon + kLonEvery),
-                    1.0f },
-                { float(lonIndex + 1.0f) / float(kSubdivision),
-                    1.0f - float(latIndex) / float(kSubdivision) },
-                {
-                    std::cosf(lat) * std::cosf(lon + kLonEvery),
-                    std::sinf(lat),
-                    std::cosf(lat) * std::sinf(lon + kLonEvery),
-                }
-            };
-            VertexData d = {
-                { std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
-                    std::sinf(lat + KLatEvery),
-                    std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
-                    1.0f },
-                { float(lonIndex + 1.0f) / float(kSubdivision),
-                    1.0f - float(latIndex + 1.0f) / float(kSubdivision) },
-                {
-                    std::cosf(lat + KLatEvery) * std::cosf(lon + kLonEvery),
-                    std::sinf(lat + KLatEvery),
-                    std::cosf(lat + KLatEvery) * std::sinf(lon + kLonEvery),
-                }
-            };
 
-            uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+            uint32_t start = (latIndex * (kSubdivision + 1) + lonIndex);
+            vertexDatasphere[start] = a;
+        }
+    }
 
-            vertexDatasphere[start + 0] = a;
-            vertexDatasphere[start + 1] = b;
-            vertexDatasphere[start + 2] = c;
+    for (uint32_t lat = 0; lat < kSubdivision; ++lat) {
+        for (uint32_t lon = 0; lon < kSubdivision; ++lon) {
 
-            vertexDatasphere[start + 3] = c;
-            vertexDatasphere[start + 4] = b;
-            vertexDatasphere[start + 5] = d;
+            uint32_t lt = lon + lat * (kSubdivision + 1);
+            uint32_t rt = (lon + 1) + lat * (kSubdivision + 1);
+            uint32_t lb = lon + (lat + 1) * (kSubdivision + 1);
+            uint32_t rb = (lon + 1) + (lat + 1) * (kSubdivision + 1);
+
+            uint32_t start = (lat * kSubdivision + lon) * 6;
+
+            indexDatasphere[start + 0] = lb;
+            indexDatasphere[start + 1] = lt;
+            indexDatasphere[start + 2] = rb;
+            indexDatasphere[start + 3] = lt;
+            indexDatasphere[start + 4] = rt;
+            indexDatasphere[start + 5] = rb;
         }
     }
 
@@ -1340,8 +1328,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // imguiのUI
             /* ImGui::ShowDemoWindow();*/
 
-            transform.rotate.y += 0.01f;
-            transformsphere.rotate.y += 1.0f / 60.0f;
+            /*transform.rotate.y += 0.01f;*/
+            /*transformsphere.rotate.y += 1.0f / 60.0f;*/
 
             Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
             Matrix4x4 cameraMatrix = MakeAffineMatrix(cameratransform.scale, cameratransform.rotate, cameratransform.translate);
@@ -1425,13 +1413,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             // 球
 
-            // Spriteの描画
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewsphere);
             // transformationMatrixCBufferの場所を設置
             commandList->SetGraphicsRootConstantBufferView(0, materialResourcesphere->GetGPUVirtualAddress());
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourcesphere->GetGPUVirtualAddress());
             commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourcesphere->GetGPUVirtualAddress());
-            commandList->DrawInstanced(sphervertexNum, 1, 0, 0);
+            commandList->IASetIndexBuffer(&indexBufferViewsphere);
+            commandList->DrawIndexedInstanced(spherindexNum, 1, 0, 0, 0);
 
             /*sprit*/
 
@@ -1445,7 +1433,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             commandList->IASetIndexBuffer(&indexBufferViewSprite);
 
             // 描画
-            commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+            /*commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);*/
 
             // 実際のcommandListのImGuiの描画コマンドを詰む
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1547,6 +1535,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     transformationMatrixResourcesphere->Release();
     materialResourcesphere->Release();
     directionalLightMatrixResourcesphere->Release();
+    indexResourcesphere->Release();
 
 #ifdef _DEBUG
     debugController->Release();
