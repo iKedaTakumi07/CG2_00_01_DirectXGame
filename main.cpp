@@ -58,6 +58,8 @@ struct VertexData {
 struct Material {
     Vector4 color;
     int32_t enableLighting;
+    float padding[3];
+    Matrix4x4 uvTransform;
 };
 struct TransformationMatrix {
     Matrix4x4 WVP;
@@ -103,7 +105,19 @@ Matrix4x4 MakeRotateZMatrix(float radian)
         0, 0, 0, 1 };
     return num;
 }
+Matrix4x4 MakeScaleMatrix(const Vector3& scale)
+{
 
+    Matrix4x4 result { scale.x, 0.0f, 0.0f, 0.0f, 0.0f, scale.y, 0.0f, 0.0f, 0.0f, 0.0f, scale.z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+
+    return result;
+}
+Matrix4x4 MakeTranslateMatrix(const Vector3& translate)
+{
+    Matrix4x4 result { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, translate.x, translate.y, translate.z, 1.0f };
+
+    return result;
+}
 Matrix4x4 Mulyiply(const Matrix4x4& m1, const Matrix4x4& m2)
 {
     Matrix4x4 num;
@@ -956,6 +970,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 今回は赤を書き込んでみる
     materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     materialData->enableLighting = false;
+    materialData->uvTransform = MakeIdentity4x4();
 
     // wvp用のリソースを作る
     ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -1146,9 +1161,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
     materialDataSprite->enableLighting = false;
+    materialDataSprite->uvTransform = MakeIdentity4x4();
+
+    Transform uvTransformSprite {
+        { 1.0f, 1.0f, 1.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+    };
 
     // Sprite用のtransformmatrix用のリソースを作る
-    ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
+    ID3D12Resource* transformationMatrixResourceSprite
+        = CreateBufferResource(device, sizeof(TransformationMatrix));
     // データを書き込む
     TransformationMatrix* transformationMatrixDataSprite = nullptr;
     // 書き込むためのアドレス取得
@@ -1281,6 +1304,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     materialDatasphere->enableLighting = true;
 
+    materialDatasphere->uvTransform = MakeIdentity4x4();
+
     // 平行光源
     ID3D12Resource* directionalLightMatrixResourcesphere = CreateBufferResource(device, sizeof(DirectionalLight));
     // データを書き込み
@@ -1316,6 +1341,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::SliderFloat3("translate", &transformsphere.translate.x, -20.0f, 20.0f);
             ImGui::SliderFloat3("rotate", &transformsphere.rotate.x, -10.0f, 10.0f);
             ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+            ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+            ImGui::DragFloat2("UVscale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+            ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
             ImGui::End();
 
             ImGui::Begin("DirectionalLight");
@@ -1349,6 +1377,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             Matrix4x4 worldViewProjectionMatrixSprite = Mulyiply(worldMatrixSprite, Mulyiply(viewMatrixSprite, projectionMatrixSprite));
             transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
             transformationMatrixDataSprite->world = worldMatrixSprite;
+
+            Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+            uvTransformMatrix = Mulyiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+            uvTransformMatrix = Mulyiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+            materialDataSprite->uvTransform = uvTransformMatrix;
 
             directionalLightDataSprite->direction = Normalize(directionalLightDataSprite->direction);
 
@@ -1433,7 +1466,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             commandList->IASetIndexBuffer(&indexBufferViewSprite);
 
             // 描画
-            /*commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);*/
+            commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
             // 実際のcommandListのImGuiの描画コマンドを詰む
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
