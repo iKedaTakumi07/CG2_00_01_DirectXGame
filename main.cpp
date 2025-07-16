@@ -73,6 +73,10 @@ struct DirectionalLight {
 };
 struct ModelData {
     std::vector<VertexData> vertices;
+    MaterialData material;
+};
+struct MaterialData {
+    std::string textureFilePath;
 };
 
 Matrix4x4 MakeIdentity4x4()
@@ -365,6 +369,9 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
             normals.push_back(normal);
         } else if (identifier == "f") {
             // 面は三角形限定,その他未対応
+
+            VertexData triangle[3];
+
             for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
                 std::string vertexDefinition;
                 s >> vertexDefinition;
@@ -382,11 +389,44 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
                 Vector3 normal = normals[elementIndeices[2] - 1];
                 VertexData vertex = { position, texcoord, normal };
                 modelData.vertices.push_back(vertex);
+
+                triangle[faceVertex] = { position, texcoord, normal };
             }
+            // 頂点を逆順で登録することで、周り順を逆にする
+            modelData.vertices.push_back(triangle[2]);
+            modelData.vertices.push_back(triangle[1]);
+            modelData.vertices.push_back(triangle[0]);
+        } else if (identifier == "mtllib") {
+        // materialTemplateLibraryファイルの名前を取得する
+            std::string;
         }
+       
     }
 
     return modelData;
+}
+
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+{
+    MaterialData materialData; // 構築するMaterialData
+    std::string line; // ファイルから読み込んだ1行を格納するもの
+    std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+    assert(file.is_open()); // 開けられないなら止める
+
+    while (std::getline(file, line)) {
+        std::string identifier;
+        std::istringstream s(line);
+        s >> identifier;
+
+        // identfierに応じた処理
+        if (identifier == "map_kd") {
+            std::string textureFilename;
+            s >> textureFilename;
+            // 連結してファイルパスにする
+            materialData.textureFilePath = directoryPath + "/" + textureFilename;
+        }
+    }
+    return materialData;
 }
 
 // ウィンドウプロ―ジャ
