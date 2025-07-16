@@ -71,12 +71,12 @@ struct DirectionalLight {
     Vector3 direction;
     float intensity;
 };
+struct MaterialData {
+    std::string textureFilePath;
+};
 struct ModelData {
     std::vector<VertexData> vertices;
     MaterialData material;
-};
-struct MaterialData {
-    std::string textureFilePath;
 };
 
 Matrix4x4 MakeIdentity4x4()
@@ -336,6 +336,45 @@ void Log(std::ostream& os, const std::string& message)
     OutputDebugStringA(message.c_str());
 }
 
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+{
+    MaterialData materialData; // 構築するMaterialData
+    std::string line; // ファイルから読み込んだ1行を格納するもの
+    std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+    assert(file.is_open()); // 開けられないなら止める
+
+    while (std::getline(file, line)) {
+        std::string identifier;
+        std::istringstream s(line);
+        s >> identifier;
+
+        // identfierに応じた処理
+        if (identifier == "map_kd") {
+            std::string textureFilename;
+            s >> textureFilename;
+            // 連結してファイルパスにする
+            materialData.textureFilePath = directoryPath + "/" + textureFilename;
+        }
+    }
+    return materialData;
+}
+
+DirectX::ScratchImage LoadTexture(const std::string& filePath)
+{
+    // テクスチャファイルを読み込んでプログラムで使えるようにする
+    DirectX::ScratchImage image {};
+    std::wstring filePathW = ConvertString(filePath);
+    HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    assert(SUCCEEDED(hr));
+
+    // ミップマップの作成
+    DirectX::ScratchImage mipImages {};
+    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+
+    // ミップマップ月のデータを返す
+    return mipImages;
+}
+
 ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
     ModelData modelData; // 構築するmodeldata
@@ -387,8 +426,14 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
                 Vector4 position = positions[elementIndeices[0] - 1];
                 Vector2 texcoord = texcoords[elementIndeices[1] - 1];
                 Vector3 normal = normals[elementIndeices[2] - 1];
-                VertexData vertex = { position, texcoord, normal };
-                modelData.vertices.push_back(vertex);
+
+                // 位置の反転&法線の反転&左下原点
+               /* position.x *= -1.0f;*/
+                texcoord.y = 1.0f - texcoord.y;
+                normal.x *= -1.0f;
+
+               /* VertexData vertex = { position, texcoord, normal };
+                modelData.vertices.push_back(vertex);*/
 
                 triangle[faceVertex] = { position, texcoord, normal };
             }
@@ -397,36 +442,17 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
             modelData.vertices.push_back(triangle[1]);
             modelData.vertices.push_back(triangle[0]);
         } else if (identifier == "mtllib") {
-        // materialTemplateLibraryファイルの名前を取得する
-            std::string;
+            // materialTemplateLibraryファイルの名前を取得する
+            std::string materialFilename;
+            s >> materialFilename;
+            // 基本的のobjファイルと同一階級にmtlは存在させるので,ディレクトリ名とファイル名を返す
+            modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+
+           
         }
-       
     }
 
     return modelData;
-}
-
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
-{
-    MaterialData materialData; // 構築するMaterialData
-    std::string line; // ファイルから読み込んだ1行を格納するもの
-    std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
-    assert(file.is_open()); // 開けられないなら止める
-
-    while (std::getline(file, line)) {
-        std::string identifier;
-        std::istringstream s(line);
-        s >> identifier;
-
-        // identfierに応じた処理
-        if (identifier == "map_kd") {
-            std::string textureFilename;
-            s >> textureFilename;
-            // 連結してファイルパスにする
-            materialData.textureFilePath = directoryPath + "/" + textureFilename;
-        }
-    }
-    return materialData;
 }
 
 // ウィンドウプロ―ジャ
@@ -533,22 +559,6 @@ IDxcBlob* CompileShader(
     // 実験用のバイナリを返却
     return shaderBlob;
 };
-
-DirectX::ScratchImage LoadTexture(const std::string& filePath)
-{
-    // テクスチャファイルを読み込んでプログラムで使えるようにする
-    DirectX::ScratchImage image {};
-    std::wstring filePathW = ConvertString(filePath);
-    HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-    assert(SUCCEEDED(hr));
-
-    // ミップマップの作成
-    DirectX::ScratchImage mipImages {};
-    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-
-    // ミップマップ月のデータを返す
-    return mipImages;
-}
 
 ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata)
 {
