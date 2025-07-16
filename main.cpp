@@ -349,7 +349,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
         s >> identifier;
 
         // identfierに応じた処理
-        if (identifier == "map_kd") {
+        if (identifier == "map_Kd") {
             std::string textureFilename;
             s >> textureFilename;
             // 連結してファイルパスにする
@@ -428,12 +428,12 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
                 Vector3 normal = normals[elementIndeices[2] - 1];
 
                 // 位置の反転&法線の反転&左下原点
-               /* position.x *= -1.0f;*/
+                position.x *= -1.0f;
                 texcoord.y = 1.0f - texcoord.y;
                 normal.x *= -1.0f;
 
-               /* VertexData vertex = { position, texcoord, normal };
-                modelData.vertices.push_back(vertex);*/
+                /* VertexData vertex = { position, texcoord, normal };
+                 modelData.vertices.push_back(vertex);*/
 
                 triangle[faceVertex] = { position, texcoord, normal };
             }
@@ -447,8 +447,6 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
             s >> materialFilename;
             // 基本的のobjファイルと同一階級にmtlは存在させるので,ディレクトリ名とファイル名を返す
             modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
-
-           
         }
     }
 
@@ -1183,6 +1181,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, desriptorSizeSRV, 2);
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, desriptorSizeSRV, 2);
 
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU3 = GetCPUDescriptorHandle(srvDescriptorHeap, desriptorSizeSRV, 3);
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU3 = GetGPUDescriptorHandle(srvDescriptorHeap, desriptorSizeSRV, 3);
+
     // SRVの生成
     device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
@@ -1429,7 +1430,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     /// ==============================================================================================================
 
     // モデル読み込み
-    ModelData model = LoadObjFile("resources", "plane.obj");
+    ModelData model = LoadObjFile("resources", "axis.obj");
+
+    // 画像読み込み
+    DirectX::ScratchImage mip2 = LoadTexture(model.material.textureFilePath);
+    const DirectX::TexMetadata& metadata3 = mip2.GetMetadata();
+    ID3D12Resource* textureResource3 = CreateTextureResource(device, metadata3);
+    ID3D12Resource* intermediateResource3 = UploadTextureData(textureResource3, mip2, device, commandList);
+
+    // 3枚目metaDataを基にSRVの設定
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc3 {};
+    srvDesc3.Format = metadata3.format;
+    srvDesc3.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc3.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc3.Texture2D.MipLevels = UINT(metadata3.mipLevels);
+
+    device->CreateShaderResourceView(textureResource3, &srvDesc3, textureSrvHandleCPU3);
 
     // 頂点リソースを作成
     ID3D12Resource* vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * model.vertices.size());
@@ -1644,7 +1660,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             // commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
             // commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourceSprite->GetGPUVirtualAddress());
-            commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+            /* commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);*/
             //// Spriteの描画
             // commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
             //// transformationMatrixCBufferの場所を設置
@@ -1658,6 +1674,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // モデルデータ
             //
 
+            commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU3);
             commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
             commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
             commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
@@ -1746,9 +1763,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     textureResource->Release();
     textureResource2->Release();
+    textureResource3->Release();
 
     intermediateResource->Release();
     intermediateResource2->Release();
+    intermediateResource3->Release();
 
     dsvDescriptorHeap->Release();
     depthStencilResource->Release();
