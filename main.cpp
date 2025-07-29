@@ -491,7 +491,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 
 SoundData SoundLoadWave(const char* filename)
 {
-    HRESULT result;
+    
     // ファイル入力ストリームのインスタンス
     std::ifstream file;
     // .wavファイルをバイナリモードで開く
@@ -564,7 +564,26 @@ void SoundUhload(SoundData* soundData)
     soundData->wfex = {};
 }
 
-void SoundPlayWave() { }
+void SoundPlayWave(IXAudio2* xAudio2,const SoundData& soundData) {
+    HRESULT result;
+
+    // 波形フォーマットを元にSoundVoiceの生成
+    IXAudio2SourceVoice* pSourceVoice = nullptr;
+    result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+    assert(SUCCEEDED(result));
+
+    // 再生する波形データの設定
+    XAUDIO2_BUFFER buf {};
+    buf.pAudioData = soundData.pBuffer;
+    buf.AudioBytes = soundData.bufferSize;
+    buf.Flags = XAUDIO2_END_OF_STREAM;
+
+    // 波形データの再生
+    result = pSourceVoice->SubmitSourceBuffer(&buf);
+    result = pSourceVoice->Start();
+}
+
+
 
 // ウィンドウプロ―ジャ
 LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
