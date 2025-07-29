@@ -1,8 +1,3 @@
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "Dbghelp.lib")
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "dxcompiler.lib")
 #include "externals/DirectXTex/d3dx12.h"
 
 #include "externals/DirectXTex/DirectXTex.h"
@@ -26,6 +21,15 @@
 #include <string>
 #include <strsafe.h>
 #include <vector>
+#include <xaudio2.h>
+
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "Dbghelp.lib")
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "dxcompiler.lib")
+#pragma comment(lib, "xaudio2.lib")
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 struct Vector2 {
@@ -89,6 +93,26 @@ struct D3DResourceLeakChecker {
             debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
         }
     }
+};
+struct ChunkHeader {
+    char id[4]; // チャンク毎のID
+    int32_t size; // チャンクサイズ
+};
+struct RiffHeader {
+    ChunkHeader chunk; // "RIFF"
+    char type[4]; // "WAVE"
+};
+struct FormatChunk {
+    ChunkHeader chunk; // "fmt"
+    WAVEFORMATEX fmt; // 波型フォーマット
+};
+struct SoundData {
+    // 波型フォーマット
+    WAVEFORMATEX wfex;
+    // バッフアの先頭アドレス
+    BYTE* pBuffer;
+    // バッフアのサイズ
+    unsigned int bufferSize;
 };
 
 Matrix4x4 MakeIdentity4x4()
@@ -464,6 +488,83 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 
     return modelData;
 }
+
+SoundData SoundLoadWave(const char* filename)
+{
+    HRESULT result;
+    // ファイル入力ストリームのインスタンス
+    std::ifstream file;
+    // .wavファイルをバイナリモードで開く
+    file.open(filename, std::ios_base::binary);
+    // ファイルオープン失敗を検出する
+    assert(file.is_open());
+
+    // RIFFヘッダーの読み込み
+    RiffHeader riff;
+    file.read((char*)&riff, sizeof(riff));
+    // ファイルがRIFFかチェック
+    if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
+        assert(0);
+    }
+    // タイプがWAVEかチェック
+    if (strncmp(riff.type, "WAVE", 4) != 0) {
+        assert(0);
+    }
+
+    // Formatチャンクの読み込み
+    FormatChunk format = {};
+    // チャンクヘッダーの確認
+    file.read((char*)&format, sizeof(ChunkHeader));
+    if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
+        assert(0);
+    }
+    // チャンク本体の読み込み
+    assert(format.chunk.size <= sizeof(format.fmt));
+    file.read((char*)&format.fmt, format.chunk.size);
+
+    // Dataチャンクの読み込み
+    ChunkHeader data;
+    file.read((char*)&data, sizeof(data));
+    // JUNKチャンクを検出した場合
+    if (strncmp(data.id, "JUNK", 4) == 0) {
+        // 読み込み位置をJUNKチャンクの終わりまで進める
+        file.seekg(data.size, std::ios_base::cur);
+        // 再度読み込み
+        file.read((char*)&data, sizeof(data));
+    }
+
+    if (strncmp(data.id, "data", 4) != 0) {
+        assert(0);
+    }
+
+    // Dataチャンクのデータ部の読み込み
+    char* pBuffer = new char[data.size];
+    file.read(pBuffer, data.size);
+
+    // waveファイルを閉じる
+    file.close();
+
+    // Returnするための音声データ
+    SoundData soundData = {};
+
+    soundData.wfex = format.fmt;
+    soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
+    soundData.bufferSize = data.size;
+
+    return soundData;
+}
+
+void SoundUhload(SoundData* soundData)
+{
+    // バッフアのメモリ解放
+    delete[] soundData->pBuffer;
+
+    soundData->pBuffer = 0;
+    soundData->bufferSize = 0;
+    soundData->wfex = {};
+}
+
+void SoundPlayWave() { }
 
 // ウィンドウプロ―ジャ
 LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -1508,6 +1609,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     transformationMatrixDataModel->world = MakeIdentity4x4();
 
     Transform transformModel { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+
+    /// ============================================================================================================
+    /// 音声データ
+    /// ============================================================================================================
+
+    Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+    IXAudio2MasteringVoice* masterVoice;
+
+    // xAudioエンジンインスタンスを生成
+    HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+    assert(SUCCEEDED(result));
+
+    result = xAudio2->CreateMasteringVoice(&masterVoice);
+    assert(SUCCEEDED(result));
 
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
