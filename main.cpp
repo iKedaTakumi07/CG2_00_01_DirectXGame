@@ -491,7 +491,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 
 SoundData SoundLoadWave(const char* filename)
 {
-    
+
     // ファイル入力ストリームのインスタンス
     std::ifstream file;
     // .wavファイルをバイナリモードで開く
@@ -564,7 +564,8 @@ void SoundUhload(SoundData* soundData)
     soundData->wfex = {};
 }
 
-void SoundPlayWave(IXAudio2* xAudio2,const SoundData& soundData) {
+void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
+{
     HRESULT result;
 
     // 波形フォーマットを元にSoundVoiceの生成
@@ -582,8 +583,6 @@ void SoundPlayWave(IXAudio2* xAudio2,const SoundData& soundData) {
     result = pSourceVoice->SubmitSourceBuffer(&buf);
     result = pSourceVoice->Start();
 }
-
-
 
 // ウィンドウプロ―ジャ
 LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -1643,6 +1642,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     result = xAudio2->CreateMasteringVoice(&masterVoice);
     assert(SUCCEEDED(result));
 
+    // 音声読み込み
+    SoundData soundData1 = SoundLoadWave("resources/fanfare.wav");
+
+    // 1度だけ→初期化の後
+    SoundPlayWave(xAudio2.Get(), soundData1);
+
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
     while (msg.message != WM_QUIT) {
@@ -1865,6 +1870,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     ImGui::DestroyContext();
 
     CloseHandle(fenceEvent);
+
+    // XAuido2解放
+    xAudio2.Reset();
+    // 音声データ解放
+    SoundUhload(&soundData1);
 
     CloseWindow(hwnd);
 
