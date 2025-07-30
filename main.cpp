@@ -1706,8 +1706,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     ImGui::SliderAngle("RotateY##Model", &transformModel.rotate.y);
                     ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
                 }
-                if (ImGui::CollapsingHeader("Light")) {
+                if (ImGui::CollapsingHeader("Light##Model")) {
                     ImGui::SliderFloat3("direction##ModelLight", &directionalLightDataModel->direction.x, -1.0f, 1.0f);
+                    ImGui::DragFloat("intensity##ModelLight", &directionalLightDataModel->intensity, 0.01f);
                     ImGui::SliderFloat4("Color##ModelLight", &directionalLightDataModel->color.x, -20.0f, 20.0f);
                     ImGui::ColorEdit4("Color##ModelLight", &(directionalLightDataModel->color).x);
                 }
@@ -1721,8 +1722,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     ImGui::ColorEdit4("Color##sphere", &(materialDatasphere->color).x);
                     ImGui::Checkbox("useMonsterBall", &useMonsterBall);
                 }
-                if (ImGui::CollapsingHeader("Light")) {
+                if (ImGui::CollapsingHeader("Light##Sphere")) {
                     ImGui::SliderFloat3("direction##SphereLight", &directionalLightDatasphere->direction.x, -1.0f, 1.0f);
+                    ImGui::DragFloat("intensity##SphereLight", &directionalLightDatasphere->intensity, 0.01f);
                     ImGui::SliderFloat4("Color##SphereLight", &directionalLightDatasphere->color.x, -20.0f, 20.0f);
                     ImGui::ColorEdit4("Color##SphereLight", &(directionalLightDatasphere->color).x);
                 }
