@@ -1661,15 +1661,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui_ImplWin32_NewFrame();
             ImGui::NewFrame();
 
-            ImGui::Begin("MaterialColor");
-            ImGui::ColorEdit4("Color", &(materialData->color).x);
-            ImGui::End();
-
-            ImGui::Begin("model");
-            ImGui::SliderFloat3("translate", &transformModel.translate.x, -10.0f, 10.0f);
-            ImGui::SliderAngle("SphereRotateX", &transformModel.rotate.x);
-            ImGui::SliderAngle("SphereRotateY", &transformModel.rotate.y);
-            ImGui::SliderAngle("SphereRotateZ", &transformModel.rotate.z);
+            ImGui::Begin("Settings");
+            if (ImGui::CollapsingHeader("Model")) {
+                ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
+                ImGui::SliderAngle("RotateX##Model", &transformModel.rotate.x);
+                ImGui::SliderAngle("RotateY##Model", &transformModel.rotate.y);
+                ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
+            }
+            if (ImGui::CollapsingHeader("Sprite")) {
+                ImGui::DragFloat3("Translate##Sprite", &transformSprite.translate.x, 0.1f);
+                ImGui::DragFloat3("Rotate##Sprite", &transformSprite.rotate.x, 0.01f);
+                ImGui::DragFloat3("Scale##Sprite", &transformSprite.scale.x, 0.01f);
+                ImGui::DragFloat2("UVTranslate##Sprite", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+                ImGui::DragFloat2("UVscale##Sprite", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+                ImGui::SliderAngle("UVRotate##Sprite", &uvTransformSprite.rotate.z);
+            }
+            if (ImGui::CollapsingHeader("Sphere")) {
+                ImGui::DragFloat3("Translate##Sphere", &transformsphere.translate.x, 0.01f);
+                ImGui::DragFloat3("Rotate##Sphere", &transformsphere.rotate.x, 0.01f);
+                ImGui::DragFloat3("Scale##Sphere", &transformsphere.scale.x, 0.01f);
+                ImGui::ColorEdit4("Color##sphere", &(materialDatasphere->color).x);
+                ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+            }
+            if (ImGui::CollapsingHeader("Light")) {
+                ImGui::SliderFloat3("direction##SphereLight", &directionalLightDatasphere->direction.x, -1.0f, 1.0f);
+                ImGui::SliderFloat4("Color##SphereLight", &directionalLightDatasphere->color.x, -20.0f, 20.0f);
+                ImGui::ColorEdit4("Color##SphereLight", &(directionalLightDatasphere->color).x);
+            }
 
             ImGui::End();
 
@@ -1779,29 +1797,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // スフィア/球
             //
 
-            // commandList->IASetVertexBuffers(0, 1, &vertexBufferViewsphere);
-            //// transformationMatrixCBufferの場所を設置
-            // commandList->SetGraphicsRootConstantBufferView(0, materialResourcesphere->GetGPUVirtualAddress());
-            // commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourcesphere->GetGPUVirtualAddress());
-            // commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourcesphere->GetGPUVirtualAddress());
-            // commandList->IASetIndexBuffer(&indexBufferViewsphere);
-            // commandList->DrawIndexedInstanced(spherindexNum, 1, 0, 0, 0);
+            commandList->IASetVertexBuffers(0, 1, &vertexBufferViewsphere);
+            // transformationMatrixCBufferの場所を設置
+            commandList->SetGraphicsRootConstantBufferView(0, materialResourcesphere->GetGPUVirtualAddress());
+            commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourcesphere->GetGPUVirtualAddress());
+            commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourcesphere->GetGPUVirtualAddress());
+            commandList->IASetIndexBuffer(&indexBufferViewsphere);
+            commandList->DrawIndexedInstanced(spherindexNum, 1, 0, 0, 0);
 
             //
             // 2d/スプライト
             //
 
-            // commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-            // commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourceSprite->GetGPUVirtualAddress());
-            /* commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);*/
-            //// Spriteの描画
-            // commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-            //// transformationMatrixCBufferの場所を設置
-            /*commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());*/
-            // commandList->IASetIndexBuffer(&indexBufferViewSprite);
+            commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+            commandList->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourceSprite->GetGPUVirtualAddress());
+            commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+            // Spriteの描画
+            commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+            // transformationMatrixCBufferの場所を設置
+            commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+            commandList->IASetIndexBuffer(&indexBufferViewSprite);
 
-            //// 描画
-            // commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+            // 描画
+            commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
             //
             // モデルデータ
