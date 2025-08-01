@@ -1311,6 +1311,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU3 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 3);
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU3 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 3);
 
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU4 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 4);
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU4 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 4);
+
     // SRVの生成
     device->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
@@ -1880,6 +1883,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
                 commandList->DrawInstanced(UINT(model.vertices.size()), 1, 0, 0);
             }
+
             // 実際のcommandListのImGuiの描画コマンドを詰む
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
