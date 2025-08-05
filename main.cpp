@@ -1698,6 +1698,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     bool isSprite = true;
 
+    // 全キーの入力状態を取得する
+    BYTE key[256] = {};
+    BYTE prevKey[256] = {};
+
     MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
     while (msg.message != WM_QUIT) {
@@ -1711,13 +1715,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // キーボード情報の取得開始
             keyboard->Acquire();
 
-            // 全キーの入力状態を取得する
-            BYTE key[256] = {};
             keyboard->GetDeviceState(sizeof(key), key);
 
-            if (key[DIK_0]) {
+            if (key[DIK_0] && !prevKey[DIK_0]) {
                 OutputDebugStringA("hit 0\n");
             }
+
+            if (key[DIK_1]) {
+                OutputDebugStringA("hit 1\n");
+            }
+
+            memcpy(prevKey, key, sizeof(key));
 
             ImGui_ImplDX12_NewFrame();
             ImGui_ImplWin32_NewFrame();
