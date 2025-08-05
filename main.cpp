@@ -1,3 +1,4 @@
+#define DIRECTINPUT_VERSION 0x0800
 #include "externals/DirectXTex/d3dx12.h"
 
 #include "externals/DirectXTex/DirectXTex.h"
@@ -10,6 +11,7 @@
 #include <chrono>
 #include <cstdint>
 #include <d3d12.h>
+#include <dinput.h>
 #include <dxcapi.h>
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
@@ -29,6 +31,7 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dxcompiler.lib")
 #pragma comment(lib, "xaudio2.lib")
+#pragma comment(lib, "dinput8.lib")
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -938,7 +941,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
 
 #endif // _DEBUG
-       // コマンドキュー
+
+    // DirectInputの初期化
+    IDirectInput8* directInput = nullptr;
+    WNDCLASS w;
+    w.hInstance = GetModuleHandle(nullptr);
+
+    HRESULT result = DirectInput8Create(w.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
+    assert(SUCCEEDED(result));
+
+    // キーボードデバイスの生成
+    IDirectInputDevice8* keyboard = nullptr;
+    result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
+    assert(SUCCEEDED(result));
+
+    // 入力データ形式のセット
+    result = keyboard->SetDataFormat(&c_dfDIKeyboard);
+    assert(SUCCEEDED(result));
+
+    // 排他制御レベルのリセット
+    result = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+    assert(SUCCEEDED(result));
+
+    // コマンドキュー
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
     D3D12_COMMAND_QUEUE_DESC commandQueueDesc {};
     hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
@@ -1650,11 +1675,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     IXAudio2MasteringVoice* masterVoice;
 
     // xAudioエンジンインスタンスを生成
-    HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+    HRESULT resultAudio = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
     assert(SUCCEEDED(result));
 
-    result = xAudio2->CreateMasteringVoice(&masterVoice);
-    assert(SUCCEEDED(result));
+    resultAudio = xAudio2->CreateMasteringVoice(&masterVoice);
+    assert(SUCCEEDED(resultAudio));
 
     // 音声読み込み
     SoundData soundData1 = SoundLoadWave("resources/fanfare.wav");
@@ -1682,6 +1707,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         } else {
+
+            // キーボード情報の取得開始
+            keyboard->Acquire();
+
+            // 全キーの入力状態を取得する
+            BYTE key[256] = {};
+            keyboard->GetDeviceState(sizeof(key), key);
+
+            if (key[DIK_0]) {
+                OutputDebugStringA("hit 0\n");
+            }
+
             ImGui_ImplDX12_NewFrame();
             ImGui_ImplWin32_NewFrame();
             ImGui::NewFrame();
