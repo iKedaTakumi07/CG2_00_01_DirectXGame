@@ -16,9 +16,6 @@
     <Filter Include="ImGui">
       <UniqueIdentifier>{1851bd09-f8c2-4cd9-9f6a-c2bd789ae2cc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\number">
-      <UniqueIdentifier>{56a22e60-b071-4db3-b567-de4e4af1ab99}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -80,9 +77,6 @@
     </ClInclude>
     <ClInclude Include="DebugCamera.h">
       <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Vector3.h">
-      <Filter>ソース ファイル\number</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
