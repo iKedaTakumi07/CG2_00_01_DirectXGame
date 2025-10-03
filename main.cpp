@@ -1173,9 +1173,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 左下
     vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
     vertexData[0].texcoord = { 0.0f, 1.0f };
-    /* vertexData[0].normal.x = vertexData[0].position.x;
-     vertexData[0].normal.y = vertexData[0].position.y;
-     vertexData[0].normal.z = vertexData[0].position.z;*/
 
     // 上
     vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
@@ -1559,7 +1556,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     /// ==============================================================================================================
 
     // モデル読み込み
-    ModelData model = LoadObjFile("resources", "axis.obj");
+    ModelData model = LoadObjFile("resources", "plane.obj");
 
     // 画像読み込み
     DirectX::ScratchImage mip2 = LoadTexture(model.material.textureFilePath);
@@ -1707,9 +1704,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     ImGui::SliderAngle("RotateX##Model", &transformModel.rotate.x);
                     ImGui::SliderAngle("RotateY##Model", &transformModel.rotate.y);
                     ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
+                    ImGui::ColorEdit4("Color##Model", &(materialDataModel->color).x);
                     ImGui::SliderFloat3("direction##ModelLight", &directionalLightDataModel->direction.x, -1.0f, 1.0f);
                     ImGui::DragFloat("intensity##ModelLight", &directionalLightDataModel->intensity, 0.01f);
-                    /*ImGui::SliderFloat4("Color##ModelLight", &directionalLightDataModel->color.x, -20.0f, 20.0f);*/
                     ImGui::ColorEdit4("Color##ModelLight", &(directionalLightDataModel->color).x);
                 }
             }
