@@ -115,7 +115,12 @@ struct SoundData {
     unsigned int bufferSize;
 };
 enum BlendMode {
-
+    kBlendModeNone,//ブレンドなし
+    kBlendModeNormal,// 通常αブレンド
+    kBlendModeAdd,//加算
+    kBlendModeSubtract,//減算
+    kBlendModeMultily,// 乗算
+    kBlendModeScreen,// スクリーン
 };
 
 Matrix4x4 MakeIdentity4x4()
