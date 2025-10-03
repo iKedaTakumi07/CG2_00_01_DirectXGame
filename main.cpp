@@ -1295,14 +1295,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
 
-    //// SRVを作成するDescripotorHeapの場所を決める
-    // D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    // D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-
-    //// 戦闘はimguiが使っているのでその次を使う
-    // textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    // textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
     // descriptorSize
     const uint32_t desriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     const uint32_t desriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
