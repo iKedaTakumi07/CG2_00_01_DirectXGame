@@ -1709,7 +1709,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
                     ImGui::SliderFloat3("direction##ModelLight", &directionalLightDataModel->direction.x, -1.0f, 1.0f);
                     ImGui::DragFloat("intensity##ModelLight", &directionalLightDataModel->intensity, 0.01f);
-                    ImGui::SliderFloat4("Color##ModelLight", &directionalLightDataModel->color.x, -20.0f, 20.0f);
+                    /*ImGui::SliderFloat4("Color##ModelLight", &directionalLightDataModel->color.x, -20.0f, 20.0f);*/
                     ImGui::ColorEdit4("Color##ModelLight", &(directionalLightDataModel->color).x);
                 }
             }
