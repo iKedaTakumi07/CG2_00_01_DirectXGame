@@ -114,6 +114,9 @@ struct SoundData {
     // バッフアのサイズ
     unsigned int bufferSize;
 };
+enum BlendMode {
+
+};
 
 Matrix4x4 MakeIdentity4x4()
 {
