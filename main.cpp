@@ -792,6 +792,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     D3DResourceLeakChecker leakChecl;
 
+    assert(false && "assertのテストナウ");
+
     CoInitializeEx(0, COINIT_MULTITHREADED);
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
     SetUnhandledExceptionFilter(ExportDump);
