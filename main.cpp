@@ -1645,7 +1645,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     /// ==============================================================================================================
 
     // モデル読み込み
-    ModelData model = LoadObjFile("resources", "plane.obj");
+    ModelData model = LoadObjFile("resources", "fence.obj");
 
     // 画像読み込み
     DirectX::ScratchImage mip2 = LoadTexture(model.material.textureFilePath);
