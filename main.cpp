@@ -1124,6 +1124,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     D3D12_BLEND_DESC blendDesc {};
     // 全ての色要素を書き込む
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
     // RasiterzerStateの設定
     D3D12_RASTERIZER_DESC rasterizerDesc {};
@@ -1133,10 +1140,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
     // Shaderをコンパイルする
-    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Object3d.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler, logStream);
+    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"resources/shaders/Object3d.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler, logStream);
     assert(vertexShaderBlob != nullptr);
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = CompileShader(L"Object3d.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler, logStream);
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = CompileShader(L"resources/shaders/Object3d.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler, logStream);
     assert(pixeShaderBlob != nullptr);
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
@@ -1748,29 +1755,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             }
 
             if (currentItem == 0 || currentItem2 == 1) {
-                if (ImGui::CollapsingHeader("Model")) {
+                if (ImGui::CollapsingHeader("Model##Model")) {
                     ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
                     ImGui::SliderAngle("RotateX##Model", &transformModel.rotate.x);
                     ImGui::SliderAngle("RotateY##Model", &transformModel.rotate.y);
                     ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
-                }
-                if (ImGui::CollapsingHeader("Light##Model")) {
+                    ImGui::ColorEdit4("Color##Model", &(materialDataModel->color).x);
                     ImGui::SliderFloat3("direction##ModelLight", &directionalLightDataModel->direction.x, -1.0f, 1.0f);
                     ImGui::DragFloat("intensity##ModelLight", &directionalLightDataModel->intensity, 0.01f);
-                    ImGui::SliderFloat4("Color##ModelLight", &directionalLightDataModel->color.x, -20.0f, 20.0f);
                     ImGui::ColorEdit4("Color##ModelLight", &(directionalLightDataModel->color).x);
                 }
             }
 
             if (currentItem == 1 || currentItem2 == 2) {
-                if (ImGui::CollapsingHeader("Sphere")) {
+                if (ImGui::CollapsingHeader("Sphere##Sphere")) {
                     ImGui::DragFloat3("Translate##Sphere", &transformsphere.translate.x, 0.01f);
                     ImGui::DragFloat3("Rotate##Sphere", &transformsphere.rotate.x, 0.01f);
                     ImGui::DragFloat3("Scale##Sphere", &transformsphere.scale.x, 0.01f);
                     ImGui::ColorEdit4("Color##sphere", &(materialDatasphere->color).x);
                     ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-                }
-                if (ImGui::CollapsingHeader("Light##Sphere")) {
                     ImGui::SliderFloat3("direction##SphereLight", &directionalLightDatasphere->direction.x, -1.0f, 1.0f);
                     ImGui::DragFloat("intensity##SphereLight", &directionalLightDatasphere->intensity, 0.01f);
                     ImGui::SliderFloat4("Color##SphereLight", &directionalLightDatasphere->color.x, -20.0f, 20.0f);
