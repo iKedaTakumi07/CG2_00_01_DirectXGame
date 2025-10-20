@@ -40,6 +40,27 @@
     <Filter Include="シェーダー ファイル">
       <UniqueIdentifier>{79e7fa1d-b0ff-4ffd-8d68-666ef6b671cb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\2d">
+      <UniqueIdentifier>{35e1d4d5-5768-4b5f-a7fe-c83942773d26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\3d">
+      <UniqueIdentifier>{f921383a-0a70-4193-a117-f29b07d6a1b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\base">
+      <UniqueIdentifier>{2e6c9982-0dcb-48ff-84c9-8f6f729727f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\audio">
+      <UniqueIdentifier>{161d119b-5510-4e03-932d-f099983a0819}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\io">
+      <UniqueIdentifier>{a5b5100a-ff95-49f6-a20a-82bbfa9ab9c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\math">
+      <UniqueIdentifier>{2451cee0-795d-4842-9cee-3c2c7470be66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\scene">
+      <UniqueIdentifier>{eae7ee72-7d55-46e6-9001-763df705b1a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
