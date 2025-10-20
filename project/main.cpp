@@ -1,6 +1,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include "externals/DirectXTex/d3dx12.h"
 
+#include "Engine/Input.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -943,25 +944,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #endif // _DEBUG
 
     // DirectInputの初期化
-    IDirectInput8* directInput = nullptr;
     WNDCLASS w;
     w.hInstance = GetModuleHandle(nullptr);
 
-    HRESULT result = DirectInput8Create(w.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
-    assert(SUCCEEDED(result));
-
-    // キーボードデバイスの生成
-    IDirectInputDevice8* keyboard = nullptr;
-    result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-    assert(SUCCEEDED(result));
-
-    // 入力データ形式のセット
-    result = keyboard->SetDataFormat(&c_dfDIKeyboard);
-    assert(SUCCEEDED(result));
-
-    // 排他制御レベルのリセット
-    result = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-    assert(SUCCEEDED(result));
+    Input* input = nullptr;
+    input->Initialize(hwnd, w.hInstance);
 
     // コマンドキュー
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
@@ -1320,14 +1307,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
 
-    //// SRVを作成するDescripotorHeapの場所を決める
-    // D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    // D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-
-    //// 戦闘はimguiが使っているのでその次を使う
-    // textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    // textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
     // descriptorSize
     const uint32_t desriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     const uint32_t desriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -1683,7 +1662,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     // xAudioエンジンインスタンスを生成
     HRESULT resultAudio = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-    assert(SUCCEEDED(result));
 
     resultAudio = xAudio2->CreateMasteringVoice(&masterVoice);
     assert(SUCCEEDED(resultAudio));
@@ -1987,6 +1965,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     ImGui::DestroyContext();
 
     CloseHandle(fenceEvent);
+
+    delete input;
 
     // XAuido2解放
     xAudio2.Reset();
