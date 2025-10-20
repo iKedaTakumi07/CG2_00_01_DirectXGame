@@ -1,1 +1,2 @@
 [![DebugBuild](https://github.com/iKedaTakumi07/CG2_00_01_DirectXGame/actions/workflows/DebugBuild.yml/badge.svg)](https://github.com/iKedaTakumi07/CG2_00_01_DirectXGame/actions/workflows/DebugBuild.yml)
+[![ReleaseBuild](https://github.com/iKedaTakumi07/CG2_00_01_DirectXGame/actions/workflows/ReleaseBuild.yml/badge.svg)](https://github.com/iKedaTakumi07/CG2_00_01_DirectXGame/actions/workflows/ReleaseBuild.yml)
