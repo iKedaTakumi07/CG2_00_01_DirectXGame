@@ -1,26 +1,18 @@
-#define DIRECTINPUT_VERSION 0x0800
-
 #include "Input.h"
 #include <cassert>
-#include <dinput.h>
-#include <wrl.h>
 
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
-using namespace Microsoft::WRL;
-
 void Input::Initialize(HWND hwnd, HINSTANCE hInstance)
 {
     // DirectInputの初期化
-    ComPtr<IDirectInput8> directInput = nullptr;
-    
+    ComPrt<IDirectInput8> directInput = nullptr;
 
     HRESULT result = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
     assert(SUCCEEDED(result));
 
     // キーボードデバイスの生成
-    ComPtr<IDirectInputDevice8> keyboard = nullptr;
     result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
     assert(SUCCEEDED(result));
 
@@ -35,4 +27,13 @@ void Input::Initialize(HWND hwnd, HINSTANCE hInstance)
 
 void Input::Update()
 {
+
+    // キーボード情報の取得開始
+    keyboard->Acquire();
+
+    // 全キーの入力状態を取得する
+    BYTE key[256] = {};
+    BYTE prevKey[256] = {};
+
+    keyboard->GetDeviceState(sizeof(key), key);
 }
