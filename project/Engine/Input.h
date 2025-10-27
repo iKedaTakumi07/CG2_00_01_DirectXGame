@@ -9,7 +9,7 @@ class Input {
 public:
     // namespace省略
     template <class T>
-    using ComPrt = Microsoft::WRL::ComPtr<T>;
+    using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 public:
     // 初期化
@@ -26,5 +26,5 @@ private:
     BYTE key[256] = {};
     BYTE prevKey[256] = {};
 
-    ComPrt<IDirectInputDevice8> keyboard;
+    ComPtr<IDirectInputDevice8> keyboard;
 };
