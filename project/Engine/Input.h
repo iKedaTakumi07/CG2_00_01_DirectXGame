@@ -8,7 +8,7 @@
 class Input {
 public:
     // namespace省略
-    template <class T> using ComPrt = Microsoft::WRL::ComPtr<T>;
+    template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 public:
     // 初期化
@@ -17,5 +17,5 @@ public:
     void Update();
 
 private:
-    ComPrt<IDirectInputDevice8> keyboard;
+    ComPtr<IDirectInputDevice8> keyboard;
 };
