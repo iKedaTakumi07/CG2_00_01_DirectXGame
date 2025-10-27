@@ -6,8 +6,7 @@
 
 void Input::Initialize(HWND hwnd, HINSTANCE hInstance)
 {
-    // DirectInputの初期化
-    ComPtr<IDirectInput8> directInput = nullptr;
+  
 
     HRESULT result = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
     assert(SUCCEEDED(result));

@@ -8,9 +8,7 @@
 class Input {
 public:
     // namespace省略
-    template <class T>
-    using ComPtr = Microsoft::WRL::ComPtr<T>;
-
+    template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 public:
     // 初期化
     void Initialize(HWND hwnd, HINSTANCE hInstance);
@@ -27,4 +25,6 @@ private:
     BYTE prevKey[256] = {};
 
     ComPtr<IDirectInputDevice8> keyboard;
+    // DirectInputの初期化
+    ComPtr<IDirectInput8> directInput;
 };
