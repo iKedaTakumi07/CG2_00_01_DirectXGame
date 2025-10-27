@@ -2,13 +2,14 @@
 #define DIRECTINPUT_VERSION 0x0800
 
 #include <Windows.h>
-#include <wrl.h>
 #include <dinput.h>
+#include <wrl.h>
 
 class Input {
 public:
     // namespace省略
-    template <class T> using ComPrt = Microsoft::WRL::ComPtr<T>;
+    template <class T>
+    using ComPrt = Microsoft::WRL::ComPtr<T>;
 
 public:
     // 初期化
@@ -16,6 +17,14 @@ public:
     // 更新
     void Update();
 
+    bool PushKey(BYTE keyNumber);
+
+    bool TriggerKey(BYTE keyNumber);
+
 private:
+    // 全キーの入力状態を取得する
+    BYTE key[256] = {};
+    BYTE prevKey[256] = {};
+
     ComPrt<IDirectInputDevice8> keyboard;
 };

@@ -1695,64 +1695,62 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             input->Update();
 
-            //if (key[DIK_0] && !prevKey[DIK_0]) {
-            //    OutputDebugStringA("hit 0\n");
-            //}
+            if (input->TriggerKey(DIK_0)) {
+                OutputDebugStringA("hit 0\n");
+            }
 
-            //if (key[DIK_1]) {
-            //    OutputDebugStringA("hit 1\n");
-            //}
+            if (input->PushKey(DIK_1)) {
+                OutputDebugStringA("hit 1\n");
+            }
 
-           /* memcpy(prevKey, key, sizeof(key));*/
+            ImGui_ImplDX12_NewFrame();
+            ImGui_ImplWin32_NewFrame();
+            ImGui::NewFrame();
 
-            //ImGui_ImplDX12_NewFrame();
-            //ImGui_ImplWin32_NewFrame();
-            //ImGui::NewFrame();
+            ImGui::Begin("Settings");
+            ImGui::Combo("Select Object", &currentItem, items, IM_ARRAYSIZE(items));
+            ImGui::Combo("Select Object2", &currentItem2, items2, IM_ARRAYSIZE(items2));
+            ImGui::Checkbox("isSprite", &isSprite);
 
-            //ImGui::Begin("Settings");
-            //ImGui::Combo("Select Object", &currentItem, items, IM_ARRAYSIZE(items));
-            //ImGui::Combo("Select Object2", &currentItem2, items2, IM_ARRAYSIZE(items2));
-            //ImGui::Checkbox("isSprite", &isSprite);
+            if (isSprite) {
+                if (ImGui::CollapsingHeader("Sprite")) {
+                    ImGui::DragFloat3("Translate##Sprite", &transformSprite.translate.x, 0.1f);
+                    ImGui::DragFloat3("Rotate##Sprite", &transformSprite.rotate.x, 0.01f);
+                    ImGui::DragFloat3("Scale##Sprite", &transformSprite.scale.x, 0.01f);
+                    ImGui::DragFloat2("UVTranslate##Sprite", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+                    ImGui::DragFloat2("UVscale##Sprite", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+                    ImGui::SliderAngle("UVRotate##Sprite", &uvTransformSprite.rotate.z);
+                }
+            }
 
-            //if (isSprite) {
-            //    if (ImGui::CollapsingHeader("Sprite")) {
-            //        ImGui::DragFloat3("Translate##Sprite", &transformSprite.translate.x, 0.1f);
-            //        ImGui::DragFloat3("Rotate##Sprite", &transformSprite.rotate.x, 0.01f);
-            //        ImGui::DragFloat3("Scale##Sprite", &transformSprite.scale.x, 0.01f);
-            //        ImGui::DragFloat2("UVTranslate##Sprite", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-            //        ImGui::DragFloat2("UVscale##Sprite", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-            //        ImGui::SliderAngle("UVRotate##Sprite", &uvTransformSprite.rotate.z);
-            //    }
-            //}
+            if (currentItem == 0 || currentItem2 == 1) {
+                if (ImGui::CollapsingHeader("Model##Model")) {
+                    ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
+                    ImGui::SliderAngle("RotateX##Model", &transformModel.rotate.x);
+                    ImGui::SliderAngle("RotateY##Model", &transformModel.rotate.y);
+                    ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
+                    ImGui::ColorEdit4("Color##Model", &(materialDataModel->color).x);
+                    ImGui::SliderFloat3("direction##ModelLight", &directionalLightDataModel->direction.x, -1.0f, 1.0f);
+                    ImGui::DragFloat("intensity##ModelLight", &directionalLightDataModel->intensity, 0.01f);
+                    ImGui::ColorEdit4("Color##ModelLight", &(directionalLightDataModel->color).x);
+                }
+            }
 
-            //if (currentItem == 0 || currentItem2 == 1) {
-            //    if (ImGui::CollapsingHeader("Model##Model")) {
-            //        ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
-            //        ImGui::SliderAngle("RotateX##Model", &transformModel.rotate.x);
-            //        ImGui::SliderAngle("RotateY##Model", &transformModel.rotate.y);
-            //        ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
-            //        ImGui::ColorEdit4("Color##Model", &(materialDataModel->color).x);
-            //        ImGui::SliderFloat3("direction##ModelLight", &directionalLightDataModel->direction.x, -1.0f, 1.0f);
-            //        ImGui::DragFloat("intensity##ModelLight", &directionalLightDataModel->intensity, 0.01f);
-            //        ImGui::ColorEdit4("Color##ModelLight", &(directionalLightDataModel->color).x);
-            //    }
-            //}
+            if (currentItem == 1 || currentItem2 == 2) {
+                if (ImGui::CollapsingHeader("Sphere##Sphere")) {
+                    ImGui::DragFloat3("Translate##Sphere", &transformsphere.translate.x, 0.01f);
+                    ImGui::DragFloat3("Rotate##Sphere", &transformsphere.rotate.x, 0.01f);
+                    ImGui::DragFloat3("Scale##Sphere", &transformsphere.scale.x, 0.01f);
+                    ImGui::ColorEdit4("Color##sphere", &(materialDatasphere->color).x);
+                    ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+                    ImGui::SliderFloat3("direction##SphereLight", &directionalLightDatasphere->direction.x, -1.0f, 1.0f);
+                    ImGui::DragFloat("intensity##SphereLight", &directionalLightDatasphere->intensity, 0.01f);
+                    ImGui::SliderFloat4("Color##SphereLight", &directionalLightDatasphere->color.x, -20.0f, 20.0f);
+                    ImGui::ColorEdit4("Color##SphereLight", &(directionalLightDatasphere->color).x);
+                }
+            }
 
-            //if (currentItem == 1 || currentItem2 == 2) {
-            //    if (ImGui::CollapsingHeader("Sphere##Sphere")) {
-            //        ImGui::DragFloat3("Translate##Sphere", &transformsphere.translate.x, 0.01f);
-            //        ImGui::DragFloat3("Rotate##Sphere", &transformsphere.rotate.x, 0.01f);
-            //        ImGui::DragFloat3("Scale##Sphere", &transformsphere.scale.x, 0.01f);
-            //        ImGui::ColorEdit4("Color##sphere", &(materialDatasphere->color).x);
-            //        ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-            //        ImGui::SliderFloat3("direction##SphereLight", &directionalLightDatasphere->direction.x, -1.0f, 1.0f);
-            //        ImGui::DragFloat("intensity##SphereLight", &directionalLightDatasphere->intensity, 0.01f);
-            //        ImGui::SliderFloat4("Color##SphereLight", &directionalLightDatasphere->color.x, -20.0f, 20.0f);
-            //        ImGui::ColorEdit4("Color##SphereLight", &(directionalLightDatasphere->color).x);
-            //    }
-            //}
-
-            //ImGui::End();
+            ImGui::End();
 
             // update/更新処理
 
