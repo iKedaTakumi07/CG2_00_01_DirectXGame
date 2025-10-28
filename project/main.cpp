@@ -1696,15 +1696,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             input->Update();
 
-            /* if (key[DIK_0] && !prevKey[DIK_0]) {
-                 OutputDebugStringA("hit 0\n");
-             }
+            if (input->TriggerKey(DIK_0)) {
+                OutputDebugStringA("hit 0\n");
+            }
 
-             if (key[DIK_1]) {
-                 OutputDebugStringA("hit 1\n");
-             }*/
+            if (input->PushKey(DIK_1)) {
+                OutputDebugStringA("hit 1\n");
 
-            /* memcpy(prevKey, key, sizeof(key));*/
 
             ImGui_ImplDX12_NewFrame();
             ImGui_ImplWin32_NewFrame();

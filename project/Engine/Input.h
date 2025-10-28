@@ -2,8 +2,8 @@
 #define DIRECTINPUT_VERSION 0x0800
 
 #include <Windows.h>
-#include <wrl.h>
 #include <dinput.h>
+#include <wrl.h>
 
 class Input {
 public:
@@ -16,6 +16,18 @@ public:
     // 更新
     void Update();
 
+    bool PushKey(BYTE keyNumber);
+
+    bool TriggerKey(BYTE keyNumber);
+
 private:
+
+    // 全キーの入力状態を取得する
+    BYTE key[256] = {};
+    BYTE prevKey[256] = {};
+
     ComPtr<IDirectInputDevice8> keyboard;
+    // DirectInputの初期化
+    ComPtr<IDirectInput8> directInput;
+
 };
