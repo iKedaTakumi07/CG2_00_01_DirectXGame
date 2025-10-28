@@ -1702,7 +1702,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             if (input->PushKey(DIK_1)) {
                 OutputDebugStringA("hit 1\n");
-            }
+
 
             ImGui_ImplDX12_NewFrame();
             ImGui_ImplWin32_NewFrame();
@@ -1805,6 +1805,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
             // draw
             ImGui::Render();
+
             // バックバッファのインデックス取得
             UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 

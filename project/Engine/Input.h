@@ -9,6 +9,7 @@ class Input {
 public:
     // namespace省略
     template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
+
 public:
     // 初期化
     void Initialize(HWND hwnd, HINSTANCE hInstance);
@@ -20,6 +21,7 @@ public:
     bool TriggerKey(BYTE keyNumber);
 
 private:
+
     // 全キーの入力状態を取得する
     BYTE key[256] = {};
     BYTE prevKey[256] = {};
@@ -27,4 +29,5 @@ private:
     ComPtr<IDirectInputDevice8> keyboard;
     // DirectInputの初期化
     ComPtr<IDirectInput8> directInput;
+
 };

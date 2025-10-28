@@ -6,8 +6,6 @@
 
 void Input::Initialize(HWND hwnd, HINSTANCE hInstance)
 {
-  
-
     HRESULT result = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
     assert(SUCCEEDED(result));
 
