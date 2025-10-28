@@ -915,6 +915,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     w.hInstance = GetModuleHandle(nullptr);
 
     Input* input = nullptr;
+    input = new Input();
     input->Initialize(hwnd, w.hInstance);
 
     // コマンドキュー
