@@ -16,6 +16,9 @@ public:
     // delete
     void Finalize();
 
+    // メッセージ処理
+    bool ProcessMessage();
+
 
     // getter
     HWND GetHwnd() const { return hwnd; }
