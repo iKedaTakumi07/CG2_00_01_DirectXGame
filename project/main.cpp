@@ -1630,7 +1630,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     bool isSprite = true;
 
-    MSG msg {};
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
 
