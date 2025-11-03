@@ -1,8 +1,6 @@
 #include "WinApp.h"
 #include "externals/imgui/imgui.h"
 
-#include <cstdint>
-
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 // ウィンドウプロ―ジャ
@@ -28,7 +26,7 @@ LRESULT CALLBACK WinApp::Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
 void WinApp::Initialize()
 {
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-    WNDCLASS wc {};
+
     // ウィンドウプロ―ジャ
     wc.lpfnWndProc = Windowproc;
     // ウィンドウクラス名(なんでもよし)
@@ -40,10 +38,6 @@ void WinApp::Initialize()
     // ウィンドウクラスを登録する
     RegisterClass(&wc);
 
-    // クライアント領域のサイズ
-    const int32_t KClientWidth = 1280;
-    const int32_t KClientHeight = 720;
-
     // ウィンドウサイズを表す構造体にクライアント領域を入れる
     RECT wrc = { 0, 0, KClientWidth, KClientHeight };
 
@@ -51,7 +45,7 @@ void WinApp::Initialize()
     AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
     // ウィンドウの作成
-    HWND hwnd = CreateWindow(
+    hwnd = CreateWindow(
         wc.lpszClassName, // 利用するクラス名
         L"CG2", // タイトルバーの文字
         WS_OVERLAPPEDWINDOW, // よく見るウィンドウスタイル
