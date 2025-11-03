@@ -829,7 +829,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     // 出力ウィンドウへの文字出力
     Log(logStream, "Hello,DirectX!\n");
-    Log(logStream, ConvertString(std::format(L"clientSize{},{}\n", KClientWidth, KClientHeight)));
+    Log(logStream, ConvertString(std::format(L"clientSize{},{}\n", WinApp::KClientWidth, WinApp::KClientHeight)));
+
+    HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
     // DXGIファクトリーの生成
     Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
@@ -911,12 +913,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #endif // _DEBUG
 
     // DirectInputの初期化
-    WNDCLASS w;
-    w.hInstance = GetModuleHandle(nullptr);
+   /* WNDCLASS w;
+    w.hInstance = GetModuleHandle(nullptr);*/
 
     Input* input = nullptr;
     input = new Input();
-    input->Initialize(hwnd, w.hInstance);
+    input->Initialize(winApp->GetHwnd(), winApp->GetHInstance());
 
     // コマンドキュー
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
@@ -937,15 +939,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // スワップチェーンを生成する
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc {};
-    swapChainDesc.Width = KClientWidth; // 画面の幅
-    swapChainDesc.Height = KClientHeight; // 画面の高さ
+    swapChainDesc.Width = WinApp::KClientWidth; // 画面の幅
+    swapChainDesc.Height = WinApp::KClientHeight; // 画面の高さ
     swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 色の形式
     swapChainDesc.SampleDesc.Count = 1; // マルチサンプルしない
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // 画面のターゲットとして利用する
     swapChainDesc.BufferCount = 2; // ダブルバッファ
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // モニターに移したら、中身を破棄
     // コマンドキュー、ウィンドウハンドル、設定をして渡す
-    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 
     // デスクリプタヒープの生成
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescripotrHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
@@ -1213,8 +1215,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // びゅーポート
     D3D12_VIEWPORT viewport {};
     // クライアント領域のサイズと一緒にして画面全体に表示
-    viewport.Width = KClientWidth;
-    viewport.Height = KClientHeight;
+    viewport.Width = WinApp::KClientWidth;
+    viewport.Height = WinApp::KClientHeight;
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
     viewport.MinDepth = 0.0f;
@@ -1224,9 +1226,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     D3D12_RECT scissorRect {};
     // 基本的にビューポートと同じ矩形が構成されるようにする
     scissorRect.left = 0;
-    scissorRect.right = KClientWidth;
+    scissorRect.right = WinApp::KClientWidth;
     scissorRect.top = 0;
-    scissorRect.bottom = KClientHeight;
+    scissorRect.bottom = WinApp::KClientHeight;
 
     // Transform変数を作る
     Transform transform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
@@ -1239,7 +1241,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
-    ImGui_ImplWin32_Init(hwnd);
+    ImGui_ImplWin32_Init(winApp->GetHwnd());
     ImGui_ImplDX12_Init(device.Get(),
         swapChainDesc.BufferCount,
         rtvDesc.Format,
@@ -1305,7 +1307,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
 
     // depthStencilTextureをウィンドウのサイズで作成
-    Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthSetencilTextureResource(device, KClientWidth, KClientHeight);
+    Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthSetencilTextureResource(device, WinApp::KClientWidth, WinApp::KClientHeight);
 
     // DSV用のひーぷでディスクリプタの数は1
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
@@ -1739,7 +1741,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // sprite用
             Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
             Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-            Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(KClientWidth), float(kWindowHeight), 0.0f, 100.0f);
+            Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kWindowWidth), float(kWindowHeight), 0.0f, 100.0f);
             Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
             transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
             transformationMatrixDataSprite->world = worldMatrixSprite;
@@ -1933,7 +1935,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 音声データ解放
     SoundUhload(&soundData1);
 
-    CloseWindow(hwnd);
+    CloseWindow(winApp->GetHwnd());
 
     return 0;
 }
