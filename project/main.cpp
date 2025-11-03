@@ -897,7 +897,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     Input* input = nullptr;
     input = new Input();
-    input->Initialize(winApp->GetHwnd(), winApp->GetHInstance());
+    input->Initialize(winApp);
 
     // コマンドキュー
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
@@ -1898,21 +1898,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         }
     }
 
-    CoUninitialize();
-
     // ImGuiの終了
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
-
-    CloseHandle(fenceEvent);
 
     // XAuido2解放
     xAudio2.Reset();
     // 音声データ解放
     SoundUhload(&soundData1);
 
-    CloseWindow(winApp->GetHwnd());
+    CloseHandle(fenceEvent);
+    winApp->Finalize();
 
     delete input;
     delete winApp;

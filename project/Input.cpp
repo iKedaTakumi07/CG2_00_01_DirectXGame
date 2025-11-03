@@ -4,9 +4,11 @@
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
-void Input::Initialize(HWND hwnd, HINSTANCE hInstance)
+void Input::Initialize(WinApp* winApp)
 {
-    HRESULT result = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
+    this->winApp_ = winApp;
+
+    HRESULT result = DirectInput8Create(winApp->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
     assert(SUCCEEDED(result));
 
     // キーボードデバイスの生成
@@ -18,7 +20,7 @@ void Input::Initialize(HWND hwnd, HINSTANCE hInstance)
     assert(SUCCEEDED(result));
 
     // 排他制御レベルのリセット
-    result = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+    result = keyboard->SetCooperativeLevel(winApp->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
     assert(SUCCEEDED(result));
 }
 

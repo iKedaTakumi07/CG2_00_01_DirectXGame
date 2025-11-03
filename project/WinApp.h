@@ -13,6 +13,10 @@ public:
     // 更新
     void Update();
 
+    // delete
+    void Finalize();
+
+
     // getter
     HWND GetHwnd() const { return hwnd; }
     HINSTANCE GetHInstance() const { return wc.hInstance; }
