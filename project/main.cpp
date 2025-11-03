@@ -1,7 +1,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include "externals/DirectXTex/d3dx12.h"
 
-#include "Engine/Input.h"
+#include "Input.h"
 #include "WinApp.h"
 #include "externals/DirectXTex/DirectXTex.h"
 
