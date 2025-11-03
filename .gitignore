@@ -314,8 +314,10 @@ MigrationBackup/
 DirectXGame/DirectXGame.exe
 DirectXGame/imgui.ini
 
+# Project-specific ignore
+/project/Dumps/
+/project/logs/
+/project/imgui.ini
+
 # DirectXTex Compiled Shaders
 **/DirectXTex/Shaders/Compiled/
-/Dumps/
-/logs/
-/imgui.ini
