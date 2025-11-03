@@ -2,8 +2,9 @@
 #include "externals/DirectXTex/d3dx12.h"
 
 #include "Engine/Input.h"
+#include "WinApp.h"
 #include "externals/DirectXTex/DirectXTex.h"
-#include "externals/imgui/imgui.h"
+
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include <DbgHelp.h>
@@ -588,26 +589,6 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
     result = pSourceVoice->Start();
 }
 
-// ウィンドウプロ―ジャ
-LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-    if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-        return true;
-    }
-
-    // メッセージに応じてゲーム固有の処理を行う
-    switch (msg) {
-        // ウィンドウが破壊された
-    case WM_DESTROY:
-        // OSに対してアプリの終了を伝える
-        PostQuitMessage(0);
-        return 0;
-    }
-
-    // 標準のメッセージ処理を行う
-    return DefWindowProc(hwnd, msg, wparam, lparam);
-}
-
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
 {
 
@@ -812,9 +793,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // ファイルを作って書き込み準備
     std::ofstream logStream(logFilePath);
 
- 
-
-   
+    // winapp初期化
+    WinApp* winApp = nullptr;
+    winApp = new WinApp();
+    winApp->Initialize();
 
 #ifdef _DEBUG
     Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
@@ -1925,14 +1907,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     CloseHandle(fenceEvent);
 
-    delete input;
-
     // XAuido2解放
     xAudio2.Reset();
     // 音声データ解放
     SoundUhload(&soundData1);
 
     CloseWindow(hwnd);
+
+    delete input;
+    delete winApp;
 
     return 0;
 }
