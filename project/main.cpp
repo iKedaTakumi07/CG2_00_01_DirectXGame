@@ -11,10 +11,9 @@
 #include <DbgHelp.h>
 #include <cassert>
 #include <chrono>
-#include <d3d12.h>
 #include <dinput.h>
 #include <dxcapi.h>
-#include <dxgi1_6.h>
+
 #include <dxgidebug.h>
 #include <filesystem>
 #include <format>
@@ -26,8 +25,6 @@
 #include <vector>
 #include <xaudio2.h>
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Dbghelp.lib")
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dxcompiler.lib")
@@ -349,6 +346,12 @@ std::wstring ConvertString(const std::string& str)
     return result;
 }
 
+void Log(std::ostream& os, const std::string& message)
+{
+    os << message << std::endl;
+    OutputDebugStringA(message.c_str());
+}
+
 // wstring->string
 std::string ConvertString(const std::wstring& str)
 {
@@ -363,17 +366,6 @@ std::string ConvertString(const std::wstring& str)
     std::string result(sizeNeeded, 0);
     WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
     return result;
-}
-
-void Log(const std::string& message)
-{
-    OutputDebugStringA(message.c_str());
-}
-
-void Log(std::ostream& os, const std::string& message)
-{
-    os << message << std::endl;
-    OutputDebugStringA(message.c_str());
 }
 
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
@@ -588,9 +580,73 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
     result = pSourceVoice->Start();
 }
 
+Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
+    // CompilerするShaderファイルへのパス
+    const std::wstring& filePath,
+    // Compilerに使用するProfile,
+    const wchar_t* profile,
+    // 初期化で生成したものを3つ
+    const Microsoft::WRL::ComPtr<IDxcUtils>& dxcUtils,
+    const Microsoft::WRL::ComPtr<IDxcCompiler3>& dxcCompiler,
+    const Microsoft::WRL::ComPtr<IDxcIncludeHandler>& includeHandler,
+    std::ostream& os)
+{
+    // これからシェーダーにコンパイルするログを出す
+    Log(os, ConvertString(std::format(L"Bggin CompileShader,path:{}, profile:{}\n", filePath, profile)));
+    // hlslファイルを読む
+    Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSourec = nullptr;
+    HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSourec);
+    // 読めなかったら止める
+    assert(SUCCEEDED(hr));
+    // 読み込んだファイルの内容を設定する
+    DxcBuffer shaderSourceBuffer;
+    shaderSourceBuffer.Ptr = shaderSourec->GetBufferPointer();
+    shaderSourceBuffer.Size = shaderSourec->GetBufferSize();
+    shaderSourceBuffer.Encoding = DXC_CP_UTF8;
 
+    LPCWSTR arguments[] = {
+        filePath.c_str(),
+        L"-E",
+        L"main",
+        L"-T",
+        profile,
+        L"-Zi",
+        L"-Qembed_debug",
+        L"-Od",
+        L"-Zpr",
+    };
 
+    // 実際にShaderをコンパイルする
+    Microsoft::WRL::ComPtr<IDxcResult> shaderResult = nullptr;
+    hr = dxcCompiler->Compile(
+        &shaderSourceBuffer,
+        arguments,
+        _countof(arguments),
+        includeHandler.Get(),
+        IID_PPV_ARGS(&shaderResult));
 
+    // コンパイルエラーではなくdxcが起動できないなど致命的な状況
+    assert(SUCCEEDED(hr));
+
+    // 警告・エラーが出たらログに出して止める
+    Microsoft::WRL::ComPtr<IDxcBlobUtf8> shaderError = nullptr;
+    shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+    if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
+        Log(os, shaderError->GetStringPointer());
+        // 警告・エラー絶対ダメ
+        assert(false);
+    }
+
+    // コンパイル結果から実用性のバイナリ部分を取得
+    Microsoft::WRL::ComPtr<IDxcBlob> shaderBlob = nullptr;
+    hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+    assert(SUCCEEDED(hr));
+    // 成功したログを出す
+    Log(os, ConvertString(std::format(L"Compile Succeeded,path:{},profile:{}\n", filePath, profile)));
+
+    // 実験用のバイナリを返却
+    return shaderBlob;
+};
 
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const DirectX::TexMetadata& metadata)
 {
@@ -642,8 +698,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::C
     commandList->ResourceBarrier(1, &barrier);
     return intermediateResourec.Get();
 }
-
-
 
 D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
 {
@@ -699,12 +753,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     Input* input = nullptr;
     input = new Input();
     input->Initialize(winApp);
-
-   
-
-    
-
-
 
     // RootSignature作成
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
@@ -916,16 +964,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
     directionalLightData->intensity = 1.0f;
 
-   
-
     // Transform変数を作る
     Transform transform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameratransform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -10.0f } };
 
     float kWindowWidth = 1280.0f;
     float kWindowHeight = 720.0f;
-
-
 
     // Textureを読み込み
     DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
