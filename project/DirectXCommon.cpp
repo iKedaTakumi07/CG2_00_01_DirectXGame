@@ -28,100 +28,6 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
     this->winApp_ = winApp;
 
-    // ======================================
-    // デバイス系
-    // ======================================
-
-#ifdef _DEBUG
-    Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
-    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
-        // デバックレイヤーを有効化
-        debugController->EnableDebugLayer();
-        // さらにGPU側でもチェックを行う
-        debugController->SetEnableGPUBasedValidation(TRUE);
-    }
-#endif // _DEBUG
-
-    // 出力ウィンドウへの文字出力
-    Log(logStream, "Hello,DirectX!\n");
-    Log(logStream, ConvertString(std::format(L"clientSize{},{}\n", WinApp::KClientWidth, WinApp::KClientHeight)));
-
-    // 関数が成功したかマクロ判定
-    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
-    // assertにしておく
-    assert(SUCCEEDED(hr));
-
-    // 使用するアダプタ用の変数
-    Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter = nullptr;
-    // 良い順にアダプタを頼む
-    for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
-        // アダプターの情報を取得する
-        DXGI_ADAPTER_DESC3 adapterDesc {};
-        hr = useAdapter->GetDesc3(&adapterDesc);
-        assert(SUCCEEDED(hr)); // 取得できないのは一大事
-        // ソフトウェアアダプタでなければ採用
-        if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
-            // ログに出力
-            Log(logStream, ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
-            break;
-        }
-        useAdapter = nullptr;
-    }
-    // 適切なアダプタが見つからなかったので起動できない
-    assert(useAdapter != nullptr);
-
-    // 昨日レベルログ出力に文字列
-    D3D_FEATURE_LEVEL featureLevels[] = {
-        D3D_FEATURE_LEVEL_12_2,
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0
-    };
-    const char* featureLevelStrings[] = { "12.2", "12.1", "12.0" };
-    // 高い順に生成する
-    for (size_t i = 0; i < _countof(featureLevels); ++i) {
-        // 指定したあだぷたーでデバイスを作成
-        hr = D3D12CreateDevice(useAdapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
-        // 　指定したレベルで生成できたか確認
-        if (SUCCEEDED(hr)) {
-            Log(logStream, std::format("FeatureLevel :{}\n", featureLevelStrings[i]));
-            break;
-        }
-    }
-
-    // デバイスの生成がうまくいかなかったので起動できない
-    assert(device != nullptr);
-    Log(logStream, "Complete create D3D12Device!\n"); // 初期化完了のログを出す
-#ifdef _DEBUG
-    Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
-    if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
-        // やばいエラー時に止まる
-        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-        // エラー時に泊まる
-        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-        // 警報時に泊まる
-        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-
-        // 警告時に止まる
-        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-
-        // 制御するメッセージのID
-        D3D12_MESSAGE_ID denyids[] = {
-            // windows11でのDXGIデバックレイヤーとDX12デバックれいやーの相互作用バグによるエラーメッセージ
-            D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
-        };
-        // 抑制するレベル
-        D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
-        D3D12_INFO_QUEUE_FILTER filter {};
-        filter.DenyList.NumIDs = _countof(denyids);
-        filter.DenyList.pIDList = denyids;
-        filter.DenyList.NumSeverities = _countof(severities);
-        filter.DenyList.pSeverityList = severities;
-        // 措定したメッセージの表示を抑制する
-        infoQueue->PushStorageFilter(&filter);
-    }
-
-#endif // _DEBUG
-
     // ===========================================
     // コマンド関連
     // ===========================================
@@ -131,14 +37,6 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
     // SRV用のヒープでディスクリプタの数128。SRVはShadre内で触るものなので、ShaderVisiblrはtrue
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-
-    // SwapChainからResourceを引っ張てくる
-    Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
-    hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
-    // うまく起動できなければ起動できない
-    assert(SUCCEEDED(hr));
-    hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
-    assert(SUCCEEDED(hr));
 
     // CommonInitialize();
 
@@ -232,6 +130,102 @@ void DirectXCommon::Initialize(WinApp* winApp)
         srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 }
 
+void DirectXCommon::deviceInitialize()
+{
+
+    HRESULT hr;
+
+#ifdef _DEBUG
+    Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
+    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
+        // デバックレイヤーを有効化
+        debugController->EnableDebugLayer();
+        // さらにGPU側でもチェックを行う
+        debugController->SetEnableGPUBasedValidation(TRUE);
+    }
+#endif // _DEBUG
+
+    // 出力ウィンドウへの文字出力
+    Log(logStream, "Hello,DirectX!\n");
+    Log(logStream, ConvertString(std::format(L"clientSize{},{}\n", WinApp::KClientWidth, WinApp::KClientHeight)));
+
+    // 関数が成功したかマクロ判定
+    hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+    // assertにしておく
+    assert(SUCCEEDED(hr));
+
+    // 使用するアダプタ用の変数
+    Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter = nullptr;
+    // 良い順にアダプタを頼む
+    for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
+        // アダプターの情報を取得する
+        DXGI_ADAPTER_DESC3 adapterDesc {};
+        hr = useAdapter->GetDesc3(&adapterDesc);
+        assert(SUCCEEDED(hr)); // 取得できないのは一大事
+        // ソフトウェアアダプタでなければ採用
+        if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
+            // ログに出力
+            Log(logStream, ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
+            break;
+        }
+        useAdapter = nullptr;
+    }
+    // 適切なアダプタが見つからなかったので起動できない
+    assert(useAdapter != nullptr);
+
+    // 昨日レベルログ出力に文字列
+    D3D_FEATURE_LEVEL featureLevels[] = {
+        D3D_FEATURE_LEVEL_12_2,
+        D3D_FEATURE_LEVEL_12_1,
+        D3D_FEATURE_LEVEL_12_0
+    };
+    const char* featureLevelStrings[] = { "12.2", "12.1", "12.0" };
+    // 高い順に生成する
+    for (size_t i = 0; i < _countof(featureLevels); ++i) {
+        // 指定したあだぷたーでデバイスを作成
+        hr = D3D12CreateDevice(useAdapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
+        // 　指定したレベルで生成できたか確認
+        if (SUCCEEDED(hr)) {
+            Log(logStream, std::format("FeatureLevel :{}\n", featureLevelStrings[i]));
+            break;
+        }
+    }
+
+    // デバイスの生成がうまくいかなかったので起動できない
+    assert(device != nullptr);
+    Log(logStream, "Complete create D3D12Device!\n"); // 初期化完了のログを出す
+#ifdef _DEBUG
+    Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
+    if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+        // やばいエラー時に止まる
+        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+        // エラー時に泊まる
+        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+        // 警報時に泊まる
+        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+
+        // 警告時に止まる
+        infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+
+        // 制御するメッセージのID
+        D3D12_MESSAGE_ID denyids[] = {
+            // windows11でのDXGIデバックレイヤーとDX12デバックれいやーの相互作用バグによるエラーメッセージ
+            D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
+        };
+        // 抑制するレベル
+        D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+        D3D12_INFO_QUEUE_FILTER filter {};
+        filter.DenyList.NumIDs = _countof(denyids);
+        filter.DenyList.pIDList = denyids;
+        filter.DenyList.NumSeverities = _countof(severities);
+        filter.DenyList.pSeverityList = severities;
+        // 措定したメッセージの表示を抑制する
+        infoQueue->PushStorageFilter(&filter);
+    }
+
+#endif // _DEBUG
+}
+
 void DirectXCommon::CommonInitialize()
 {
 
@@ -262,6 +256,15 @@ DXGI_SWAP_CHAIN_DESC1 DirectXCommon::swapChainInitialize()
 {
     // スワップチェーンを生成する
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
+
+    // SwapChainからResourceを引っ張てくる
+    Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
+    hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+    // うまく起動できなければ起動できない
+    assert(SUCCEEDED(hr));
+    hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
+    assert(SUCCEEDED(hr));
+
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc {};
     swapChainDesc.Width = WinApp::KClientWidth; // 画面の幅
     swapChainDesc.Height = WinApp::KClientHeight; // 画面の高さ

@@ -9,6 +9,8 @@ public:
     // 初期化
     void Initialize(WinApp* winApp);
 
+    void deviceInitialize();
+
     void CommonInitialize();
 
     DXGI_SWAP_CHAIN_DESC1 swapChainInitialize();
