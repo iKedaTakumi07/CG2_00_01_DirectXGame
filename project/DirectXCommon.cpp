@@ -1,43 +1,11 @@
 #include "DirectXCommon.h"
 #include <cassert>
+#include <format>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
 using namespace Microsoft::WRL;
-
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthSetencilTextureResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height)
-{
-    D3D12_RESOURCE_DESC resourceDesc {};
-    resourceDesc.Width = width;
-    resourceDesc.Height = height;
-    resourceDesc.MipLevels = 1;
-    resourceDesc.DepthOrArraySize = 1;
-    resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    resourceDesc.SampleDesc.Count = 1;
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-    // 利用するheaoの設定
-    D3D12_HEAP_PROPERTIES heapProperties {};
-    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-    // 震度値のクリア設定
-    D3D12_CLEAR_VALUE depthClearValue {};
-    depthClearValue.DepthStencil.Depth = 1.0f;
-    depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
-    // Resourceの設定
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-    HRESULT hr = device->CreateCommittedResource(
-        &heapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &resourceDesc,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &depthClearValue, IID_PPV_ARGS(&resource));
-    assert(SUCCEEDED(hr));
-    return resource;
-};
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
 {
@@ -53,10 +21,12 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(const Microsof
     return DescripotrHeap;
 };
 
-
-
-void DirectXCommon::Initialize()
+void DirectXCommon::Initialize(WinApp* winApp)
 {
+    // null検出
+    assert(winApp);
+
+    this->winApp_ = winApp;
 
     // ======================================
     // デバイス系
@@ -76,8 +46,6 @@ void DirectXCommon::Initialize()
     Log(logStream, "Hello,DirectX!\n");
     Log(logStream, ConvertString(std::format(L"clientSize{},{}\n", WinApp::KClientWidth, WinApp::KClientHeight)));
 
-    // DXGIファクトリーの生成
-    Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
     // 関数が成功したかマクロ判定
     HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
     // assertにしておく
@@ -102,7 +70,6 @@ void DirectXCommon::Initialize()
     // 適切なアダプタが見つからなかったので起動できない
     assert(useAdapter != nullptr);
 
-    Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;
     // 昨日レベルログ出力に文字列
     D3D_FEATURE_LEVEL featureLevels[] = {
         D3D_FEATURE_LEVEL_12_2,
@@ -159,35 +126,6 @@ void DirectXCommon::Initialize()
     // コマンド関連
     // ===========================================
 
-    // コマンドキュー
-    Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
-    D3D12_COMMAND_QUEUE_DESC commandQueueDesc {};
-    hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
-    // コマンドキューの生成がうまくいかなかったから起動できない
-    assert(SUCCEEDED(hr));
-    // コマンドアロケータを生成する
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
-    hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
-    // コマンドアロケータの生成がうまくいかなかったから起動できない
-    assert(SUCCEEDED(hr));
-    // コマンドリストを生成する
-    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
-    hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
-    // コマンドリストの生成がうまくいかなかったから起動できない
-    assert(SUCCEEDED(hr));
-    // スワップチェーンを生成する
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc {};
-    swapChainDesc.Width = WinApp::KClientWidth; // 画面の幅
-    swapChainDesc.Height = WinApp::KClientHeight; // 画面の高さ
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 色の形式
-    swapChainDesc.SampleDesc.Count = 1; // マルチサンプルしない
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // 画面のターゲットとして利用する
-    swapChainDesc.BufferCount = 2; // ダブルバッファ
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // モニターに移したら、中身を破棄
-    // コマンドキュー、ウィンドウハンドル、設定をして渡す
-    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
-
     // デスクリプタヒープの生成
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescripotrHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 
@@ -201,6 +139,8 @@ void DirectXCommon::Initialize()
     assert(SUCCEEDED(hr));
     hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
     assert(SUCCEEDED(hr));
+
+    // CommonInitialize();
 
     // RTVの設定
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
@@ -290,4 +230,81 @@ void DirectXCommon::Initialize()
         srvDescriptorHeap.Get(),
         srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
         srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+}
+
+void DirectXCommon::CommonInitialize()
+{
+
+    // コマンドキュー
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
+    D3D12_COMMAND_QUEUE_DESC commandQueueDesc {};
+    hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
+    // コマンドキューの生成がうまくいかなかったから起動できない
+    assert(SUCCEEDED(hr));
+    // コマンドアロケータを生成する
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
+    hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+    // コマンドアロケータの生成がうまくいかなかったから起動できない
+    assert(SUCCEEDED(hr));
+    // コマンドリストを生成する
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
+    hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
+    // コマンドリストの生成がうまくいかなかったから起動できない
+    assert(SUCCEEDED(hr));
+
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc_ = swapChainInitialize();
+
+    // コマンドキュー、ウィンドウハンドル、設定をして渡す
+    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp_->GetHwnd(), &swapChainDesc_, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+}
+
+DXGI_SWAP_CHAIN_DESC1 DirectXCommon::swapChainInitialize()
+{
+    // スワップチェーンを生成する
+    Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc {};
+    swapChainDesc.Width = WinApp::KClientWidth; // 画面の幅
+    swapChainDesc.Height = WinApp::KClientHeight; // 画面の高さ
+    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 色の形式
+    swapChainDesc.SampleDesc.Count = 1; // マルチサンプルしない
+    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // 画面のターゲットとして利用する
+    swapChainDesc.BufferCount = 2; // ダブルバッファ
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // モニターに移したら、中身を破棄
+
+    return swapChainDesc;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::DepthBufferInitialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height)
+{
+
+    D3D12_RESOURCE_DESC resourceDesc {};
+    resourceDesc.Width = width;
+    resourceDesc.Height = height;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    // 利用するheaoの設定
+    D3D12_HEAP_PROPERTIES heapProperties {};
+    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    // 震度値のクリア設定
+    D3D12_CLEAR_VALUE depthClearValue {};
+    depthClearValue.DepthStencil.Depth = 1.0f;
+    depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+    // Resourceの設定
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+    HRESULT hr = device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &depthClearValue, IID_PPV_ARGS(&resource));
+
+    assert(SUCCEEDED(hr));
+    return resource;
 }
