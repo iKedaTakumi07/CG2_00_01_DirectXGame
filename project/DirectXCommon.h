@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <d3d12.h>
+#include <dxcapi.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
 
@@ -35,9 +36,11 @@ private:
     void swapChainInitialize();
     // スワップチェーンを生成する
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc {};
 
     void DepthBufferInitialize();
-    
+    // Resourceの設定
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
 
     void DescriptorInitialize();
     uint32_t desriptorSizeSRV;
@@ -52,6 +55,7 @@ private:
     // SwapChainResource
     /*Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2];*/
     std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
 
     // RTVを二つ作るのでディスクリプタを2用意
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
@@ -60,4 +64,22 @@ private:
 
     void DepthStencilInitialize();
 
+    void fenceInitialize();
+    // 初期値0でfenecを作る
+    Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+
+    void viewportInitialize();
+    // びゅーポート
+    D3D12_VIEWPORT viewport {};
+
+    void scissorRectInitialize();
+    // シザー矩形
+    D3D12_RECT scissorRect {};
+
+    void dxcCompilerInitialize();
+    // dxcCompilerを初期化
+    Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
+    Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+
+    void ImguiInitialize();
 };

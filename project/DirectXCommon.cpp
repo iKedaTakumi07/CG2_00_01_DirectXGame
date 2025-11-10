@@ -2,7 +2,9 @@
 #include "Logger.h"
 #include "StringUtility.h"
 
-#include <dxcapi.h>
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -58,78 +60,18 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
     this->winApp_ = winApp;
 
-    deviceInitialize();
-    CommonInitialize();
-    swapChainInitialize();
-
-    // ===========================================
-    // フェンス
-    // ===========================================
-
-    // 初期値0でfenecを作る
-    Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
-    uint64_t fenceValue = 0;
-    hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-    assert(SUCCEEDED(hr));
-
-    // FenceのSignalを待つためのイベントを作る
-    HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    assert(fenceEvent != nullptr);
-
-    // ===========================================
-    // ビューポート&シザリング矩形
-    // ===========================================
-
-    // びゅーポート
-    D3D12_VIEWPORT viewport {};
-    // クライアント領域のサイズと一緒にして画面全体に表示
-    viewport.Width = WinApp::KClientWidth;
-    viewport.Height = WinApp::KClientHeight;
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-
-    // シザー矩形
-    D3D12_RECT scissorRect {};
-    // 基本的にビューポートと同じ矩形が構成されるようにする
-    scissorRect.left = 0;
-    scissorRect.right = WinApp::KClientWidth;
-    scissorRect.top = 0;
-    scissorRect.bottom = WinApp::KClientHeight;
-
-    // ===========================================
-    // DXCコンパイラ
-    // ===========================================
-
-    // dxcCompilerを初期化
-    Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
-    Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
-    hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-    assert(SUCCEEDED(hr));
-    hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
-    assert(SUCCEEDED(hr));
-
-    // 現時点ではincludeはしないが、nicludeに対するための設定を行っておく
-    Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-    hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
-    assert(SUCCEEDED(hr));
-
-    // ===========================================
-    // ImGui
-    // ===========================================
-
-    // ImGui初期化
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplWin32_Init(winApp->GetHwnd());
-    ImGui_ImplDX12_Init(device.Get(),
-        swapChainDesc.BufferCount,
-        rtvDesc.Format,
-        srvDescriptorHeap.Get(),
-        srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-        srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    deviceInitialize(); // デバイス
+    CommonInitialize(); // コマンド関連
+    swapChainInitialize(); // スワップチェーン
+    DepthBufferInitialize(); // 深度バッフア
+    DescriptorInitialize(); // 各種デスクリプタヒープ
+    rtvInitialize(); // レンダーターゲットビュー
+    DepthStencilInitialize(); // 深度ステンシル
+    fenceInitialize(); // フェンス
+    viewportInitialize(); // ビューポート
+    scissorRectInitialize(); // シザリング矩形
+    dxcCompilerInitialize(); // DXCコンパイラ
+    ImguiInitialize(); // Imgui
 }
 
 void DirectXCommon::deviceInitialize()
@@ -264,7 +206,6 @@ void DirectXCommon::swapChainInitialize()
 {
     HRESULT hr;
 
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc {};
     swapChainDesc.Width = winApp_->KClientWidth; // 画面の幅
     swapChainDesc.Height = winApp_->KClientHeight; // 画面の高さ
     swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 色の形式
@@ -299,9 +240,6 @@ void DirectXCommon::DepthBufferInitialize()
     depthClearValue.DepthStencil.Depth = 1.0f;
     depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-    // Resourceの設定
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
-
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
@@ -325,24 +263,6 @@ void DirectXCommon::DescriptorInitialize()
     srvDescriptorHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
     // DSV用のひーぷでディスクリプタの数は1
     dsvDescriptorHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
-
-    // SRVを作成するdescriptorHeapの場所を決める
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 1);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 1);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 2);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 2);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU3 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 3);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU3 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 3);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU4 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 4);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU4 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 4);
-
-    // SRVの生成
-    device->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-
-    device->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
 }
 
 void DirectXCommon::rtvInitialize()
@@ -356,7 +276,7 @@ void DirectXCommon::rtvInitialize()
     assert(SUCCEEDED(hr));
 
     // RTVの設定
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
+
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をSRGBに変換して書き込む
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして書き込む
     // 　ディスクリプタの先頭を取得する
@@ -372,13 +292,75 @@ void DirectXCommon::rtvInitialize()
 
 void DirectXCommon::DepthStencilInitialize()
 {
-    // depthStencilTextureをウィンドウのサイズで作成
-    Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthSetencilTextureResource(device, winApp_->KClientWidth, winApp_->KClientHeight);
-
     // DSV
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc {};
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
     // DSVheapの先頭にDSVを作る
-    device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+}
+
+void DirectXCommon::fenceInitialize()
+{
+    HRESULT hr;
+
+    uint64_t fenceValue = 0;
+    hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+    assert(SUCCEEDED(hr));
+
+    // FenceのSignalを待つためのイベントを作る
+    HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    assert(fenceEvent != nullptr);
+}
+
+void DirectXCommon::viewportInitialize()
+{
+
+    // クライアント領域のサイズと一緒にして画面全体に表示
+    viewport.Width = winApp_->KClientWidth;
+    viewport.Height = winApp_->KClientHeight;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+}
+
+void DirectXCommon::scissorRectInitialize()
+{
+
+    // 基本的にビューポートと同じ矩形が構成されるようにする
+    scissorRect.left = 0;
+    scissorRect.right = winApp_->KClientWidth;
+    scissorRect.top = 0;
+    scissorRect.bottom = winApp_->KClientHeight;
+}
+
+void DirectXCommon::dxcCompilerInitialize()
+{
+    HRESULT hr;
+
+    hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+    assert(SUCCEEDED(hr));
+    hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+    assert(SUCCEEDED(hr));
+
+    // 現時点ではincludeはしないが、nicludeに対するための設定を行っておく
+    Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
+    hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+    assert(SUCCEEDED(hr));
+}
+
+void DirectXCommon::ImguiInitialize()
+{
+    // ImGui初期化
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplWin32_Init(winApp_->GetHwnd());
+    ImGui_ImplDX12_Init(device.Get(),
+        swapChainDesc.BufferCount,
+        rtvDesc.Format,
+        srvDescriptorHeap.Get(),
+        srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+        srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 }
