@@ -15,6 +15,10 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
     D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
+    void PreDraw();
+
+    void PostDraw();
+
 private:
     // WindousAPI
     WinApp* winApp_ = nullptr;
@@ -67,6 +71,8 @@ private:
     void fenceInitialize();
     // 初期値0でfenecを作る
     Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+    uint64_t fenceValue = 0;
+    HANDLE fenceEvent;
 
     void viewportInitialize();
     // びゅーポート
