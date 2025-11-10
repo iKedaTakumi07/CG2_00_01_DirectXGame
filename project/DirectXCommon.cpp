@@ -120,11 +120,21 @@ void DirectXCommon::PostDraw()
     D3D12_RESOURCE_BARRIER barrier {};
 
     // 画面に各処理は全て終わり、画面に移すので、状態を遷移
+
+    // 今回のバリアはTransutuion
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    // noneにしておく
+    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    // バリアを貼る対象のリソース。現在のバックバッファに対して行う
+    barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+
     // 今回hRenderTargetからPresentにする
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+
     // TransitionBarrierを張る
     commandList->ResourceBarrier(1, &barrier);
+
     // 描画先のRTVを設定する
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
