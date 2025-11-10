@@ -9,19 +9,32 @@ public:
     // 初期化
     void Initialize(WinApp* winApp);
 
-    void deviceInitialize();
-
-    void CommonInitialize();
-
-    DXGI_SWAP_CHAIN_DESC1 swapChainInitialize();
-
-    Microsoft::WRL::ComPtr<ID3D12Resource> DepthBufferInitialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height);
-
 private:
-    // DirectX12デバイス
-    Microsoft::WRL::ComPtr<ID3D12Device> device;
-    // DXGIファクトリ
-    Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
     // WindousAPI
     WinApp* winApp_ = nullptr;
+
+    void deviceInitialize();
+    // DirectX12デバイス
+    Microsoft::WRL::ComPtr<ID3D12Device> device;
+    // DXGIファクトリ-
+    Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
+
+    void CommonInitialize();
+    // コマンドキュー
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
+    // コマンドリストを生成する
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList;
+    // コマンドアロケータを生成する
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;
+
+    void swapChainInitialize();
+    // スワップチェーンを生成する
+    Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
+
+    void DepthBufferInitialize();
+
+    void DescriptorInitialize();
+    uint32_t desriptorSizeSRV;
+    uint32_t desriptorSizeRTV;
+    uint32_t desriptorSizeDSV;
 };

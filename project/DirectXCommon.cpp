@@ -1,6 +1,12 @@
 #include "DirectXCommon.h"
+#include "Logger.h"
+#include "StringUtility.h"
+
 #include <cassert>
+#include <dxcapi.h>
+#include <filesystem>
 #include <format>
+#include <fstream>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -21,6 +27,20 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(const Microsof
     return DescripotrHeap;
 };
 
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    handleCPU.ptr += (descriptorSize * index);
+    return handleCPU;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
+{
+    D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+    handleGPU.ptr += (descriptorSize * index);
+    return handleGPU;
+}
+
 void DirectXCommon::Initialize(WinApp* winApp)
 {
     // null検出
@@ -28,37 +48,9 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
     this->winApp_ = winApp;
 
-    // ===========================================
-    // コマンド関連
-    // ===========================================
-
-    // デスクリプタヒープの生成
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescripotrHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-
-    // SRV用のヒープでディスクリプタの数128。SRVはShadre内で触るものなので、ShaderVisiblrはtrue
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-
-    // CommonInitialize();
-
-    // RTVの設定
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
-    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をSRGBに変換して書き込む
-    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして書き込む
-    // 　ディスクリプタの先頭を取得する
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescripotrHeap->GetCPUDescriptorHandleForHeapStart();
-    // RTVを二つ作るのでディスクリプタを2用意
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
-    // まず1つ目
-    rtvHandles[0] = rtvStartHandle;
-    device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
-    // 2つ目
-    rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    // 作成
-    device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
-
-    // ===========================================
-    // スワップチェーン
-    // ===========================================
+    deviceInitialize();
+    CommonInitialize();
+    swapChainInitialize();
 
     // ===========================================
     // フェンス
@@ -132,7 +124,6 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
 void DirectXCommon::deviceInitialize()
 {
-
     HRESULT hr;
 
 #ifdef _DEBUG
@@ -145,9 +136,24 @@ void DirectXCommon::deviceInitialize()
     }
 #endif // _DEBUG
 
+    // ログのディレクトリを用意
+    std::filesystem::create_directory("logs");
+    // 現在時刻を取得(UTC)
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    // ログファイルの名前にコンマ何秒はいらぬから削る
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
+    // 日本時間(pcの設定)に変更
+    std::chrono::zoned_time localTime { std::chrono::current_zone(), nowSeconds };
+    // formatを使って年月日_時分秒に変換
+    std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
+    // 時刻を使ってファイル名を決定
+    std::string logFilePath = std::string("logs/") + dateString + ".log";
+    // ファイルを作って書き込み準備
+    std::ofstream logStream(logFilePath);
+
     // 出力ウィンドウへの文字出力
-    Log(logStream, "Hello,DirectX!\n");
-    Log(logStream, ConvertString(std::format(L"clientSize{},{}\n", WinApp::KClientWidth, WinApp::KClientHeight)));
+    Logger::Log(logStream, "Hello,DirectX!\n");
+    Logger::Log(logStream, StringUtility::ConvertString(std::format(L"clientSize{},{}\n", WinApp::KClientWidth, WinApp::KClientHeight)));
 
     // 関数が成功したかマクロ判定
     hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
@@ -165,7 +171,7 @@ void DirectXCommon::deviceInitialize()
         // ソフトウェアアダプタでなければ採用
         if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
             // ログに出力
-            Log(logStream, ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
+            Logger::Log(logStream, StringUtility::ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
             break;
         }
         useAdapter = nullptr;
@@ -186,14 +192,14 @@ void DirectXCommon::deviceInitialize()
         hr = D3D12CreateDevice(useAdapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
         // 　指定したレベルで生成できたか確認
         if (SUCCEEDED(hr)) {
-            Log(logStream, std::format("FeatureLevel :{}\n", featureLevelStrings[i]));
+            Logger::Log(logStream, std::format("FeatureLevel :{}\n", featureLevelStrings[i]));
             break;
         }
     }
 
     // デバイスの生成がうまくいかなかったので起動できない
     assert(device != nullptr);
-    Log(logStream, "Complete create D3D12Device!\n"); // 初期化完了のログを出す
+    Logger::Log(logStream, "Complete create D3D12Device!\n"); // 初期化完了のログを出す
 #ifdef _DEBUG
     Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
     if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
@@ -228,34 +234,28 @@ void DirectXCommon::deviceInitialize()
 
 void DirectXCommon::CommonInitialize()
 {
+    HRESULT hr;
 
-    // コマンドキュー
-    Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
     D3D12_COMMAND_QUEUE_DESC commandQueueDesc {};
     hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
     // コマンドキューの生成がうまくいかなかったから起動できない
     assert(SUCCEEDED(hr));
-    // コマンドアロケータを生成する
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
+
     hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
     // コマンドアロケータの生成がうまくいかなかったから起動できない
     assert(SUCCEEDED(hr));
-    // コマンドリストを生成する
-    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
+
     hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
     // コマンドリストの生成がうまくいかなかったから起動できない
     assert(SUCCEEDED(hr));
 
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc_ = swapChainInitialize();
-
     // コマンドキュー、ウィンドウハンドル、設定をして渡す
-    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp_->GetHwnd(), &swapChainDesc_, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+    hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp_->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 }
 
-DXGI_SWAP_CHAIN_DESC1 DirectXCommon::swapChainInitialize()
+void DirectXCommon::swapChainInitialize()
 {
-    // スワップチェーンを生成する
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
+    HRESULT hr;
 
     // SwapChainからResourceを引っ張てくる
     Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
@@ -273,16 +273,14 @@ DXGI_SWAP_CHAIN_DESC1 DirectXCommon::swapChainInitialize()
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // 画面のターゲットとして利用する
     swapChainDesc.BufferCount = 2; // ダブルバッファ
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // モニターに移したら、中身を破棄
-
-    return swapChainDesc;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::DepthBufferInitialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height)
+void DirectXCommon::DepthBufferInitialize()
 {
 
     D3D12_RESOURCE_DESC resourceDesc {};
-    resourceDesc.Width = width;
-    resourceDesc.Height = height;
+    resourceDesc.Width = winApp_->KClientWidth;
+    resourceDesc.Height = winApp_->KClientHeight;
     resourceDesc.MipLevels = 1;
     resourceDesc.DepthOrArraySize = 1;
     resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -309,5 +307,62 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::DepthBufferInitialize(cons
         &depthClearValue, IID_PPV_ARGS(&resource));
 
     assert(SUCCEEDED(hr));
-    return resource;
+}
+
+void DirectXCommon::DescriptorInitialize()
+{
+    // descriptorSize
+    desriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    desriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    desriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+    // RTVデスクリプタヒープの生成
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescripotrHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+
+    // SRV用のヒープでディスクリプタの数128。SRVはShadre内で触るものなので、ShaderVisiblrはtrue
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+
+    // RTVの設定
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
+    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をSRGBに変換して書き込む
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして書き込む
+    // 　ディスクリプタの先頭を取得する
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescripotrHeap->GetCPUDescriptorHandleForHeapStart();
+    // RTVを二つ作るのでディスクリプタを2用意
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+    // まず1つ目
+    rtvHandles[0] = rtvStartHandle;
+    device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
+    // 2つ目
+    rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    // 作成
+    device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
+
+    // SRVを作成するdescriptorHeapの場所を決める
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 1);
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 1);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 2);
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 2);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU3 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 3);
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU3 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 3);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU4 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 4);
+    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU4 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), desriptorSizeSRV, 4);
+
+    // SRVの生成
+    device->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+
+    device->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
+
+    // DSV用のひーぷでディスクリプタの数は1
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = createDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+
+    // DSV
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc {};
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    // DSVheapの先頭にDSVを作る
+    device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
