@@ -664,7 +664,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     D3DResourceLeakChecker leakChecl;
 
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
-    SetUnhandledExceptionFilter(ExportDump);
+    /*SetUnhandledExceptionFilter(ExportDump);*/
 
     // winapp初期化
     WinApp* winApp = nullptr;
@@ -684,45 +684,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     input->Initialize(winApp);
 
     // RootSignature作成
-    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
-    descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    //D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
+    //descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-    descriptorRange[0].BaseShaderRegister = 0;
-    descriptorRange[0].NumDescriptors = 1;
-    descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    //D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+    //descriptorRange[0].BaseShaderRegister = 0;
+    //descriptorRange[0].NumDescriptors = 1;
+    //descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    //descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    // RootParameter作成
-    D3D12_ROOT_PARAMETER rootParameters[4] = {};
-    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[0].Descriptor.ShaderRegister = 0;
-    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParameters[1].Descriptor.ShaderRegister = 0;
-    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
-    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[3].Descriptor.ShaderRegister = 1;
+    //// RootParameter作成
+    //D3D12_ROOT_PARAMETER rootParameters[4] = {};
+    //rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    //rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    //rootParameters[0].Descriptor.ShaderRegister = 0;
+    //rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    //rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    //rootParameters[1].Descriptor.ShaderRegister = 0;
+    //rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    //rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    //rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+    //rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+    //rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    //rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    //rootParameters[3].Descriptor.ShaderRegister = 1;
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-    staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
-    staticSamplers[0].ShaderRegister = 0;
-    staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    descriptionRootSignature.pStaticSamplers = staticSamplers;
-    descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
+    //D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+    //staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    //staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    //staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    //staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    //staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    //staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+    //staticSamplers[0].ShaderRegister = 0;
+    //staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    //descriptionRootSignature.pStaticSamplers = staticSamplers;
+    //descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
-    descriptionRootSignature.pParameters = rootParameters;
-    descriptionRootSignature.NumParameters = _countof(rootParameters);
+    //descriptionRootSignature.pParameters = rootParameters;
+    //descriptionRootSignature.NumParameters = _countof(rootParameters);
 
     // シリアスライズしてバイナリにする
     //Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
@@ -852,31 +852,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     /*vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));*/
 
     // 左下
-    vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
-    vertexData[0].texcoord = { 0.0f, 1.0f };
+    /*vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
+    vertexData[0].texcoord = { 0.0f, 1.0f };*/
     /* vertexData[0].normal.x = vertexData[0].position.x;
      vertexData[0].normal.y = vertexData[0].position.y;
      vertexData[0].normal.z = vertexData[0].position.z;*/
 
     // 上
-    vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
-    vertexData[1].texcoord = { 0.5f, 0.0f };
+    //vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
+    //vertexData[1].texcoord = { 0.5f, 0.0f };
 
-    // 右下
-    vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
-    vertexData[2].texcoord = { 1.0f, 1.0f };
+    //// 右下
+    //vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
+    //vertexData[2].texcoord = { 1.0f, 1.0f };
 
-    // 左下2
-    vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
-    vertexData[3].texcoord = { 0.0f, 1.0f };
+    //// 左下2
+    //vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
+    //vertexData[3].texcoord = { 0.0f, 1.0f };
 
-    // 上2
-    vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-    vertexData[4].texcoord = { 0.5f, 0.0f };
+    //// 上2
+    //vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+    //vertexData[4].texcoord = { 0.5f, 0.0f };
 
-    // 右下2
-    vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
-    vertexData[5].texcoord = { 1.0f, 1.0f };
+    //// 右下2
+    //vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
+    //vertexData[5].texcoord = { 1.0f, 1.0f };
 
     // マテリアル用のリソースを作る
     //Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(device, sizeof(Material));
@@ -912,11 +912,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     //directionalLightData->intensity = 1.0f;
 
     // Transform変数を作る
-    Transform transform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+    /*Transform transform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameratransform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -10.0f } };
 
     float kWindowWidth = 1280.0f;
-    float kWindowHeight = 720.0f;
+    float kWindowHeight = 720.0f;*/
 
     // Textureを読み込み
     //DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
@@ -947,10 +947,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     //srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
 
     // heapの設定
-    D3D12_HEAP_PROPERTIES heapProperties {};
+    /*D3D12_HEAP_PROPERTIES heapProperties {};
     heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
     heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;*/
 
     // depthStencilTextureをウィンドウのサイズで作成
     //Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthSetencilTextureResource(device, WinApp::KClientWidth, WinApp::KClientHeight);

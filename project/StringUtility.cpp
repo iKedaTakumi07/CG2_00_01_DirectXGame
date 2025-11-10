@@ -1,5 +1,6 @@
-#include <stringapiset.h>
+#include "Windows.h"
 #include <chrono>
+#include <stringapiset.h>
 
 namespace StringUtility {
 // string->wstring
