@@ -299,6 +299,9 @@ void DirectXCommon::DepthBufferInitialize()
     depthClearValue.DepthStencil.Depth = 1.0f;
     depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
+    // Resourceの設定
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,

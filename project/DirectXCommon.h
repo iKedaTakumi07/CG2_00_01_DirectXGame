@@ -37,8 +37,7 @@ private:
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
 
     void DepthBufferInitialize();
-    // Resourceの設定
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+    
 
     void DescriptorInitialize();
     uint32_t desriptorSizeSRV;
