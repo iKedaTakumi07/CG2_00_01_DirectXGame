@@ -1,5 +1,8 @@
 #pragma once
+#include "externals/DirectXTex/d3dx12.h"
+
 #include "WinApp.h"
+#include "externals/DirectXTex/DirectXTex.h"
 #include <array>
 #include <cassert>
 #include <d3d12.h>
@@ -9,15 +12,28 @@
 
 class DirectXCommon {
 public:
-    // 初期化
-    void Initialize(WinApp* winApp);
-
     D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
     D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
+
+    // シェーダーのコンパイル
+    Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
+    // バッフアリソースの生成
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizwInBytes);
+    // テクスチャリソースの生成
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+    // テクスチャデータの転送
+    Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
+    // 初期化
+    void Initialize(WinApp* winApp);
 
     void PreDraw();
 
     void PostDraw();
+
+    // getter
+    ID3D12Device* GetDevice() const { return device.Get(); };
+    ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 
 private:
     // WindousAPI
@@ -86,6 +102,7 @@ private:
     // dxcCompilerを初期化
     Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
     Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+    Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 
     void ImguiInitialize();
 };
