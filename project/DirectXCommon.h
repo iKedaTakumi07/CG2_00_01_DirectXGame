@@ -36,6 +36,7 @@ public:
     // getter
     ID3D12Device* GetDevice() const { return device.Get(); };
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+    HANDLE GetfenceEvent() { return fenceEvent; }
 
 private:
     // WindousAPI

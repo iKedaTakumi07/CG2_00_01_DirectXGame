@@ -201,7 +201,7 @@ void DirectXCommon::UploadTextureData(ID3D12Resource* texture, const DirectX::Sc
     commandList->ResourceBarrier(1, &barrier);
 }
 
-static DirectX::ScratchImage LoadTexture(const std::string& filePath)
+DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 {
     // テクスチャファイルを読み込んでプログラムで使えるようにする
     DirectX::ScratchImage image {};
