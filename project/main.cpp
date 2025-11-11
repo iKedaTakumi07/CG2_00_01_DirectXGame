@@ -1135,7 +1135,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // SRV
         dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
         // 描画
-        dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+        /*dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);*/
 
         //
         // 2d/スプライト

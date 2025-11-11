@@ -32,6 +32,7 @@ public:
     void PreDraw();
 
     void PostDraw();
+    void FlushCommandQueue();
 
     // getter
     ID3D12Device* GetDevice() const { return device.Get(); };

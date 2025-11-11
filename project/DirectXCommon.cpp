@@ -199,6 +199,8 @@ void DirectXCommon::UploadTextureData(ID3D12Resource* texture, const DirectX::Sc
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
     commandList->ResourceBarrier(1, &barrier);
+
+    FlushCommandQueue();
 }
 
 DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
@@ -275,10 +277,12 @@ void DirectXCommon::PreDraw()
 
 void DirectXCommon::PostDraw()
 {
-    HRESULT hr;
 
     // バックバッファのインデックス取得
     UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+    // 描画先のRTVを設定する
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
     // TransitionBarrierの設定
     D3D12_RESOURCE_BARRIER barrier {};
@@ -299,12 +303,15 @@ void DirectXCommon::PostDraw()
     // TransitionBarrierを張る
     commandList->ResourceBarrier(1, &barrier);
 
-    // 描画先のRTVを設定する
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-
     // 指定した震度で画面全体をクリアする
     commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
+    FlushCommandQueue();
+}
+
+void DirectXCommon::FlushCommandQueue()
+{
+    HRESULT hr;
     // コマンドリストの内容を確定させる
     hr = commandList->Close();
     assert(SUCCEEDED(hr));
