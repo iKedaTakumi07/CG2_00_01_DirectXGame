@@ -1,5 +1,6 @@
 #define DIRECTINPUT_VERSION 0x0800
 
+#include "D3dResourceLeakChecker.h"
 #include "DirectXCommon.h"
 #include "Input.h"
 #include "Logger.h"
@@ -10,8 +11,6 @@
 #include <cassert>
 #include <chrono>
 #include <dinput.h>
-
-#include <dxgidebug.h>
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -82,18 +81,6 @@ struct MaterialData {
 struct ModelData {
     std::vector<VertexData> vertices;
     MaterialData material;
-};
-struct D3DResourceLeakChecker {
-    ~D3DResourceLeakChecker()
-    {
-        // リソースチェック
-        Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-            debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-            debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-            debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-        }
-    }
 };
 struct ChunkHeader {
     char id[4]; // チャンク毎のID
@@ -519,10 +506,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // ファイルを作って書き込み準備
     std::ofstream logStream(logFilePath);
 
-    D3DResourceLeakChecker leakChecl;
+    D3dResourceLeakChecker leakChecl;
 
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
-    /*SetUnhandledExceptionFilter(ExportDump);*/
+    SetUnhandledExceptionFilter(ExportDump);
 
     // winapp初期化
     WinApp* winApp = nullptr;
