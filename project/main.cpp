@@ -1189,7 +1189,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     delete input;
     delete winApp;
-    // エラー発生場所
     delete dxCommon;
 
     return 0;
