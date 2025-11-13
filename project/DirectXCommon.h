@@ -7,6 +7,7 @@
 #include <cassert>
 #include <d3d12.h>
 #include <dxcapi.h>
+#include <chrono>
 #include <dxgi1_6.h>
 #include <wrl.h>
 
@@ -109,4 +110,10 @@ private:
     Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 
     void ImguiInitialize();
+
+    // FPS固定初期化
+    void InitializeFixFPS();
+    void UpdateFixFPS();
+    // 記録時間FPS固定用
+    std::chrono::steady_clock::time_point reference_;
 };
