@@ -12,6 +12,8 @@
 #include <chrono>
 #include <dinput.h>
 
+#include "Sprite.h"
+#include "SpriteCommon.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
@@ -30,7 +32,7 @@
 #pragma comment(lib, "xaudio2.lib")
 #pragma comment(lib, "dinput8.lib")
 
-// extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 struct Vector2 {
     float x;
@@ -520,13 +522,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     dxCommon = new DirectXCommon();
     dxCommon->Initialize(winApp);
 
-    // DirectInputの初期化
-    // WNDCLASS w;
-    // w.hInstance = GetModuleHandle(nullptr);
-
     Input* input = nullptr;
     input = new Input();
     input->Initialize(winApp);
+
+    SpriteCommon* spriteCommon = nullptr;
+    spriteCommon = new SpriteCommon;
+    spriteCommon->Initialize();
 
     // RootSignature作成
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
@@ -1005,6 +1007,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     bool isSprite = true;
 
+    Sprite* sprite = new Sprite();
+    sprite->Initialize();
+
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
 
@@ -1177,6 +1182,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     delete input;
     delete winApp;
     delete dxCommon;
+    delete spriteCommon;
+    delete sprite;
 
     return 0;
 }
