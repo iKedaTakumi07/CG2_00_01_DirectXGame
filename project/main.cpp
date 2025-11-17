@@ -4,10 +4,11 @@
 #include "DirectXCommon.h"
 #include "Input.h"
 #include "Logger.h"
-#include "Sprite.h"
-#include "SpriteCommon.h"
 #include "StringUtility.h"
 #include "WinApp.h"
+
+#include "SpriteCommon.h"
+#include "Sprite.h"
 
 #include <DbgHelp.h>
 #include <cassert>
