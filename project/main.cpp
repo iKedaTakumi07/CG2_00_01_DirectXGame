@@ -668,53 +668,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // depthStencilTextureをウィンドウのサイズで作成
     /* Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthSetencilTextureResource(device, WinApp::KClientWidth, WinApp::KClientHeight);*/
 
-    // Sprite用の頂点リソースを作る
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = dxCommon->CreateBufferResource(sizeof(VertexData) * 4);
+  
 
-    // 頂点バッファビューを作る
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite {};
-    // リソースの先端のアドレスから使う
-    vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
-    // 使用するサイズ
-    vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 4;
-    // 1ツ当たりのサイズ
-    vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
-
-    VertexData* vertexDataSprite = nullptr;
-    vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
-    // 1枚目
-    vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
-    vertexDataSprite[0].texcoord = { 0.0f, 1.0f };
-    vertexDataSprite[0].normal = { 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[1].texcoord = { 0.0f, 0.0f };
-    vertexDataSprite[1].normal = { 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
-    vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
-    vertexDataSprite[2].normal = { 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };
-    vertexDataSprite[3].texcoord = { 1.0f, 0.0f };
-    vertexDataSprite[3].normal = { 0.0f, 0.0f, 1.0f };
-
-    // インデックスリソースにデータを書き込む
-    Microsoft::WRL::ComPtr<ID3D12Resource> indexResourceSprite = dxCommon->CreateBufferResource(sizeof(uint32_t) * 6);
-
-    D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite {};
-    // リソースの先頭のアドレスから使う
-    indexBufferViewSprite.BufferLocation = indexResourceSprite->GetGPUVirtualAddress();
-    // 使用するリソースのサイズはインデックス6つ分のサイズ
-    indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
-    // インデックスはuint32_Tとする
-    indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
-
-    uint32_t* indexDataSprite = nullptr;
-    indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
-    indexDataSprite[0] = 0;
-    indexDataSprite[1] = 1;
-    indexDataSprite[2] = 2;
-    indexDataSprite[3] = 1;
-    indexDataSprite[4] = 3;
-    indexDataSprite[5] = 2;
+   
 
     // Sprite用のマテリアルリソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = dxCommon->CreateBufferResource(sizeof(Material));
