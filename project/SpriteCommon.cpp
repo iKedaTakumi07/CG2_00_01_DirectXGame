@@ -4,11 +4,20 @@
 #include "externals/DirectXTex/d3dx12.h"
 #include <cassert>
 
-#pragma comment(lib, "d3d12.lib")
 
 void SpriteCommon::Initialize(DirectXCommon* dxcommon)
 {
-    graphicsPipelineInitialize(dxcommon);
+    dxCommon_ = dxcommon;
+
+    graphicsPipelineInitialize(dxCommon_);
+}
+
+void SpriteCommon::PrepareSpriteDraw()
+{
+    // RootSignatureを設定。PSOに設定しているけど別途設定が必要
+    dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+    dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+    dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void SpriteCommon::RootSignatureInitialize(DirectXCommon* dxcommon)
@@ -66,7 +75,7 @@ void SpriteCommon::RootSignatureInitialize(DirectXCommon* dxcommon)
     }
 
     // バイナリを元に生成
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+    rootSignature = nullptr;
     hr = dxcommon->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
     assert(SUCCEEDED(hr));
 }
@@ -75,51 +84,6 @@ void SpriteCommon::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 {
     // ルートシグネチャ作成
     RootSignatureInitialize(dxcommon);
-
-    // SRVを作成するdescriptorHeapの場所を決める
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxcommon->GetSRVCPUDescriptorHandle(1);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxcommon->GetSRVGPUDescriptorHandle(1);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = dxcommon->GetSRVCPUDescriptorHandle(2);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = dxcommon->GetSRVGPUDescriptorHandle(2);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU3 = dxcommon->GetSRVCPUDescriptorHandle(3);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU3 = dxcommon->GetSRVGPUDescriptorHandle(3);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU4 = dxcommon->GetSRVCPUDescriptorHandle(4);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU4 = dxcommon->GetSRVGPUDescriptorHandle(4);
-
-    // Textureを読み込み
-    DirectX::ScratchImage mipImages = dxcommon->LoadTexture("resources/uvChecker.png");
-    const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxcommon->CreateTextureResource(dxcommon->GetDevice(), metadata);
-
-    dxcommon->UploadTextureData(textureResource.Get(), mipImages);
-
-    // 2枚目Textureを読み込み
-    DirectX::ScratchImage mipImages2 = dxcommon->LoadTexture("resources/monsterBall.png");
-    const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
-    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = dxcommon->CreateTextureResource(dxcommon->GetDevice(), metadata2);
-    dxcommon->UploadTextureData(textureResource2.Get(), mipImages2);
-
-    // metaDataを基にSRVの設定
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
-    srvDesc.Format = metadata.format;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
-    // 2枚目metaDataを基にSRVの設定
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 {};
-    srvDesc2.Format = metadata2.format;
-    srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
-
-    // SRVの生成
-    dxcommon->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-
-    dxcommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
 
     // InputLayout
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
@@ -197,7 +161,7 @@ void SpriteCommon::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
     // 実際に生成
     HRESULT hr;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+    graphicsPipelineState = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
     assert(SUCCEEDED(hr));
 }
