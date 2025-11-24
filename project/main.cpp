@@ -4,6 +4,7 @@
 #include "DirectXCommon.h"
 #include "Input.h"
 #include "Logger.h"
+#include "Math.h"
 #include "StringUtility.h"
 #include "WinApp.h"
 
@@ -35,21 +36,6 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-struct Vector2 {
-    float x;
-    float y;
-};
-struct Vector3 {
-    float x;
-    float y;
-    float z;
-};
-struct Vector4 {
-    float x;
-    float y;
-    float z;
-    float w;
-};
 struct Matrix4x4 {
     float m[4][4];
 };
@@ -799,9 +785,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     ///
 
     bool isSprite = true;
-
-    Sprite* sprite = new Sprite();
-    sprite->Initialize(spriteCommon, winApp);
+    std::vector<Sprite*> sprites;
+    for (uint32_t i = 0; i < 5; ++i) {
+        Sprite* sprite = new Sprite();
+        sprite->Initialize(spriteCommon, winApp);
+        sprites.push_back(sprite);
+    }
 
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
@@ -858,7 +847,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         directionalLightData->direction = Normalize(directionalLightData->direction);
 
-        sprite->Update();
+        for (uint32_t i = 0; i < sprites.size(); ++i) {
+            Vector2 pos = sprites[i]->GetPosition();
+            pos.x = i * 100.0f;
+            pos.y = i * 100.0f;
+            sprites[i]->SetPosition(pos);
+            sprites[i]->Update();
+        }
 
         /*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
@@ -906,7 +901,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // 2d/スプライト
         //
 
-        sprite->Draw();
+        for (uint32_t i = 0; i < sprites.size(); ++i) {
+            sprites[i]->Draw();
+        }
 
         //
         // モデルデータ
@@ -945,7 +942,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     delete winApp;
     delete dxCommon;
     delete spriteCommon;
-    delete sprite;
+    for (uint32_t i = 0; i < sprites.size(); ++i) {
+        delete sprites[i];
+    }
 
     return 0;
 }

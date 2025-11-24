@@ -1,4 +1,5 @@
 #pragma once
+#include "Math.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
 #include <wrl.h>
@@ -8,26 +9,12 @@ class WinApp;
 
 class Sprite {
 public:
-    struct Vector2 {
-        float x;
-        float y;
-    };
-    struct Vector3 {
-        float x;
-        float y;
-        float z;
-    };
-    struct Vector4 {
-        float x;
-        float y;
-        float z;
-        float w;
-    };
     struct VertexData {
         Vector4 position;
         Vector2 texcoord;
         Vector3 normal;
     };
+
     struct Matrix4x4 {
         float m[4][4];
     };
@@ -149,6 +136,17 @@ public:
     // 更新
     void Draw();
 
+    // getter
+    const Vector2& GetPosition() const { return position; }
+    float GetRotation() const { return rotation; }
+    const Vector4& GetColor() { return materialData->color; }
+    const Vector2& GetSize() const { return size; }
+    // setter
+    void SetPosition(const Vector2& position) { this->position = position; }
+    void SetRotation(float rotation) { this->rotation = rotation; }
+    void SetColor(const Vector4& color) { materialData->color = color; }
+    void SetSize(const Vector2& size) { this->size = size; }
+
 private:
     void VertexResourceInitialize();
     void MaterialResourceInitialize();
@@ -181,5 +179,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
 
     // 動かす用のtransform
-    Transform transformSprite { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+    Transform transform { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+
+    Vector2 position = { 0.0f, 0.0f };
+    float rotation = 0.0f;
+    Vector2 size { 640.0f, 360.0f };
 };

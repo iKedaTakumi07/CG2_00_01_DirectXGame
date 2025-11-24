@@ -63,18 +63,18 @@ void Sprite::TransMatrixResourceInitialize()
 void Sprite::Update()
 {
     // 頂点リソースにデータを書き込む
-    vertexData[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
+    vertexData[0].position = { 0.0f, 1.0f, 0.0f, 1.0f };
     vertexData[0].texcoord = { 0.0f, 1.0f };
-    vertexData[0].normal = { 0.0f, 0.0f, 1.0f };
+    vertexData[0].normal = { 0.0f, 0.0f, -1.0f };
     vertexData[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };
     vertexData[1].texcoord = { 0.0f, 0.0f };
-    vertexData[1].normal = { 0.0f, 0.0f, 1.0f };
-    vertexData[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };
+    vertexData[1].normal = { 0.0f, 0.0f, -1.0f };
+    vertexData[2].position = { 1.0f, 1.0f, 0.0f, 1.0f };
     vertexData[2].texcoord = { 1.0f, 1.0f };
-    vertexData[2].normal = { 0.0f, 0.0f, 1.0f };
-    vertexData[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };
+    vertexData[2].normal = { 0.0f, 0.0f, -1.0f };
+    vertexData[3].position = { 1.0f, 0.0f, 0.0f, 1.0f };
     vertexData[3].texcoord = { 1.0f, 0.0f };
-    vertexData[3].normal = { 0.0f, 0.0f, 1.0f };
+    vertexData[3].normal = { 0.0f, 0.0f, -1.0f };
     // インデックスリソースにデータを書きこむ
     indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
     indexData[0] = 0;
@@ -85,7 +85,11 @@ void Sprite::Update()
     indexData[5] = 2;
 
     // sprite用
-    Matrix4x4 worldMatrix = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+    transform.translate = { position.x, position.y, 0.0f };
+    transform.rotate = { 0.0f, 0.0f, rotation };
+    transform.scale = { size.x, size.y, 1.0f };
+
+    Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
     Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(winApp_->KClientWidth), float(winApp_->KClientHeight), 0.0f, 100.0f);
     Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrix, Multiply(viewMatrixSprite, projectionMatrixSprite));
