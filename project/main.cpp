@@ -7,8 +7,8 @@
 #include "StringUtility.h"
 #include "WinApp.h"
 
-#include "SpriteCommon.h"
 #include "Sprite.h"
+#include "SpriteCommon.h"
 
 #include <DbgHelp.h>
 #include <cassert>
@@ -668,52 +668,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // depthStencilTextureをウィンドウのサイズで作成
     /* Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthSetencilTextureResource(device, WinApp::KClientWidth, WinApp::KClientHeight);*/
 
-  
+    /*Transform uvTransformSprite {
+           { 1.0f, 1.0f, 1.0f },
+           { 0.0f, 0.0f, 0.0f },
+           { 0.0f, 0.0f, 0.0f },
+    };*/
 
-   
-
-    // Sprite用のマテリアルリソースを作る
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = dxCommon->CreateBufferResource(sizeof(Material));
-
-    Material* materialDataSprite = nullptr;
-    // mapして書き込み
-    materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
-
-    // 今回は白を書き込んでみる
-    materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-    materialDataSprite->enableLighting = false;
-    materialDataSprite->uvTransform = MakeIdentity4x4();
-
-    Transform uvTransformSprite {
-        { 1.0f, 1.0f, 1.0f },
-        { 0.0f, 0.0f, 0.0f },
-        { 0.0f, 0.0f, 0.0f },
-    };
-
-    // Sprite用のtransformmatrix用のリソースを作る
-    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
-    // データを書き込む
-    TransformationMatrix* transformationMatrixDataSprite = nullptr;
-    // 書き込むためのアドレス取得
-    transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
-    // 単位行列を書き込む
-    transformationMatrixDataSprite->WVP = MakeIdentity4x4();
-    transformationMatrixDataSprite->world = MakeIdentity4x4();
-
-    // 平行光源
-    Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightMatrixResourceSprite = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
-    // データを書き込み
-    DirectionalLight* directionalLightDataSprite = nullptr;
-    // アドレスを取得
-    directionalLightMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightDataSprite));
-    // 書き込み
-    directionalLightDataSprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightDataSprite->direction = { 0.0f, -1.0f, 0.0f };
-    directionalLightDataSprite->intensity = 1.0f;
+    //// 平行光源
+    // Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightMatrixResourceSprite = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
+    //// データを書き込み
+    // DirectionalLight* directionalLightDataSprite = nullptr;
+    //// アドレスを取得
+    // directionalLightMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightDataSprite));
+    //// 書き込み
+    // directionalLightDataSprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    // directionalLightDataSprite->direction = { 0.0f, -1.0f, 0.0f };
+    // directionalLightDataSprite->intensity = 1.0f;
 
     // 動かす用のtransform
-    Transform transformSprite { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+    /*Transform transformSprite { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };*/
 
     /// ==============================================================================================================
     /// モデルデータ
@@ -828,7 +801,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     bool isSprite = true;
 
     Sprite* sprite = new Sprite();
-    sprite->Initialize();
+    sprite->Initialize(spriteCommon, winApp);
 
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
@@ -855,17 +828,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ImGui::Begin("Settings");
 
         ImGui::Checkbox("isSprite", &isSprite);
-
-        if (isSprite) {
-            if (ImGui::CollapsingHeader("Sprite")) {
-                ImGui::DragFloat3("Translate##Sprite", &transformSprite.translate.x, 0.1f);
-                ImGui::DragFloat3("Rotate##Sprite", &transformSprite.rotate.x, 0.01f);
-                ImGui::DragFloat3("Scale##Sprite", &transformSprite.scale.x, 0.01f);
-                ImGui::DragFloat2("UVTranslate##Sprite", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-                ImGui::DragFloat2("UVscale##Sprite", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-                ImGui::SliderAngle("UVRotate##Sprite", &uvTransformSprite.rotate.z);
-            }
-        }
 
         if (ImGui::CollapsingHeader("Model##Model")) {
             ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
@@ -896,20 +858,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         directionalLightData->direction = Normalize(directionalLightData->direction);
 
-        // sprite用
-        Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-        Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-        Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kWindowWidth), float(kWindowHeight), 0.0f, 100.0f);
-        Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-        transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
-        transformationMatrixDataSprite->world = worldMatrixSprite;
+        sprite->Update();
 
-        Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+        /*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
         materialDataSprite->uvTransform = uvTransformMatrix;
 
-        directionalLightDataSprite->direction = Normalize(directionalLightDataSprite->direction);
+        directionalLightDataSprite->direction = Normalize(directionalLightDataSprite->direction);*/
 
         // 球体
 
@@ -949,19 +905,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         //
         // 2d/スプライト
         //
-        if (isSprite) {
-            dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-            dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourceSprite->GetGPUVirtualAddress());
-            dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-            // Spriteの描画
-            dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-            // transformationMatrixCBufferの場所を設置
-            dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-            dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
 
-            // 描画
-            dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
-        }
+        sprite->Draw();
 
         //
         // モデルデータ
