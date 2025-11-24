@@ -85,7 +85,10 @@ void Sprite::Update()
     indexData[5] = 2;
 
     // sprite用
-    Matrix4x4 worldMatrix = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+    transform.translate = { position.x, position.y, 0.0f };
+    transform.rotate = { 0.0f, 0.0f, rotation };
+
+    Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
     Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(winApp_->KClientWidth), float(winApp_->KClientHeight), 0.0f, 100.0f);
     Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrix, Multiply(viewMatrixSprite, projectionMatrixSprite));

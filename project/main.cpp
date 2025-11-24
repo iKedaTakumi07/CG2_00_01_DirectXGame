@@ -4,6 +4,7 @@
 #include "DirectXCommon.h"
 #include "Input.h"
 #include "Logger.h"
+#include "Math.h"
 #include "StringUtility.h"
 #include "WinApp.h"
 
@@ -35,21 +36,6 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-struct Vector2 {
-    float x;
-    float y;
-};
-struct Vector3 {
-    float x;
-    float y;
-    float z;
-};
-struct Vector4 {
-    float x;
-    float y;
-    float z;
-    float w;
-};
 struct Matrix4x4 {
     float m[4][4];
 };
@@ -857,6 +843,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         transformationMatrixData->world = worldMatrix;
 
         directionalLightData->direction = Normalize(directionalLightData->direction);
+
+        Vector2 position = sprite->GetPosition();
+        position.x += 0.1f;
+        position.y += 0.1f;
+        sprite->SetPosition(position);
+        float rotation = sprite->GetRotation();
+        rotation += 0.01f;
+        sprite->SetRotation(rotation);
 
         sprite->Update();
 
