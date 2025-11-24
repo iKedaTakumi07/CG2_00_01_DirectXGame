@@ -1,9 +1,11 @@
 #pragma once
+#include "StringUtility.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
 #include <string>
 #include <wrl.h>
-class DirectXCollision;
+
+class DirectXCommon;
 
 class TextureManager {
 public:
@@ -12,7 +14,10 @@ public:
     void Finalize();
 
     // 初期化
-    void Initialize();
+    void Initialize(DirectXCommon* DirectXCollision);
+
+    // テクスチャファイルの読み込み
+    void LoadTexture(const std::string& filePath);
 
 private:
     static TextureManager* instance;
@@ -33,4 +38,6 @@ private:
 
     // テクスチャデータ
     std::vector<TextureData> textureDatas;
+
+    DirectXCommon* textureManager_;
 };

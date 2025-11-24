@@ -879,8 +879,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ImGui::Render();
 
         dxCommon->PreDraw();
-
-        TextureManager::getInstance()->Initialize();
+        
+        TextureManager::getInstance()->Initialize(dxCommon);
 
         spriteCommon->PrepareSpriteDraw();
 
