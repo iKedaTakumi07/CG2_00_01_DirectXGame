@@ -785,9 +785,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     ///
 
     bool isSprite = true;
-
-    Sprite* sprite = new Sprite();
-    sprite->Initialize(spriteCommon, winApp);
+    std::vector<Sprite*> sprites;
+    for (uint32_t i = 0; i < 5; ++i) {
+        Sprite* sprite = new Sprite();
+        sprite->Initialize(spriteCommon, winApp);
+        sprites.push_back(sprite);
+    }
 
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
@@ -844,15 +847,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         directionalLightData->direction = Normalize(directionalLightData->direction);
 
-        Vector2 position = sprite->GetPosition();
-        position.x += 0.1f;
-        position.y += 0.1f;
-        sprite->SetPosition(position);
-        float rotation = sprite->GetRotation();
-        rotation += 0.01f;
-        sprite->SetRotation(rotation);
-
-        sprite->Update();
+        for (uint32_t i = 0; i < sprites.size(); ++i) {
+            Vector2 pos = sprites[i]->GetPosition();
+            pos.x = i * 100.0f;
+            pos.y = i * 100.0f;
+            sprites[i]->SetPosition(pos);
+            sprites[i]->Update();
+        }
 
         /*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
@@ -900,7 +901,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // 2d/スプライト
         //
 
-        sprite->Draw();
+        for (uint32_t i = 0; i < sprites.size(); ++i) {
+            sprites[i]->Draw();
+        }
 
         //
         // モデルデータ
@@ -939,7 +942,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     delete winApp;
     delete dxCommon;
     delete spriteCommon;
-    delete sprite;
+    for (uint32_t i = 0; i < sprites.size(); ++i) {
+        delete sprites[i];
+    }
 
     return 0;
 }

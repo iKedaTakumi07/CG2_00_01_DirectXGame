@@ -139,9 +139,13 @@ public:
     // getter
     const Vector2& GetPosition() const { return position; }
     float GetRotation() const { return rotation; }
+    const Vector4& GetColor() { return materialData->color; }
+    const Vector2& GetSize() const { return size; }
     // setter
     void SetPosition(const Vector2& position) { this->position = position; }
     void SetRotation(float rotation) { this->rotation = rotation; }
+    void SetColor(const Vector4& color) { materialData->color = color; }
+    void SetSize(const Vector2& size) { this->size = size; }
 
 private:
     void VertexResourceInitialize();
@@ -179,5 +183,5 @@ private:
 
     Vector2 position = { 0.0f, 0.0f };
     float rotation = 0.0f;
-
+    Vector2 size { 640.0f, 360.0f };
 };
