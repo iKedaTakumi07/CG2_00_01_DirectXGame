@@ -26,6 +26,17 @@ void TextureManager::Initialize(DirectXCommon* DirectXCollision)
 
 void TextureManager::LoadTexture(const std::string& filePath)
 {
+    // 読み込み済みテクスチャを検索
+    auto it = std::find_if(
+        textureDatas.begin(),
+        textureDatas.end(),
+        [&](TextureData& textureData) { return textureData.filePath == filePath; }
+
+    );
+    if (it != textureDatas.end()) {
+        return;
+    }
+
     // テクスチャファイルを読み込んでプログラムで使えるようにする
     DirectX::ScratchImage image {};
     std::wstring filePathW = StringUtility::ConvertString(filePath);
@@ -60,7 +71,5 @@ void TextureManager::LoadTexture(const std::string& filePath)
     // SRVの生成
     textureManager_->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU);
 
-
-    DirectXCommon::UploadTextureData
     textureManager_->UploadTextureData(textureData.resource.Get(), image);
 }
