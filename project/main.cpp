@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "Math.h"
 #include "StringUtility.h"
+#include "TextureManager.h"
 #include "WinApp.h"
 
 #include "Sprite.h"
@@ -879,6 +880,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         dxCommon->PreDraw();
 
+        TextureManager::getInstance()->Initialize();
+
         spriteCommon->PrepareSpriteDraw();
 
         //
@@ -921,6 +924,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         // 実際のcommandListのImGuiの描画コマンドを詰む
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
+
+        TextureManager::getInstance()->Finalize();
 
         dxCommon->PostDraw();
     }

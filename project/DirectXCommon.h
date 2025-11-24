@@ -40,6 +40,10 @@ public:
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
     HANDLE GetfenceEvent() { return fenceEvent; }
 
+    
+    // 最大SRV
+    static const uint32_t kMaxSRVCount;
+
 private:
     // WindousAPI
     WinApp* winApp_ = nullptr;
@@ -116,4 +120,6 @@ private:
     void UpdateFixFPS();
     // 記録時間FPS固定用
     std::chrono::steady_clock::time_point reference_;
+
+
 };
