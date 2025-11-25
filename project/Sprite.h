@@ -143,6 +143,7 @@ public:
     float GetRotation() const { return rotation; }
     const Vector4& GetColor() { return materialData->color; }
     const Vector2& GetSize() const { return size; }
+    const uint32_t GettextureIndex() { return textureIndex; }
     // setter
     void SetPosition(const Vector2& position) { this->position = position; }
     void SetRotation(float rotation) { this->rotation = rotation; }

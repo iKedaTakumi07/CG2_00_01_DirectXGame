@@ -825,7 +825,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         ImGui::Begin("Settings");
 
-        ImGui::Checkbox("isSprite", &isSprite);
+        for (uint32_t i = 0; i < sprites.size(); ++i) {
+            ImGui::Text("textureIndex[%u]: %u", i, sprites[i]->GettextureIndex());
+        }
+        
+        /*ImGui::Checkbox("isSprite", &isSprite);*/
+        
 
         /* if (ImGui::CollapsingHeader("Model##Model")) {
              ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
