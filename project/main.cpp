@@ -532,23 +532,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU4 = dxCommon->GetSRVGPUDescriptorHandle(4);
 
     // Textureを読み込み
-    /* DirectX::ScratchImage mipImages = */ TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-    /*  const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-      Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata);
-      Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureResource, mipImages);*/
+    // DirectX::ScratchImage mipImages =
+    TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    // const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+    // Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata);
+    // Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureResource, mipImages);
 
     // 2枚目Textureを読み込み
-    /*   DirectX::ScratchImage mipImages2 = */ TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
+    // DirectX::ScratchImage mipImages2 =
+    TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
     // const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
     // Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata2);
     // Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = dxCommon->UploadTextureData(textureResource2, mipImages2);
 
     // metaDataを基にSRVの設定
-    /*  D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
-      srvDesc.Format = metadata.format;
-      srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-      srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-      srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);*/
+    // D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
+    // srvDesc.Format = metadata.format;
+    // srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    // srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    // srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
     //// 2枚目metaDataを基にSRVの設定
     // D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 {};

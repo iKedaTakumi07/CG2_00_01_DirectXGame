@@ -21,7 +21,7 @@ public:
     // バッフアリソースの生成
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizwInBytes);
     // テクスチャリソースの生成
-    Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
     // テクスチャデータの転送
     Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
    
