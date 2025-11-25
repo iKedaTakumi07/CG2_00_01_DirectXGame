@@ -518,6 +518,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     spriteCommon = new SpriteCommon;
     spriteCommon->Initialize(dxCommon);
 
+    TextureManager::getInstance()->Initialize(dxCommon);
+
     // SRVを作成するdescriptorHeapの場所を決める
     D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetSRVCPUDescriptorHandle(1);
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxCommon->GetSRVGPUDescriptorHandle(1);
@@ -886,23 +888,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         dxCommon->PreDraw();
 
-        TextureManager::getInstance()->Initialize(dxCommon);
-
         spriteCommon->PrepareSpriteDraw();
 
         //
         // 三角形
         //
 
-        dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-        // 形状を設定
-        // マテリアルCBuffrtの場所を設定
-        dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-        // wvp用のCBufferの場所を設定
-        dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-        dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
-        // SRV
-        dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+        //dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+        //// 形状を設定
+        //// マテリアルCBuffrtの場所を設定
+        //dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+        //// wvp用のCBufferの場所を設定
+        //dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+        //dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
+        //// SRV
+        //dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
         // 描画
         /*dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);*/
 
@@ -931,8 +931,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // 実際のcommandListのImGuiの描画コマンドを詰む
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
-        TextureManager::getInstance()->Finalize();
-
         dxCommon->PostDraw();
     }
 
@@ -951,6 +949,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     delete input;
     delete winApp;
+    TextureManager::getInstance()->Finalize();
     delete dxCommon;
     delete spriteCommon;
     for (uint32_t i = 0; i < sprites.size(); ++i) {
