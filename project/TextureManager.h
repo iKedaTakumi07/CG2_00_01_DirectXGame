@@ -19,6 +19,11 @@ public:
     // テクスチャファイルの読み込み
     void LoadTexture(const std::string& filePath);
 
+    // SRVインデクスの開始番号
+    uint32_t GetTextureIndexByFilePath(const std::string& filePath);
+    // テクスチャ番号からGPUハンドルを取得
+    D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandelGPU(uint32_t textureIndex);
+
 private:
     static TextureManager* instance;
 
@@ -39,5 +44,7 @@ private:
     // テクスチャデータ
     std::vector<TextureData> textureDatas;
 
-    DirectXCommon* textureManager_;
+    DirectXCommon* dxCommon;
+
+    static uint32_t kSRVIndexTop;
 };

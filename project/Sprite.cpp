@@ -1,7 +1,8 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "TextureManager.h"
 
-void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp)
+void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string texturefilePath)
 {
     this->spriteCommon_ = spriteCommon;
     this->winApp_ = winApp;
@@ -9,6 +10,8 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp)
     VertexResourceInitialize();
     MaterialResourceInitialize();
     TransMatrixResourceInitialize();
+
+    textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(texturefilePath);
 }
 
 void Sprite::VertexResourceInitialize()
@@ -110,7 +113,7 @@ void Sprite::Draw()
     // wvp用のCBufferの場所を設定
     spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
-    spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, spriteCommon_->GetDxCommon()->GetSRVGPUDescriptorHandle(1));
+    spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(textureIndex));
 
     // 描画
     spriteCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);

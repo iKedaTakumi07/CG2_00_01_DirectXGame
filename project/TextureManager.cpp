@@ -1,6 +1,8 @@
 #include "TextureManager.h"
 #include "DirectXCommon.h"
 
+uint32_t TextureManager::kSRVIndexTop = 1;
+
 TextureManager* TextureManager::instance = nullptr;
 
 TextureManager* TextureManager::getInstance()
@@ -19,7 +21,7 @@ void TextureManager::Finalize()
 
 void TextureManager::Initialize(DirectXCommon* DirectXCollision)
 {
-    this->textureManager_ = DirectXCollision;
+    this->dxCommon = DirectXCollision;
 
     textureDatas.reserve(DirectXCommon::kMaxSRVCount);
 }
@@ -54,13 +56,14 @@ void TextureManager::LoadTexture(const std::string& filePath)
 
     textureData.filePath = filePath;
     textureData.metadata = image.GetMetadata();
-    textureData.resource = textureManager_->CreateTextureResource(textureManager_->GetDevice(), textureData.metadata);
+    textureData.resource = dxCommon->CreateTextureResource(dxCommon->GetDevice(), textureData.metadata);
 
-    // テクスチャデータの要素番号
-    uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1);
+    // テクスチャデータの要素数番号からSRVのインデクスを計算
+    uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
+    assert(textureDatas.size() + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
 
-    textureData.srvHandleCPU = textureManager_->GetSRVCPUDescriptorHandle(srvIndex);
-    textureData.srvHandleGPU = textureManager_->GetSRVGPUDescriptorHandle(srvIndex);
+    textureData.srvHandleCPU = dxCommon->GetSRVCPUDescriptorHandle(srvIndex);
+    textureData.srvHandleGPU = dxCommon->GetSRVGPUDescriptorHandle(srvIndex);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
     srvDesc.Format = textureData.metadata.format;
@@ -69,7 +72,35 @@ void TextureManager::LoadTexture(const std::string& filePath)
     srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
 
     // SRVの生成
-    textureManager_->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU);
+    dxCommon->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU);
 
-    textureManager_->UploadTextureData(textureData.resource.Get(), image);
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureData.resource, mipImages);
+
+    /*UploadTextureData内に転送確定後に解放処理しているためいらない？*/
+}
+
+uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
+{
+    // 読み込み済みテクスチャを検索
+    auto it = std::find_if(
+        textureDatas.begin(),
+        textureDatas.end(),
+        [&](TextureData& textureData) { return textureData.filePath == filePath; }
+
+    );
+    if (it != textureDatas.end()) {
+        uint32_t textureIndex = static_cast<uint32_t>(std::distance(textureDatas.begin(), it));
+        return textureIndex;
+    }
+
+    assert(0);
+    return 0;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandelGPU(uint32_t textureIndex)
+{
+    assert(textureIndex < DirectXCommon::kMaxSRVCount);
+
+    TextureData& textureData = textureDatas.back();
+    return textureData.srvHandleGPU;
 }

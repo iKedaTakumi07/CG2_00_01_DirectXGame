@@ -535,14 +535,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     DirectX::ScratchImage mipImages = dxCommon->LoadTexture("resources/uvChecker.png");
     const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata);
-
-    dxCommon->UploadTextureData(textureResource.Get(), mipImages);
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureResource, mipImages);
 
     // 2枚目Textureを読み込み
     DirectX::ScratchImage mipImages2 = dxCommon->LoadTexture("resources/monsterBall.png");
     const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata2);
-    dxCommon->UploadTextureData(textureResource2.Get(), mipImages2);
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = dxCommon->UploadTextureData(textureResource2, mipImages2);
 
     // metaDataを基にSRVの設定
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
@@ -686,7 +685,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     DirectX::ScratchImage mip2 = dxCommon->LoadTexture(model.material.textureFilePath);
     const DirectX::TexMetadata& metadata3 = mip2.GetMetadata();
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource3 = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata3);
-    /* Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource3 =*/dxCommon->UploadTextureData(textureResource3.Get(), mip2);
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource3 = dxCommon->UploadTextureData(textureResource3, mip2);
 
     // 3枚目metaDataを基にSRVの設定
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc3 {};
@@ -779,7 +778,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     SoundData soundData1 = SoundLoadWave("resources/fanfare.wav");
 
     // 1度だけ→初期化の後
-    SoundPlayWave(xAudio2.Get(), soundData1);
+    /*SoundPlayWave(xAudio2.Get(), soundData1);*/
 
     ///
     /// その他
@@ -789,7 +788,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     std::vector<Sprite*> sprites;
     for (uint32_t i = 0; i < 5; ++i) {
         Sprite* sprite = new Sprite();
-        sprite->Initialize(spriteCommon, winApp);
+        if (i % 2 == 0) {
+            sprite->Initialize(spriteCommon, winApp, "resources/uvChecker.png");
+        } else {
+            sprite->Initialize(spriteCommon, winApp, "resources/monsterBall.png");
+        }
+
         sprites.push_back(sprite);
     }
 
@@ -879,7 +883,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ImGui::Render();
 
         dxCommon->PreDraw();
-        
+
         TextureManager::getInstance()->Initialize(dxCommon);
 
         spriteCommon->PrepareSpriteDraw();
