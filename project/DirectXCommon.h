@@ -21,11 +21,10 @@ public:
     // バッフアリソースの生成
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizwInBytes);
     // テクスチャリソースの生成
-    Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
     // テクスチャデータの転送
-    void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
-    // テクスチャファイルの読み込み
-    static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+    Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+   
 
     // 初期化
     void Initialize(WinApp* winApp);
@@ -39,6 +38,10 @@ public:
     ID3D12Device* GetDevice() const { return device.Get(); };
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
     HANDLE GetfenceEvent() { return fenceEvent; }
+
+    
+    // 最大SRV
+    static const uint32_t kMaxSRVCount;
 
 private:
     // WindousAPI
@@ -116,4 +119,6 @@ private:
     void UpdateFixFPS();
     // 記録時間FPS固定用
     std::chrono::steady_clock::time_point reference_;
+
+
 };

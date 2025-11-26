@@ -2,10 +2,12 @@
 #include "Math.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
+#include <string>
 #include <wrl.h>
 
 class SpriteCommon;
 class WinApp;
+class TextureManager;
 
 class Sprite {
 public:
@@ -128,7 +130,7 @@ public:
     }
 
     // 初期化
-    void Initialize(SpriteCommon* spriteCommon, WinApp* winApp);
+    void Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string texturefilePath);
 
     // 更新
     void Update();
@@ -141,6 +143,7 @@ public:
     float GetRotation() const { return rotation; }
     const Vector4& GetColor() { return materialData->color; }
     const Vector2& GetSize() const { return size; }
+    const uint32_t GettextureIndex() { return textureIndex; }
     // setter
     void SetPosition(const Vector2& position) { this->position = position; }
     void SetRotation(float rotation) { this->rotation = rotation; }
@@ -184,4 +187,6 @@ private:
     Vector2 position = { 0.0f, 0.0f };
     float rotation = 0.0f;
     Vector2 size { 640.0f, 360.0f };
+
+    uint32_t textureIndex = 0;
 };
