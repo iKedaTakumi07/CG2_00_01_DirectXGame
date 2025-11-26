@@ -101,6 +101,6 @@ D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandelGPU(uint32_t textureInde
 {
     assert(textureIndex < DirectXCommon::kMaxSRVCount);
 
-    TextureData& textureData = textureDatas.back();
+    TextureData& textureData = textureDatas[textureIndex];
     return textureData.srvHandleGPU;
 }
