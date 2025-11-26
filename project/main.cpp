@@ -828,9 +828,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         for (uint32_t i = 0; i < sprites.size(); ++i) {
             ImGui::Text("textureIndex[%u]: %u", i, sprites[i]->GettextureIndex());
         }
-        
+
         /*ImGui::Checkbox("isSprite", &isSprite);*/
-        
 
         /* if (ImGui::CollapsingHeader("Model##Model")) {
              ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
@@ -866,6 +865,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             pos.x = i * 100.0f;
             pos.y = i * 100.0f;
             sprites[i]->SetPosition(pos);
+            sprites[i]->SetAnchorPoint({ 0.5f, 0.5f });
+
             sprites[i]->Update();
         }
 
@@ -899,16 +900,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // 三角形
         //
 
-        //dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+        // dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
         //// 形状を設定
         //// マテリアルCBuffrtの場所を設定
-        //dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+        // dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
         //// wvp用のCBufferの場所を設定
-        //dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-        //dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
+        // dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+        // dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
         //// SRV
-        //dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-        // 描画
+        // dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+        //  描画
         /*dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);*/
 
         //

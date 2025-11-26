@@ -144,11 +144,22 @@ public:
     const Vector4& GetColor() { return materialData->color; }
     const Vector2& GetSize() const { return size; }
     const uint32_t GettextureIndex() { return textureIndex; }
+    const Vector2& GetAnchorPoint() const { return anchorPoint; }
+    bool GetisFlipX_() const { return isFlipX_; }
+    bool GetisFlipY_() const { return isFlipY_; }
+    const Vector2& GettextureLeftTop() const { return textureLeftTop; }
+    const Vector2& GetextureSize() const { return textureSize; }
+
     // setter
     void SetPosition(const Vector2& position) { this->position = position; }
     void SetRotation(float rotation) { this->rotation = rotation; }
     void SetColor(const Vector4& color) { materialData->color = color; }
     void SetSize(const Vector2& size) { this->size = size; }
+    void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint = anchorPoint; }
+    void SetisFlipX_(float isFlipX_) { this->isFlipX_ = isFlipX_; }
+    void SetisFlipY_(float isFlipY_) { this->isFlipY_ = isFlipY_; }
+    void SettextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
+    void SettextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
 
 private:
     void VertexResourceInitialize();
@@ -189,4 +200,16 @@ private:
     Vector2 size { 640.0f, 360.0f };
 
     uint32_t textureIndex = 0;
+
+    // アンカーポイント
+    Vector2 anchorPoint = { 0.0f, 0.0f };
+    // フリップ
+    bool isFlipX_ = false;
+    bool isFlipY_ = false;
+    // テクスチャ左上座標
+    Vector2 textureLeftTop = { 0.0f, 0.0f };
+    // テクスチャ切り出しサイズ
+    Vector2 textureSize = { 100.0f, 100.0f };
+
+    void AdjustTextureSize();
 };
