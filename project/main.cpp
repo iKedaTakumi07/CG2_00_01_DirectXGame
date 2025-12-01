@@ -8,6 +8,7 @@
 #include "StringUtility.h"
 #include "TextureManager.h"
 #include "WinApp.h"
+#include "Object3dCommon.h"
 
 #include "Sprite.h"
 #include "SpriteCommon.h"
@@ -28,6 +29,7 @@
 #include <strsafe.h>
 #include <vector>
 #include <xaudio2.h>
+#include "Object3d.h"
 
 #pragma comment(lib, "Dbghelp.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -518,6 +520,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     spriteCommon = new SpriteCommon;
     spriteCommon->Initialize(dxCommon);
 
+    Object3dCommon* object3dCommon = nullptr;
+    object3dCommon = new Object3dCommon();
+    object3dCommon->Initialize();
+
     TextureManager::getInstance()->Initialize(dxCommon);
 
     // SRVを作成するdescriptorHeapの場所を決める
@@ -801,6 +807,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         sprites.push_back(sprite);
     }
 
+    Object3d* object3d = new Object3d();
+    object3d->Initialize();
+
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
 
@@ -961,6 +970,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     for (uint32_t i = 0; i < sprites.size(); ++i) {
         delete sprites[i];
     }
+    delete object3dCommon;
+    delete object3d;
 
     return 0;
 }
