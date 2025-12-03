@@ -4,7 +4,22 @@
 #include <d3d12.h>
 #include <wrl.h>
 
-void Object3dCommon::Initialize()
+void Object3dCommon::Initialize(DirectXCommon* dxcommon)
+{
+    dxCommon_ = dxcommon;
+
+    graphicsPipelineInitialize(dxCommon_);
+}
+
+void Object3dCommon::PrepareObjectDraw()
+{
+    // RootSignatureを設定。PSOに設定しているけど別途設定が必要
+    dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+    dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+    dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void Object3dCommon::RootSignatureInitialize(DirectXCommon* dxcommon)
 {
     // RootSignature作成
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
