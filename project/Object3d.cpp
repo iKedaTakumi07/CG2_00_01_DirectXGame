@@ -83,8 +83,8 @@ Object3d::ModelData Object3d::LoadObjFile(const std::string& directoryPath, cons
 
                 texcoord.y = 1.0f - texcoord.y;
 
-                //VertexData vertex = { position, texcoord, normal };
-                //modelData.vertices.push_back(vertex);
+                // VertexData vertex = { position, texcoord, normal };
+                // modelData.vertices.push_back(vertex);
 
                 triangle[faceVertex] = { position, texcoord, normal };
             }
@@ -111,16 +111,16 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WinApp* winApp)
 
     modelData = LoadObjFile("resources", "plane.obj");
 
-    VertexResourceInitialize();
-    MaterialResourceInitialize();
-    TransMatrixResourceInitialize();
-    directionalLightInitialize();
-
     TextureManager::getInstance()->LoadTexture(modelData.material.textureFilePath);
     modelData.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 
     transform = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.3f, 0.0f, 0.0f }, { 0.0f, 4.0f, -10.0f } };
+
+    VertexResourceInitialize();
+    MaterialResourceInitialize();
+    TransMatrixResourceInitialize();
+    directionalLightInitialize();
 }
 
 void Object3d::Update()
@@ -128,7 +128,7 @@ void Object3d::Update()
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
     Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-    Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(winApp_->KClientWidth), float(winApp_->KClientHeight), 0.0f, 100.0f);
+    Matrix4x4 projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(winApp_->KClientWidth)/ float(winApp_->KClientHeight), 0.1f, 100.0f);
     Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
@@ -138,13 +138,13 @@ void Object3d::Update()
 
 void Object3d::Draw()
 {
-    // object3dCommon->GetDxCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
     object3dCommon->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(modelData.material.textureIndex));
+
+    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
     object3dCommon->GetDxCommon()->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
 
@@ -159,6 +159,7 @@ void Object3d::VertexResourceInitialize()
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
     vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+    std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 }
 void Object3d::MaterialResourceInitialize()
 {
@@ -169,7 +170,7 @@ void Object3d::MaterialResourceInitialize()
 
     // 今回は白を書き込んでみる
     materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    materialData->enableLighting = false;
+    materialData->enableLighting = true;
     materialData->uvTransform = MakeIdentity4x4();
 }
 void Object3d::TransMatrixResourceInitialize()

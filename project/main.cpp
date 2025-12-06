@@ -443,6 +443,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     /// その他
     ///
 
+
+
     bool isSprite = true;
     std::vector<Sprite*> sprites;
     for (uint32_t i = 0; i < 5; ++i) {
