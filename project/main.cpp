@@ -10,9 +10,11 @@
 #include "TextureManager.h"
 #include "WinApp.h"
 
+#include "Model.h"
+#include "ModelCommon.h"
+#include "Object3d.h"
 #include "Sprite.h"
 #include "SpriteCommon.h"
-#include "Object3d.h"
 
 #include <DbgHelp.h>
 #include <cassert>
@@ -71,7 +73,6 @@ Matrix4x4 MakeTranslateMatrix(const Vector3& translate)
 
     return result;
 }
-
 
 // CrashHandler
 
@@ -236,6 +237,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     Object3dCommon* object3dCommon = nullptr;
     object3dCommon = new Object3dCommon();
     object3dCommon->Initialize(dxCommon);
+
+    ModelCommon* modelCommon = nullptr;
+    modelCommon = new ModelCommon();
+    modelCommon->Initialize(dxCommon);
 
     TextureManager::getInstance()->Initialize(dxCommon);
 
@@ -443,8 +448,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     /// その他
     ///
 
-
-
     bool isSprite = true;
     std::vector<Sprite*> sprites;
     for (uint32_t i = 0; i < 5; ++i) {
@@ -459,7 +462,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
 
     Object3d* object3d = new Object3d();
-    object3d->Initialize(object3dCommon,winApp);
+    object3d->Initialize(object3dCommon, winApp);
+
+    Model* model = new Model();
+    model->Initialize(modelCommon);
+    object3d->SetModel(model);
 
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
@@ -519,6 +526,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             sprites[i]->Update();
         }
 
+        Vector3 rotate = object3d->GetRotate();
+        rotate.x += 0.1f;
+        rotate.y += 0.1f;
+        object3d->SetRotate(rotate);
         object3d->Update();
 
         /*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
@@ -579,8 +590,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // モデルデータ
         //
 
-       
-
         // 実際のcommandListのImGuiの描画コマンドを詰む
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
@@ -610,6 +619,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
     delete object3dCommon;
     delete object3d;
+    delete modelCommon;
+    delete model;
 
     return 0;
 }

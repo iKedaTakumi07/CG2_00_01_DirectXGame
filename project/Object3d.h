@@ -2,22 +2,14 @@
 #include "Math.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
-#include <string>
 #include <wrl.h>
 
 class WinApp;
 class Object3dCommon;
+class Model;
 
 class Object3d {
 public:
-    struct MaterialData {
-        std::string textureFilePath;
-        uint32_t textureIndex = 0;
-    };
-    struct ModelData {
-        std::vector<VertexData> vertices;
-        MaterialData material;
-    };
     struct DirectionalLight {
         Vector4 color;
         Vector3 direction;
@@ -42,27 +34,24 @@ public:
     // 更新
     void Draw();
 
+    // Setter
+    void SetModel(Model* model) { this->model = model; }
+    void SetScale(const Vector3& scale) { transform.scale = scale; }
+    void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
+    void SetTranslate(const Vector3& translate) { transform.translate = translate; }
+
+    // Getter
+    const Vector3& GetScale() const { return transform.scale; }
+    const Vector3& GetRotate() const { return transform.rotate; }
+    const Vector3& GetTranslate() const { return transform.translate; }
+
 private:
-    void VertexResourceInitialize();
-    void MaterialResourceInitialize();
     void TransMatrixResourceInitialize();
     void directionalLightInitialize();
 
     Object3dCommon* object3dCommon = nullptr;
     WinApp* winApp_ = nullptr;
-
-    // objファイルのデータ
-    ModelData modelData;
-
-    // バッファリソース
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-    VertexData* vertexData = nullptr;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView {};
-
-    // Model用のマテリアルリソースを作る
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
-    // バッファリソース
-    Material* materialData;
+    Model* model = nullptr;
 
     // バッファリソース
     TransformationMatrix* transformationMatrixData;

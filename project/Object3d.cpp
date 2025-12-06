@@ -1,10 +1,11 @@
 #include "Object3d.h"
+#include "Model.h"
 #include "Object3dCommon.h"
 #include "TextureManager.h"
 #include <cassert>
 #include <fstream>
 
-Object3d::MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
     MaterialData materialData; // 構築するMaterialData
     std::string line; // ファイルから読み込んだ1行を格納するもの
@@ -27,7 +28,7 @@ Object3d::MaterialData Object3d::LoadMaterialTemplateFile(const std::string& dir
     return materialData;
 }
 
-Object3d::ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
+ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
     ModelData modelData; // 構築するmodeldata
     std::vector<Vector4> positions; // 位置
@@ -109,16 +110,9 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WinApp* winApp)
     this->object3dCommon = object3dCommon;
     this->winApp_ = winApp;
 
-    modelData = LoadObjFile("resources", "plane.obj");
-
-    TextureManager::getInstance()->LoadTexture(modelData.material.textureFilePath);
-    modelData.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
-
     transform = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.3f, 0.0f, 0.0f }, { 0.0f, 4.0f, -10.0f } };
 
-    VertexResourceInitialize();
-    MaterialResourceInitialize();
     TransMatrixResourceInitialize();
     directionalLightInitialize();
 }
@@ -128,7 +122,7 @@ void Object3d::Update()
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
     Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-    Matrix4x4 projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(winApp_->KClientWidth)/ float(winApp_->KClientHeight), 0.1f, 100.0f);
+    Matrix4x4 projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(winApp_->KClientWidth) / float(winApp_->KClientHeight), 0.1f, 100.0f);
     Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
@@ -138,41 +132,14 @@ void Object3d::Update()
 
 void Object3d::Draw()
 {
-    object3dCommon->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-
-    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(modelData.material.textureIndex));
-
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
-    object3dCommon->GetDxCommon()->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
+    if (model) {
+        model->Draw();
+    }
 }
 
-void Object3d::VertexResourceInitialize()
-{
-    vertexResource = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
-    // リソースの先端のアドレスから使う
-    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-    // 使用するサイズ
-    vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
-    // 1ツ当たりのサイズ
-    vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-    vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-    std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
-}
-void Object3d::MaterialResourceInitialize()
-{
-    // model用のマテリアルリソースを作る
-    materialResource = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(Material));
-    // mapして書き込み
-    materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-
-    // 今回は白を書き込んでみる
-    materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    materialData->enableLighting = true;
-    materialData->uvTransform = MakeIdentity4x4();
-}
 void Object3d::TransMatrixResourceInitialize()
 {
     transformationMatrixResource = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(TransformationMatrix));

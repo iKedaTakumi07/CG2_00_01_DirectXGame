@@ -1,6 +1,8 @@
 #pragma once
 #include <cmath>
 #include <cstdint>
+#include <string>
+#include <vector>
 
 struct Vector2 {
     float x;
@@ -39,6 +41,14 @@ struct Material {
 struct TransformationMatrix {
     Matrix4x4 WVP;
     Matrix4x4 world;
+};
+struct MaterialData {
+    std::string textureFilePath;
+    uint32_t textureIndex = 0;
+};
+struct ModelData {
+    std::vector<VertexData> vertices;
+    MaterialData material;
 };
 
 Matrix4x4 MakeIdentity4x4();
