@@ -1,10 +1,12 @@
 #pragma once
 #include "Math.h"
-#include "Object3dCommon.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
 #include <string>
 #include <wrl.h>
+
+class WinApp;
+class Object3dCommon;
 
 class Object3d {
 public:
@@ -33,9 +35,12 @@ public:
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
     // 初期化
-    void Initialize(Object3dCommon* object3dCommon);
+    void Initialize(Object3dCommon* object3dCommon, WinApp* winApp);
 
     void Update();
+
+    // 更新
+    void Draw();
 
 private:
     void VertexResourceInitialize();
@@ -44,6 +49,8 @@ private:
     void directionalLightInitialize();
 
     Object3dCommon* object3dCommon = nullptr;
+    WinApp* winApp_ = nullptr;
+
     // objファイルのデータ
     ModelData modelData;
 

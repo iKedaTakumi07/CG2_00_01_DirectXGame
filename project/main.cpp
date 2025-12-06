@@ -12,22 +12,19 @@
 
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "Object3d.h"
 
 #include <DbgHelp.h>
 #include <cassert>
 #include <chrono>
 #include <dinput.h>
 
-#include "Object3d.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
 #include <filesystem>
 #include <fstream>
-#include <numbers>
-#include <sstream>
-#include <string>
 #include <strsafe.h>
 #include <vector>
 #include <xaudio2.h>
@@ -460,7 +457,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
 
     Object3d* object3d = new Object3d();
-    object3d->Initialize(object3dCommon);
+    object3d->Initialize(object3dCommon,winApp);
 
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {
@@ -520,6 +517,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             sprites[i]->Update();
         }
 
+        object3d->Update();
+
         /*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
@@ -568,23 +567,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // 2d/スプライト
         //
 
-        for (uint32_t i = 0; i < sprites.size(); ++i) {
+        /*for (uint32_t i = 0; i < sprites.size(); ++i) {
             sprites[i]->Draw();
-        }
+        }*/
+
+        object3d->Draw();
 
         //
         // モデルデータ
         //
 
-        /* dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU3);
-         dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
-         dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
-         dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
-         dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResourceModel->GetGPUVirtualAddress());
-
-         dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewModel);
-
-         dxCommon->GetCommandList()->DrawInstanced(UINT(model.vertices.size()), 1, 0, 0);*/
+       
 
         // 実際のcommandListのImGuiの描画コマンドを詰む
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
