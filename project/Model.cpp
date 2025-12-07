@@ -3,11 +3,11 @@
 #include "Object3d.h"
 #include "TextureManager.h"
 
-void Model::Initialize(ModelCommon* modelCommon)
+void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
 {
     modelCommon_ = modelCommon;
 
-    modelData = Object3d::LoadObjFile("resources", "plane.obj");
+    modelData = Object3d::LoadObjFile(directorypath, filename);
 
     // 頂点データ初期化
     VertexResourceInitialize();

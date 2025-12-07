@@ -1,5 +1,6 @@
 #include "Object3d.h"
 #include "Model.h"
+#include "ModelManager.h"
 #include "Object3dCommon.h"
 #include "TextureManager.h"
 #include <cassert>
@@ -138,6 +139,12 @@ void Object3d::Draw()
     if (model) {
         model->Draw();
     }
+}
+
+void Object3d::SetModel(const std::string& filePath)
+{
+    // モデル検索してセット
+    model = ModelManager::GetInstance()->FindModel(filePath);
 }
 
 void Object3d::TransMatrixResourceInitialize()

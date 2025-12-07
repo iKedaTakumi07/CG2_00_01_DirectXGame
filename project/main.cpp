@@ -12,6 +12,7 @@
 
 #include "Model.h"
 #include "ModelCommon.h"
+#include "ModelManager.h"
 #include "Object3d.h"
 #include "Sprite.h"
 #include "SpriteCommon.h"
@@ -243,33 +244,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     modelCommon->Initialize(dxCommon);
 
     TextureManager::getInstance()->Initialize(dxCommon);
+    ModelManager::GetInstance()->Initialize(dxCommon);
 
-    // SRVを作成するdescriptorHeapの場所を決める
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetSRVCPUDescriptorHandle(1);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxCommon->GetSRVGPUDescriptorHandle(1);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = dxCommon->GetSRVCPUDescriptorHandle(2);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = dxCommon->GetSRVGPUDescriptorHandle(2);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU3 = dxCommon->GetSRVCPUDescriptorHandle(3);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU3 = dxCommon->GetSRVGPUDescriptorHandle(3);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU4 = dxCommon->GetSRVCPUDescriptorHandle(4);
-    D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU4 = dxCommon->GetSRVGPUDescriptorHandle(4);
-
-    // Textureを読み込み
-    // DirectX::ScratchImage mipImages =
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-    // const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-    // Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata);
-    // Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureResource, mipImages);
 
-    // 2枚目Textureを読み込み
-    // DirectX::ScratchImage mipImages2 =
     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
-    // const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
-    // Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata2);
-    // Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = dxCommon->UploadTextureData(textureResource2, mipImages2);
+
+    ModelManager::GetInstance()->LoadModel("Plane.obj");
+    ModelManager::GetInstance()->LoadModel("axis.obj");
 
     // metaDataを基にSRVの設定
     // D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
@@ -461,11 +443,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         sprites.push_back(sprite);
     }
 
+    Object3d* object3d2 = new Object3d();
+    object3d2->Initialize(object3dCommon, winApp);
+
+    Model* model2 = new Model();
+    model2->Initialize(modelCommon, "resources", "plane.obj");
+    object3d2->SetModel(model2);
+    object3d2->SetModel("axis.obj");
+
     Object3d* object3d = new Object3d();
     object3d->Initialize(object3dCommon, winApp);
 
     Model* model = new Model();
-    model->Initialize(modelCommon);
+    model->Initialize(modelCommon, "resources", "plane.obj");
     object3d->SetModel(model);
 
     // ウィンドウの×ボタンが押されるまでループ
@@ -532,6 +522,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         object3d->SetRotate(rotate);
         object3d->Update();
 
+        object3d2->Update();
+
         /*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
         uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
@@ -585,6 +577,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         }*/
 
         object3d->Draw();
+        object3d2->Draw();
 
         //
         // モデルデータ
@@ -612,6 +605,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     delete input;
     delete winApp;
     TextureManager::getInstance()->Finalize();
+    ModelManager::GetInstance()->Finalize();
     delete dxCommon;
     delete spriteCommon;
     for (uint32_t i = 0; i < sprites.size(); ++i) {
@@ -619,8 +613,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
     delete object3dCommon;
     delete object3d;
+    delete object3d2;
     delete modelCommon;
     delete model;
+    delete model2;
 
     return 0;
 }
