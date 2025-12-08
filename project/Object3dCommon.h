@@ -1,5 +1,6 @@
 #pragma once
 #include "DirectXCommon.h"
+class Camera;
 
 class Object3dCommon {
 public:
@@ -11,8 +12,14 @@ public:
 
     // get
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
+    Camera* GetDefaultCamera() const { return defaultCamera_; }
+
+    // set
+    void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
 
 private:
+    Camera* defaultCamera_ = nullptr;
+
     // ルートシグネチャの作成
     void RootSignatureInitialize(DirectXCommon* dxcommon);
 

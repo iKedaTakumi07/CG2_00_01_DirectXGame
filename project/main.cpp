@@ -10,6 +10,7 @@
 #include "TextureManager.h"
 #include "WinApp.h"
 
+#include "Camera.h"
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
@@ -320,93 +321,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 動かす用のtransform
     /*Transform transformSprite { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };*/
 
-    /// ==============================================================================================================
-    /// モデルデータ
-    /// ==============================================================================================================
-
-    // モデル読み込み
-    // ModelData model = LoadObjFile("resources", "axis.obj");
-
-    //// 画像読み込み
-    // DirectX::ScratchImage mip2 = (model.material.textureFilePath);
-    // const DirectX::TexMetadata& metadata3 = mip2.GetMetadata();
-    // Microsoft::WRL::ComPtr<ID3D12Resource> textureResource3 = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata3);
-    // Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource3 = dxCommon->UploadTextureData(textureResource3, mip2);
-
-    //// 3枚目metaDataを基にSRVの設定
-    // D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc3 {};
-    // srvDesc3.Format = metadata3.format;
-    // srvDesc3.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    // srvDesc3.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    // srvDesc3.Texture2D.MipLevels = UINT(metadata3.mipLevels);
-
-    // dxCommon->GetDevice()->CreateShaderResourceView(textureResource3.Get(), &srvDesc3, textureSrvHandleCPU3);
-
-    // 頂点リソースを作成
-    /*   Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel = dxCommon->CreateBufferResource(sizeof(VertexData) * model.vertices.size());*/
-
-    // 頂点バッファビューを作成
-    // D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel {};
-    // vertexBufferViewModel.BufferLocation = vertexResourceModel->GetGPUVirtualAddress(); // リソースの先頭のアドレスから使用
-    // vertexBufferViewModel.SizeInBytes = UINT(sizeof(VertexData) * model.vertices.size()); // 使用するリソースのサイズ
-    // vertexBufferViewModel.StrideInBytes = sizeof(VertexData); // 1頂点当たりのサイズ
-
-    // 頂点リソースに書き込み
-    // VertexData* vertexDataModel = nullptr;
-    // vertexResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataModel)); // 書き込むためのアドレス取得
-    // std::memcpy(vertexDataModel, model.vertices.data(), sizeof(VertexData) * model.vertices.size()); // 頂点データをリソースにコピー
-
-    // インデックスリソースにデータを書き込む
-    /*Microsoft::WRL::ComPtr<ID3D12Resource> indexResourceModel = dxCommon->CreateBufferResource(sizeof(uint32_t) * model.vertices.size());*/
-
-    // D3D12_INDEX_BUFFER_VIEW indexBufferViewModel {};
-    //// リソースの先頭のアドレスから使う
-    // indexBufferViewModel.BufferLocation = indexResourceModel->GetGPUVirtualAddress();
-    //// 使用するリソースのサイズはインデックス6つ分のサイズ
-    // indexBufferViewModel.SizeInBytes = UINT(sizeof(uint32_t) * model.vertices.size());
-    //// インデックスはuint32_Tとする
-    // indexBufferViewModel.Format = DXGI_FORMAT_R32_UINT;
-
-    // uint32_t* indexDataModel = nullptr;
-    // indexResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&indexDataModel));
-
-    //// sphere用のマテリアルリソースを作る
-    // Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel = dxCommon->CreateBufferResource(sizeof(Material));
-
-    // Material* materialDataModel = nullptr;
-
-    //// mapして書き込み
-    // materialResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&materialDataModel));
-    //// 今回は白を書き込んでみる
-    // materialDataModel->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-    // materialDataModel->enableLighting = true;
-
-    // materialDataModel->uvTransform = MakeIdentity4x4();
-
-    //// sphere用のtransformmatrix用のリソースを作る
-    // Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceModel = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
-    //// データを書き込む
-    // TransformationMatrix* transformationMatrixDataModel = nullptr;
-    //// 書き込むためのアドレス取得
-    // transformationMatrixResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataModel));
-    //// 単位行列を書き込む
-    // transformationMatrixDataModel->WVP = MakeIdentity4x4();
-    // transformationMatrixDataModel->world = MakeIdentity4x4();
-
-    // Transform transformModel { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
-
-    //// 平行光源
-    // Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightMatrixResourceModel = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
-    //// データを書き込み
-    // DirectionalLight* directionalLightDataModel = nullptr;
-    //// アドレスを取得
-    // directionalLightMatrixResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightDataModel));
-    //// 書き込み
-    // directionalLightDataModel->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    // directionalLightDataModel->direction = { 0.0f, -1.0f, 0.0f };
-    // directionalLightDataModel->intensity = 1.0f;
-
     /// ============================================================================================================
     /// 音声データ
     /// ============================================================================================================
@@ -443,12 +357,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         sprites.push_back(sprite);
     }
 
+    Camera* camera = new Camera();
+    camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
+    camera->SetRotate({ 0.3f, 0.0f, 0.0f });
+    object3dCommon->SetDefaultCamera(camera);
+
     Object3d* object3d2 = new Object3d();
     object3d2->Initialize(object3dCommon, winApp);
 
     Model* model2 = new Model();
     model2->Initialize(modelCommon, "resources", "plane.obj");
-    object3d2->SetModel(model2);
     object3d2->SetModel("axis.obj");
 
     Object3d* object3d = new Object3d();
@@ -486,19 +404,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             ImGui::Text("textureIndex[%u]: %u", i, sprites[i]->GettextureIndex());
         }
 
-        /*ImGui::Checkbox("isSprite", &isSprite);*/
-
-        /* if (ImGui::CollapsingHeader("Model##Model")) {
-             ImGui::DragFloat3("Translate##Model", &transformModel.translate.x, 0.01f);
-             ImGui::SliderAngle("RotateX##Model", &transformModel.rotate.x);
-             ImGui::SliderAngle("RotateY##Model", &transformModel.rotate.y);
-             ImGui::SliderAngle("RotateZ##Model", &transformModel.rotate.z);
-             ImGui::ColorEdit4("Color##Model", &(materialDataModel->color).x);
-             ImGui::SliderFloat3("direction##ModelLight", &directionalLightDataModel->direction.x, -1.0f, 1.0f);
-             ImGui::DragFloat("intensity##ModelLight", &directionalLightDataModel->intensity, 0.01f);
-             ImGui::ColorEdit4("Color##ModelLight", &(directionalLightDataModel->color).x);
-         }*/
-
         ImGui::End();
 
         // update/更新処理
@@ -523,25 +428,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         object3d->Update();
 
         object3d2->Update();
-
-        /*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
-        uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
-        uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
-        materialDataSprite->uvTransform = uvTransformMatrix;
-
-        directionalLightDataSprite->direction = Normalize(directionalLightDataSprite->direction);*/
-
-        // 球体
-
-        // モデルデータ
-
-        /*   Matrix4x4 worldMatrixModel = MakeAffineMatrix(transformModel.scale, transformModel.rotate, transformModel.translate);
-           Matrix4x4 projectionMatrixModel = MakePrespectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-           Matrix4x4 worldViewProjectionMatrixModel = Multiply(worldMatrixModel, Multiply(viewMatrix, projectionMatrixModel));
-           transformationMatrixDataModel->WVP = worldViewProjectionMatrixModel;
-           transformationMatrixDataModel->world = worldMatrixModel;
-
-           directionalLightDataModel->direction = Normalize(directionalLightDataModel->direction);*/
+        Vector3 rotate2 = object3d2->GetRotate();
+        rotate2.x += -0.1f;
+        rotate2.y += -0.1f;
+        object3d2->SetRotate(rotate2);
 
         // draw
         ImGui::Render();
@@ -553,28 +443,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         spriteCommon->PrepareSpriteDraw();
 
         //
-        // 三角形
-        //
-
-        // dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-        //// 形状を設定
-        //// マテリアルCBuffrtの場所を設定
-        // dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-        //// wvp用のCBufferの場所を設定
-        // dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-        // dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
-        //// SRV
-        // dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-        //  描画
-        /*dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);*/
-
-        //
         // 2d/スプライト
         //
 
         /*for (uint32_t i = 0; i < sprites.size(); ++i) {
             sprites[i]->Draw();
         }*/
+
+        camera->Update();
 
         object3d->Draw();
         object3d2->Draw();

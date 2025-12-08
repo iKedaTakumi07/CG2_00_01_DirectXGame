@@ -7,6 +7,7 @@
 class WinApp;
 class Object3dCommon;
 class Model;
+class Camera;
 
 class Object3d {
 public:
@@ -40,6 +41,7 @@ public:
     void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
     void SetTranslate(const Vector3& translate) { transform.translate = translate; }
     void SetModel(const std::string& filePath);
+    void SetCamera(Camera* camera) { this->camera = camera; }
 
     // Getter
     const Vector3& GetScale() const { return transform.scale; }
@@ -53,6 +55,7 @@ private:
     Object3dCommon* object3dCommon = nullptr;
     WinApp* winApp_ = nullptr;
     Model* model = nullptr;
+    Camera* camera = nullptr;
 
     // バッファリソース
     TransformationMatrix* transformationMatrixData;
