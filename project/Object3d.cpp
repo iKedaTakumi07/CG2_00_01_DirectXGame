@@ -1,4 +1,5 @@
 #include "Object3d.h"
+#include "Camera.h"
 #include "Model.h"
 #include "ModelManager.h"
 #include "Object3dCommon.h"
@@ -111,6 +112,8 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WinApp* winApp)
     this->object3dCommon = object3dCommon;
     this->winApp_ = winApp;
 
+    this->camera = object3dCommon->GetDefaultCamera();
+
     transform = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.3f, 0.0f, 0.0f }, { 0.0f, 4.0f, -10.0f } };
 
@@ -121,10 +124,13 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, WinApp* winApp)
 void Object3d::Update()
 {
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-    Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-    Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-    Matrix4x4 projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(winApp_->KClientWidth) / float(winApp_->KClientHeight), 0.1f, 100.0f);
-    Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+    Matrix4x4 worldViewProjectionMatrix;
+    if (camera) {
+        const Matrix4x4& ViewProjectionMatrix = camera->GetViewProjectionMatrix();
+        worldViewProjectionMatrix = Multiply(worldMatrix, ViewProjectionMatrix);
+    } else {
+        worldViewProjectionMatrix = worldMatrix;
+    }
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
 
