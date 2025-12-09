@@ -17,6 +17,7 @@
 #include "Object3d.h"
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "SrvManager.h"
 
 #include <DbgHelp.h>
 #include <cassert>
@@ -232,6 +233,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     input = new Input();
     input->Initialize(winApp);
 
+    SrvManager* srvManager = nullptr;
+    srvManager = new SrvManager();
+    srvManager->Initialize(dxCommon);
+
     SpriteCommon* spriteCommon = nullptr;
     spriteCommon = new SpriteCommon;
     spriteCommon->Initialize(dxCommon);
@@ -244,7 +249,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     modelCommon = new ModelCommon();
     modelCommon->Initialize(dxCommon);
 
-    TextureManager::getInstance()->Initialize(dxCommon);
+    TextureManager::getInstance()->Initialize(dxCommon, srvManager);
     ModelManager::GetInstance()->Initialize(dxCommon);
 
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
@@ -394,17 +399,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             OutputDebugStringA("hit 1\n");
         }
 
-        ImGui_ImplDX12_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-        ImGui::NewFrame();
+        // ImGui_ImplDX12_NewFrame();
+        // ImGui_ImplWin32_NewFrame();
+        // ImGui::NewFrame();
 
-        ImGui::Begin("Settings");
+        // ImGui::Begin("Settings");
 
-        for (uint32_t i = 0; i < sprites.size(); ++i) {
-            ImGui::Text("textureIndex[%u]: %u", i, sprites[i]->GettextureIndex());
-        }
-
-        ImGui::End();
+        // ImGui::End();
 
         // update/更新処理
 
@@ -466,9 +467,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
 
     // ImGuiの終了
-    ImGui_ImplDX12_Shutdown();
+    /*ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
+    ImGui::DestroyContext();*/
 
     // XAuido2解放
     xAudio2.Reset();
@@ -482,6 +483,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     delete winApp;
     TextureManager::getInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
+    delete srvManager;
     delete dxCommon;
     delete spriteCommon;
     for (uint32_t i = 0; i < sprites.size(); ++i) {

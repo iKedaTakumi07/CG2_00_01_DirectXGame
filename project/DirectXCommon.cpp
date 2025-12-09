@@ -2,8 +2,8 @@
 #include "Logger.h"
 #include "StringUtility.h"
 
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
+//#include "externals/imgui/imgui_impl_dx12.h"
+//#include "externals/imgui/imgui_impl_win32.h"
 
 #include <filesystem>
 #include <format>
@@ -601,7 +601,7 @@ void DirectXCommon::dxcCompilerInitialize()
 void DirectXCommon::ImguiInitialize()
 {
     // ImGui初期化
-    IMGUI_CHECKVERSION();
+   /* IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
     ImGui_ImplWin32_Init(winApp_->GetHwnd());
@@ -610,7 +610,7 @@ void DirectXCommon::ImguiInitialize()
         rtvDesc.Format,
         srvDescriptorHeap.Get(),
         srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-        srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());*/
 }
 
 void DirectXCommon::InitializeFixFPS()

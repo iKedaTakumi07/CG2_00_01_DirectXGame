@@ -32,6 +32,11 @@ struct VertexData {
     Vector2 texcoord;
     Vector3 normal;
 };
+struct ParticleForGPU {
+    Matrix4x4 WVP;
+    Matrix4x4 world;
+    Vector4 color;
+};
 struct Material {
     Vector4 color;
     int32_t enableLighting;
