@@ -434,34 +434,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         rotate2.y += -0.1f;
         object3d2->SetRotate(rotate2);
 
+        camera->Update();
+
         // draw
-        ImGui::Render();
+        // ImGui::Render();
 
         dxCommon->PreDraw();
 
         object3dCommon->PrepareObjectDraw();
 
-        spriteCommon->PrepareSpriteDraw();
-
         //
         // 2d/スプライト
         //
 
-        /*for (uint32_t i = 0; i < sprites.size(); ++i) {
+        /*object3d->Draw();
+        object3d2->Draw();*/
+
+        spriteCommon->PrepareSpriteDraw();
+
+        for (uint32_t i = 0; i < sprites.size(); ++i) {
             sprites[i]->Draw();
-        }*/
-
-        camera->Update();
-
-        object3d->Draw();
-        object3d2->Draw();
+        }
 
         //
         // モデルデータ
         //
 
         // 実際のcommandListのImGuiの描画コマンドを詰む
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
+        // ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
         dxCommon->PostDraw();
     }

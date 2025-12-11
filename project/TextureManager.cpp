@@ -61,14 +61,16 @@ void TextureManager::LoadTexture(const std::string& filePath)
     textureData.srvHandleCPU = srvManager->GetCPUDescriptorHandle(textureData.srvIndex);
     textureData.srvHandleGPU = srvManager->GetGPUDescriptorHandle(textureData.srvIndex);
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
-    srvDesc.Format = textureData.metadata.format;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
+    // D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc {};
+    // srvDesc.Format = textureData.metadata.format;
+    // srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    // srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    // srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
+    // dxCommon->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU);
 
     // SRVの生成
-    dxCommon->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU);
+    srvManager->CreateSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(), textureData.metadata.format, UINT(textureData.metadata.mipLevels));
+
 
     Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureData.resource, mipImages);
 
@@ -78,7 +80,7 @@ void TextureManager::LoadTexture(const std::string& filePath)
 uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 {
     // 読み込み済みテクスチャを検索
-   
+
     if (textureDatas.contains(filePath)) {
         uint32_t textureIndex = GetSrvIndex(filePath);
         return textureIndex;
@@ -98,8 +100,6 @@ uint32_t TextureManager::GetSrvIndex(const std::string& filePath)
 {
     return 0;
 }
-
-
 
 const DirectX::TexMetadata& TextureManager::GetMetadata(const std::string& filePath)
 {
