@@ -447,8 +447,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // 2d/スプライト
         //
 
-        /*object3d->Draw();
-        object3d2->Draw();*/
+        object3d->Draw();
+        object3d2->Draw();
 
         spriteCommon->PrepareSpriteDraw();
 
