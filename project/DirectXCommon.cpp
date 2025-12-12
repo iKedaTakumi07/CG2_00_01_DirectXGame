@@ -261,7 +261,6 @@ void DirectXCommon::PreDraw()
 
     // 描画用のDescriptorHeapの設定
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHraps[] = { srvDescriptorHeap.Get() };
-    commandList->SetDescriptorHeaps(1, descriptorHraps->GetAddressOf());
 
     commandList->RSSetViewports(1, &viewport);
     commandList->RSSetScissorRects(1, &scissorRect);

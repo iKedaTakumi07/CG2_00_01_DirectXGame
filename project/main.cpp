@@ -441,6 +441,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         dxCommon->PreDraw();
 
+        srvManager->PreDraw();
+
         object3dCommon->PrepareObjectDraw();
 
         //
