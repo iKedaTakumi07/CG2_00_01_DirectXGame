@@ -3,23 +3,24 @@
 #include "Logger.h"
 #include "Model.h"
 #include "SrvManager.h"
+#include "TextureManager.h"
 
-Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
-{
-    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-    std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-    std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-    Particle particle;
-    particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-    particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-    Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-    particle.transform.translate = { translate.x + randomTranslate.x, translate.y + randomTranslate.y, translate.z + randomTranslate.z };
-    particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-    particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-    particle.lifeTime = distTime(randomEngine);
-    particle.currentTime = 0;
-    return particle;
-}
+//Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
+//{
+//    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+//    std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+//    std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+//    Particle particle;
+//    particle.transform.scale = { 1.0f, 1.0f, 1.0f };
+//    particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
+//    Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+//    particle.transform.translate = { translate.x + randomTranslate.x, translate.y + randomTranslate.y, translate.z + randomTranslate.z };
+//    particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+//    particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+//    particle.lifeTime = distTime(randomEngine);
+//    particle.currentTime = 0;
+//    return particle;
+//}
 
 ParticleManager* ParticleManager::getInstance()
 {
@@ -48,9 +49,68 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
 
 void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
 {
-    if (particleGroups.contains(textureFilePath)) {
-        return;
+    auto it = particleGroups.find(name);
+    assert(it == particleGroups.end() && "ParticleGroup already exists!");
+
+    ParticleGroup group {};
+    group.materialData = new MaterialData();
+
+    group.materialData->textureFilePath = textureFilePath;
+
+    // テクスチャ読み込み
+    TextureManager::getInstance()->LoadTexture(textureFilePath);
+
+    D3D12_HEAP_PROPERTIES heapProps = {};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    D3D12_RESOURCE_DESC resourceDesc = {};
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resourceDesc.Width = sizeof(ParticleForGPU) * group.kNumMaxInstance;
+    resourceDesc.Height = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    HRESULT hr = dxCommon->GetDevice()->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&group.instancingResource));
+    if (FAILED(hr)) {
+        assert(false && "Failed to create instancing resource");
     }
+
+    hr = group.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&group.instancingData));
+    if (FAILED(hr)) {
+        assert(false && "Failed to map instancing buffer");
+    }
+
+    // StructuredBuffer用のSRVを確保
+    uint32_t instancingSrvIndex = srvManager->Allocate();
+
+    group.instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    group.instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    group.instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    group.instancingSrvDesc.Buffer.FirstElement = 0;
+    group.instancingSrvDesc.Buffer.NumElements = group.kNumMaxInstance;
+    group.instancingSrvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
+    group.instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+    // SRVの生成
+    dxCommon->GetDevice()->CreateShaderResourceView(
+        group.instancingResource.Get(),
+        &group.instancingSrvDesc,
+        srvManager->GetCPUDescriptorHandle(instancingSrvIndex));
+
+    // SRVインデクスを保存
+    group.materialData->textureIndex = instancingSrvIndex;
+
+    //
+    particleGroups[name] = std::move(group);
 }
 
 void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
@@ -59,21 +119,27 @@ void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
+    D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
+    descriptorRangeForInstancing[0].BaseShaderRegister = 0;
+    descriptorRangeForInstancing[0].NumDescriptors = 1;
+    descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
     D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
     descriptorRange[0].BaseShaderRegister = 0;
     descriptorRange[0].NumDescriptors = 1;
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    //// RootParameter作成
     D3D12_ROOT_PARAMETER rootParameters[4] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
 
-    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParameters[1].Descriptor.ShaderRegister = 0;
+    rootParameters[1].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;
+    rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
 
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -127,14 +193,15 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     inputElementDescs[0].SemanticIndex = 0;
     inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
     inputElementDescs[1].SemanticName = "TEXCOORD";
     inputElementDescs[1].SemanticIndex = 0;
     inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
     inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-    inputElementDescs[2].SemanticName = "NORMAL";
+    inputElementDescs[2].SemanticName = "COLOR";
     inputElementDescs[2].SemanticIndex = 0;
-    inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
     D3D12_INPUT_LAYOUT_DESC inputLayoutDesc {};
@@ -161,10 +228,10 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
     // Shaderをコンパイルする
-    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/Object3d.VS.hlsl", L"vs_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/Particle.VS.hlsl", L"vs_6_0");
     assert(vertexShaderBlob != nullptr);
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = dxcommon->CompileShader(L"resources/shaders/Object3d.PS.hlsl", L"ps_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = dxcommon->CompileShader(L"resources/shaders/Particle.PS.hlsl", L"ps_6_0");
     assert(pixeShaderBlob != nullptr);
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};

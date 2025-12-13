@@ -11,7 +11,7 @@ class Model;
 class ParticleManager {
 public:
     struct ParticleGroup {
-        Material* materialData; // マテリアルデータ
+        MaterialData* materialData; // マテリアルデータ
         std::list<Particle> Particles; // パーティクルリスト
         D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc; // SRVインデクス
         Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource; // インスタンシングデータ
