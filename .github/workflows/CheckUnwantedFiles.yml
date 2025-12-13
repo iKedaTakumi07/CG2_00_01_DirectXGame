@@ -23,12 +23,14 @@ jobs:
       - name: 不要なファイルとディレクトリを検索(bash)
         run: |
           DIR_CONDITIONS=()
-          for  pattern in $UNWANTED_DIR_PATTERNS; do DIR_CONDITIONS+=(-o -iname "$pattern")
+          for pattern in $UNWANTED_DIR_PATTERNS; do 
+            DIR_CONDITIONS+=(-o -iname "$pattern")
           done
           unset DIR_CONDITIONS[0]
 
-          NAME_CONDITIONS()
-          for pattern in $UNWANTED_NAME_PATTERNS; do NAME_CONDITIONS+=(-o -iname "$pattern")
+          NAME_CONDITIONS=()
+          for pattern in $UNWANTED_NAME_PATTERNS; do 
+           NAME_CONDITIONS+=(-o -iname "$pattern")
           done
           unset NAME_CONDITIONS[0]
 
