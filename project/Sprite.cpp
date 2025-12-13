@@ -11,8 +11,9 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string 
     MaterialResourceInitialize();
     TransMatrixResourceInitialize();
 
-    textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(texturefilePath);
-    AdjustTextureSize();
+    //textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(texturefilePath);
+    texturefilePath_ = texturefilePath;
+    AdjustTextureSize(texturefilePath_);
 }
 
 void Sprite::VertexResourceInitialize()
@@ -64,10 +65,10 @@ void Sprite::TransMatrixResourceInitialize()
     transformationMatrixData->world = MakeIdentity4x4();
 }
 
-void Sprite::AdjustTextureSize()
+void Sprite::AdjustTextureSize(std::string texturefilePath)
 {
     // テクスチャメタデータを取得
-    const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(textureIndex);
+    const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(texturefilePath);
 
     textureSize.x = static_cast<float>(metadata.width);
     textureSize.y = static_cast<float>(metadata.height);
@@ -92,7 +93,7 @@ void Sprite::Update()
         bottom = -bottom;
     }
 
-    const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(textureIndex);
+    const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(texturefilePath_);
     float tex_left = textureLeftTop.x / metadata.width;
     float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
     float tex_top = textureLeftTop.y / metadata.height;
@@ -146,7 +147,7 @@ void Sprite::Draw()
     // wvp用のCBufferの場所を設定
     spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
-    spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(textureIndex));
+    spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
 
     // 描画
     spriteCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);

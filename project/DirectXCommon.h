@@ -35,10 +35,13 @@ public:
     void FlushCommandQueue();
 
     // getter
-    ID3D12Device* GetDevice() const { return device.Get(); };
+    ID3D12Device* GetDevice() const {
+        return device.Get();
+    };
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
     HANDLE GetfenceEvent() { return fenceEvent; }
 
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
     
     // 最大SRV
     static const uint32_t kMaxSRVCount;
@@ -77,7 +80,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescripotrHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
     void rtvInitialize();
     // SwapChainResource
