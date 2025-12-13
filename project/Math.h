@@ -55,6 +55,13 @@ struct ModelData {
     std::vector<VertexData> vertices;
     MaterialData material;
 };
+struct Particle {
+    Transform transform;
+    Vector3 velocity;
+    Vector4 color;
+    float lifeTime;
+    float currentTime;
+};
 
 Matrix4x4 MakeIdentity4x4();
 
