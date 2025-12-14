@@ -1,26 +1,25 @@
 #include "ParticleManager.h"
 #include "DirectXCommon.h"
 #include "Logger.h"
-#include "Model.h"
 #include "SrvManager.h"
 #include "TextureManager.h"
 
-//Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
+// Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
 //{
-//    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-//    std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-//    std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-//    Particle particle;
-//    particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-//    particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-//    Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-//    particle.transform.translate = { translate.x + randomTranslate.x, translate.y + randomTranslate.y, translate.z + randomTranslate.z };
-//    particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-//    particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-//    particle.lifeTime = distTime(randomEngine);
-//    particle.currentTime = 0;
-//    return particle;
-//}
+//     std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+//     std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+//     std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+//     Particle particle;
+//     particle.transform.scale = { 1.0f, 1.0f, 1.0f };
+//     particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
+//     Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+//     particle.transform.translate = { translate.x + randomTranslate.x, translate.y + randomTranslate.y, translate.z + randomTranslate.z };
+//     particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+//     particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+//     particle.lifeTime = distTime(randomEngine);
+//     particle.currentTime = 0;
+//     return particle;
+// }
 
 ParticleManager* ParticleManager::getInstance()
 {
@@ -37,8 +36,8 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
 
     // ランダムエンジン初期化
     std::random_device seedGenerator;
-    std::mt19937 randomEngine(seedGenerator());
     std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+    randomEngine = std::mt19937(seedGenerator());
 
     // パイプライン生成
     graphicsPipelineInitialize(dxCommon);
@@ -47,70 +46,8 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
     VertexResourceInitialize();
 }
 
-void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
-{
-    auto it = particleGroups.find(name);
-    assert(it == particleGroups.end() && "ParticleGroup already exists!");
+void ParticleManager::Update() {
 
-    ParticleGroup group {};
-    group.materialData = new MaterialData();
-
-    group.materialData->textureFilePath = textureFilePath;
-
-    // テクスチャ読み込み
-    TextureManager::getInstance()->LoadTexture(textureFilePath);
-
-    D3D12_HEAP_PROPERTIES heapProps = {};
-    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-    D3D12_RESOURCE_DESC resourceDesc = {};
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resourceDesc.Width = sizeof(ParticleForGPU) * group.kNumMaxInstance;
-    resourceDesc.Height = 1;
-    resourceDesc.DepthOrArraySize = 1;
-    resourceDesc.MipLevels = 1;
-    resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-    resourceDesc.SampleDesc.Count = 1;
-    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-    HRESULT hr = dxCommon->GetDevice()->CreateCommittedResource(
-        &heapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &resourceDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&group.instancingResource));
-    if (FAILED(hr)) {
-        assert(false && "Failed to create instancing resource");
-    }
-
-    hr = group.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&group.instancingData));
-    if (FAILED(hr)) {
-        assert(false && "Failed to map instancing buffer");
-    }
-
-    // StructuredBuffer用のSRVを確保
-    uint32_t instancingSrvIndex = srvManager->Allocate();
-
-    group.instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
-    group.instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-    group.instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    group.instancingSrvDesc.Buffer.FirstElement = 0;
-    group.instancingSrvDesc.Buffer.NumElements = group.kNumMaxInstance;
-    group.instancingSrvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
-    group.instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
-    // SRVの生成
-    dxCommon->GetDevice()->CreateShaderResourceView(
-        group.instancingResource.Get(),
-        &group.instancingSrvDesc,
-        srvManager->GetCPUDescriptorHandle(instancingSrvIndex));
-
-    // SRVインデクスを保存
-    group.materialData->textureIndex = instancingSrvIndex;
-
-    //
-    particleGroups[name] = std::move(group);
 }
 
 void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
@@ -278,11 +215,49 @@ void ParticleManager::VertexResourceInitialize()
     vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * model.vertices.size()); // 使用するリソースのサイズ
     vertexBufferView.StrideInBytes = sizeof(VertexData); // 1頂点当たりのサイズ
 
-    vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&VertexData));
+    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&VertexData));
+    assert(SUCCEEDED(hr));
+
     VertexData[0] = { { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
     VertexData[1] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
     VertexData[2] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
     VertexData[3] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
     VertexData[4] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
     VertexData[5] = { { -1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
+}
+
+void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
+{
+    // 登録済みチェック
+    auto it = particleGroups.find(name);
+    assert(it == particleGroups.end());
+
+    //  空のグループを作成＆登録
+    ParticleGroup group {};
+
+    // マテリアルにファイルパス設定
+    group.material.textureFilePath = textureFilePath;
+
+    // テクスチャ読み込み
+    TextureManager::getInstance()->LoadTexture(textureFilePath);
+
+    // SRVインデクス取得
+    uint32_t textureSrvIndex = TextureManager::getInstance()->GetSrvIndex(textureFilePath);
+
+    group.textureSrvIndex = textureSrvIndex;
+    group.material.textureIndex = textureSrvIndex;
+
+    // インスタンシング用リソース生成
+    const uint32_t kMaxInstanceCount = 100;
+
+    group.instancingResource = dxCommon->CreateBufferResource(sizeof(ParticleForGPU) * kMaxInstanceCount);
+
+    // インスタンシング用SRV確保
+    group.instancingSrvIndex = srvManager->Allocate();
+
+    // StructuredBuffer用SRV作成
+    srvManager->CreateSRVforStructuredBuffer(group.instancingSrvIndex, group.instancingResource.Get(), kMaxInstanceCount, sizeof(ParticleForGPU));
+
+    // 登録
+    particleGroups.emplace(name, std::move(group));
 }

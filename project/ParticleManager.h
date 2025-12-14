@@ -1,22 +1,40 @@
 #pragma once
-#include <random>
 #include <d3d12.h>
-#include "Math.h"
 #include <list>
+#include <random>
+#include <string>
+#include <unordered_map>
+#include <wrl.h>
+
+#include "Math.h"
 
 class DirectXCommon;
 class SrvManager;
-class Model;
 
 class ParticleManager {
 public:
+    // struct ParticleGroup {
+    //     MaterialData* materialData; // マテリアルデータ
+    //     std::list<Particle> Particles; // パーティクルリスト
+    //     D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc; // SRVインデクス
+    //     Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource; // インスタンシングデータ
+    //     const uint32_t kNumMaxInstance = 100; // インスタンス数
+    //     ParticleForGPU* instancingData; // インスタンシングデータ
+    // };
+
     struct ParticleGroup {
-        MaterialData* materialData; // マテリアルデータ
-        std::list<Particle> Particles; // パーティクルリスト
-        D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc; // SRVインデクス
-        Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource; // インスタンシングデータ
-        const uint32_t kNumMaxInstance = 100; // インスタンス数
-        ParticleForGPU* instancingData; // インスタンシングデータ
+        // 1. マテリアルデータ
+        MaterialData material;
+        // 2. パーティクルリスト
+        std::list<Particle> particles;
+        // 3. テクスチャ用 SRV インデックス
+        uint32_t textureSrvIndex = 0;
+        // 4. インスタンシング用リソース
+        Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
+        // 5. インスタンス数
+        uint32_t instanceCount = 0;
+        // 6. インスタンシング用 SRV インデックス
+        uint32_t instancingSrvIndex = 0;
     };
 
     static ParticleManager* getInstance();
@@ -26,12 +44,15 @@ public:
     // 初期化
     void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager);
 
+    void Update();
+
     void CreateParticleGroup(const std::string name, const std::string textureFilePath);
 
 private:
     SrvManager* srvManager = nullptr;
     DirectXCommon* dxCommon;
-    Model* model = nullptr;
+
+    ModelData model;
 
     static ParticleManager* instance;
 
@@ -53,6 +74,6 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
-    // std::random_device seedGenerator;
-    // std::mt19937 randomEngine;
+
+    std::mt19937 randomEngine;
 };

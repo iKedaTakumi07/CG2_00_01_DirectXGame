@@ -57,8 +57,8 @@ void SrvManager::CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource*
     instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
     instancingSrvDesc.Buffer.FirstElement = 0;
     instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-    instancingSrvDesc.Buffer.NumElements = kMaxSRVCount;
-    instancingSrvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
+    instancingSrvDesc.Buffer.NumElements = numElements;
+    instancingSrvDesc.Buffer.StructureByteStride = structureByteStride;
 
    directXCommon->GetDevice()->CreateShaderResourceView(pResource, &instancingSrvDesc, GetCPUDescriptorHandle(srvIndex));
 }
