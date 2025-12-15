@@ -1,4 +1,5 @@
 #pragma once
+#include "Math.h"
 #include <d3d12.h>
 #include <list>
 #include <random>
@@ -6,22 +7,13 @@
 #include <unordered_map>
 #include <wrl.h>
 
-#include "Math.h"
-
 class DirectXCommon;
 class SrvManager;
+class Camera;
+class WinApp;
 
 class ParticleManager {
 public:
-    // struct ParticleGroup {
-    //     MaterialData* materialData; // マテリアルデータ
-    //     std::list<Particle> Particles; // パーティクルリスト
-    //     D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc; // SRVインデクス
-    //     Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource; // インスタンシングデータ
-    //     const uint32_t kNumMaxInstance = 100; // インスタンス数
-    //     ParticleForGPU* instancingData; // インスタンシングデータ
-    // };
-
     struct ParticleGroup {
         // 1. マテリアルデータ
         MaterialData material;
@@ -42,19 +34,33 @@ public:
     void Finalize();
 
     // 初期化
-    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager);
+    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager, WinApp* winApp);
 
     void Update();
 
+    void Draw();
+
     void CreateParticleGroup(const std::string name, const std::string textureFilePath);
+
+    void Emit(const std::string name, const Vector3& position, uint32_t count);
+
+    // set
+    void SetDefaultCamera(Camera* camera) { this->Camera_ = camera; }
 
 private:
     SrvManager* srvManager = nullptr;
     DirectXCommon* dxCommon;
+    WinApp* winApp_ = nullptr;
+
+    Camera* Camera_ = nullptr;
 
     ModelData model;
 
     static ParticleManager* instance;
+    const uint32_t kMaxInstanceCount = 100;
+    const float kDeltaTime = 1.0f / 60.0f;
+
+    bool useBillboard = false;
 
     ParticleManager() = default;
     ~ParticleManager() = default;

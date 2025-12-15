@@ -1,25 +1,30 @@
 #include "ParticleManager.h"
+#include "Camera.h"
 #include "DirectXCommon.h"
 #include "Logger.h"
 #include "SrvManager.h"
 #include "TextureManager.h"
+#include <cassert>
+#include <numbers>
 
-// Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
-//{
-//     std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-//     std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-//     std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-//     Particle particle;
-//     particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-//     particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-//     Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-//     particle.transform.translate = { translate.x + randomTranslate.x, translate.y + randomTranslate.y, translate.z + randomTranslate.z };
-//     particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-//     particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-//     particle.lifeTime = distTime(randomEngine);
-//     particle.currentTime = 0;
-//     return particle;
-// }
+Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
+{
+    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+    std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+    std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+    Particle particle;
+    particle.transform.scale = { 1.0f, 1.0f, 1.0f };
+    particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
+    Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+    particle.transform.translate = { translate.x + randomTranslate.x, translate.y + randomTranslate.y, translate.z + randomTranslate.z };
+    particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+    particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+    particle.lifeTime = distTime(randomEngine);
+    particle.currentTime = 0;
+    return particle;
+}
+
+ParticleManager* ParticleManager::instance = nullptr;
 
 ParticleManager* ParticleManager::getInstance()
 {
@@ -29,10 +34,11 @@ ParticleManager* ParticleManager::getInstance()
     return instance;
 }
 
-void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager)
+void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager, WinApp* winApp)
 {
     dxCommon = DirectXCollision;
     this->srvManager = srvManager;
+    this->winApp_ = winApp;
 
     // ランダムエンジン初期化
     std::random_device seedGenerator;
@@ -46,8 +52,104 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
     VertexResourceInitialize();
 }
 
-void ParticleManager::Update() {
+void ParticleManager::Update()
+{
 
+    const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
+    Matrix4x4 viewMatrix = Inverse(Camera_->GetWorldMatrix());
+
+    Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
+    Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, Camera_->GetWorldMatrix());
+    billboardMatrix.m[3][0] = 0.0f;
+    billboardMatrix.m[3][1] = 0.0f;
+    billboardMatrix.m[3][2] = 0.0f;
+
+    // ===== 全パーティクルグループ =====
+    for (auto& [name, group] : particleGroups) {
+
+        // インスタンス数リセット
+        group.instanceCount = 0;
+
+        // インスタンシングバッファ Map
+        ParticleForGPU* instancingData = nullptr;
+        group.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
+
+        // ===== グループ内全パーティクル =====
+        for (auto it = group.particles.begin();
+            it != group.particles.end();) {
+
+            Particle& particle = *it;
+
+            // ===== 寿命判定 =====
+            if (particle.currentTime >= particle.lifeTime) {
+                it = group.particles.erase(it);
+                continue;
+            }
+
+            // ===== 移動 =====
+            particle.transform.translate += particle.velocity * kDeltaTime;
+
+            // ===== 経過時間加算 =====
+            particle.currentTime += kDeltaTime;
+
+            // ===== ワールド行列 =====
+            Matrix4x4 worldMatrix = MakeAffineMatrix(particle.transform.scale, particle.transform.rotate, particle.transform.translate);
+            if (useBillboard) {
+                worldMatrix = Multiply(worldMatrix, billboardMatrix);
+            }
+            Matrix4x4 projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(winApp_->KClientWidth) / float(winApp_->KClientHeight), 0.1f, 100.0f);
+            Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+            float alpha = 1.0f - (particle.currentTime / particle.lifeTime);
+
+            // ===== インスタンシングデータ書き込み =====
+            instancingData[group.instanceCount].world = worldMatrix;
+            instancingData[group.instanceCount].WVP = worldViewProjectionMatrix;
+            instancingData[group.instanceCount].color = particle.color;
+            instancingData[group.instanceCount].color.w = alpha;
+
+            group.instanceCount++;
+            ++it;
+        }
+
+        group.instancingResource->Unmap(0, nullptr);
+    }
+}
+
+void ParticleManager::Draw()
+{
+
+    auto* commandList = dxCommon->GetCommandList();
+
+    // ===== ルートシグネチャ設定 =====
+    commandList->SetGraphicsRootSignature(rootSignature.Get());
+
+    // ===== PSO 設定 =====
+    commandList->SetPipelineState(graphicsPipelineState.Get());
+
+    // ===== プリミティブトポロジー =====
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // ===== VBV 設定（板ポリ）=====
+    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+
+    // ===== 全パーティクルグループ =====
+    for (auto& [name, group] : particleGroups) {
+
+        // 生存パーティクルがなければ描画しない
+        if (group.instanceCount == 0) {
+            continue;
+        }
+
+        // ===== テクスチャ SRV =====
+        srvManager->SetGraphicsRootDescriptorTable(1, group.textureSrvIndex);
+
+        // ===== インスタンシング SRV =====
+        srvManager->SetGraphicsRootDescriptorTable(
+            2, group.instancingSrvIndex);
+
+        // ===== DrawCall（1グループ = 1回）=====
+        commandList->DrawInstanced(UINT(model.vertices.size()), group.instanceCount, 0, 0);
+    }
 }
 
 void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
@@ -240,6 +342,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
     // テクスチャ読み込み
     TextureManager::getInstance()->LoadTexture(textureFilePath);
+    model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);
 
     // SRVインデクス取得
     uint32_t textureSrvIndex = TextureManager::getInstance()->GetSrvIndex(textureFilePath);
@@ -248,8 +351,6 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     group.material.textureIndex = textureSrvIndex;
 
     // インスタンシング用リソース生成
-    const uint32_t kMaxInstanceCount = 100;
-
     group.instancingResource = dxCommon->CreateBufferResource(sizeof(ParticleForGPU) * kMaxInstanceCount);
 
     // インスタンシング用SRV確保
@@ -260,4 +361,18 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
     // 登録
     particleGroups.emplace(name, std::move(group));
+}
+
+void ParticleManager::Emit(const std::string name, const Vector3& position, uint32_t count)
+{
+    auto it = particleGroups.find(name);
+    assert(it != particleGroups.end());
+
+    ParticleGroup& group = it->second;
+
+    for (uint32_t i = 0; i < count; ++i) {
+        Particle particle = MakeNewParticle(randomEngine, position);
+
+        group.particles.push_back(particle);
+    }
 }

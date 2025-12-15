@@ -9,6 +9,8 @@
 #include "StringUtility.h"
 #include "TextureManager.h"
 #include "WinApp.h"
+#include "ParticleManager.h"
+#include "ParticleEmitter.h"
 
 #include "Camera.h"
 #include "Model.h"
@@ -380,6 +382,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     Model* model = new Model();
     model->Initialize(modelCommon, "resources", "plane.obj");
     object3d->SetModel(model);
+
+    // 板ポリ
+    ParticleManager* particleManager = new ParticleManager();
 
     // ウィンドウの×ボタンが押されるまでループ
     while (true) {

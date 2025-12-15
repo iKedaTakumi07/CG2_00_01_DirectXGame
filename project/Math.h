@@ -27,6 +27,10 @@ struct Transform {
 struct Matrix4x4 {
     float m[4][4];
 };
+struct AABB {
+    Vector3 min;
+    Vector3 max;
+};
 struct VertexData {
     Vector4 position;
     Vector2 texcoord;
@@ -82,3 +86,10 @@ Matrix4x4 MakePrespectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 Vector3 Normalize(const Vector3& v);
 
 Matrix4x4 Inverse(const Matrix4x4& m);
+
+bool IsCollision(const AABB& aabb, const Vector3& point);
+
+Vector3 Multiply(const Vector3& m1, const float& m2);
+
+Vector3 operator*(const Vector3& m1, const float& m2);
+Vector3& operator+=(Vector3& lhv, const Vector3& rhv);
