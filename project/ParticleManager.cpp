@@ -34,6 +34,12 @@ ParticleManager* ParticleManager::getInstance()
     return instance;
 }
 
+void ParticleManager::Finalize()
+{
+    delete instance;
+    instance = nullptr;
+}
+
 void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager, WinApp* winApp)
 {
     dxCommon = DirectXCollision;
@@ -311,21 +317,24 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 void ParticleManager::VertexResourceInitialize()
 {
     // 頂点リソースを作成
-    vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * model.vertices.size());
+    //TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    //model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);
+
+    vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
     // 頂点バッファビューを作成
     vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress(); // リソースの先頭のアドレスから使用
-    vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * model.vertices.size()); // 使用するリソースのサイズ
+    vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * 6); // 使用するリソースのサイズ
     vertexBufferView.StrideInBytes = sizeof(VertexData); // 1頂点当たりのサイズ
 
-    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&VertexData));
+    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
     assert(SUCCEEDED(hr));
 
-    VertexData[0] = { { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-    VertexData[1] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-    VertexData[2] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
-    VertexData[3] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
-    VertexData[4] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-    VertexData[5] = { { -1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
+    vertexData[0] = { { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+    vertexData[1] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+    vertexData[2] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
+    vertexData[3] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
+    vertexData[4] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+    vertexData[5] = { { -1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
 }
 
 void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
@@ -342,7 +351,6 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
     // テクスチャ読み込み
     TextureManager::getInstance()->LoadTexture(textureFilePath);
-    model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);
 
     // SRVインデクス取得
     uint32_t textureSrvIndex = TextureManager::getInstance()->GetSrvIndex(textureFilePath);

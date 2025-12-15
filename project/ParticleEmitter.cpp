@@ -10,14 +10,14 @@ ParticleEmitter::ParticleEmitter(const std::string& groupName, const Transform& 
 {
 }
 
-void ParticleEmitter::Update(float deltaTime)
+void ParticleEmitter::Update()
 {
     if (emitRate_ <= 0.0f) {
         return;
     }
 
     // 時刻を進める
-    elapsedTime_ += deltaTime;
+    elapsedTime_ += 1.0f/60.0f;
 
     // 1回発生するのに必要な時間
     const float emitInterval = 1.0f / emitRate_;
@@ -29,4 +29,9 @@ void ParticleEmitter::Update(float deltaTime)
 
         elapsedTime_ -= emitInterval;
     }
+}
+
+void ParticleEmitter::Emit()
+{
+    ParticleManager::getInstance()->Emit("pori", transform_.translate, 3);
 }

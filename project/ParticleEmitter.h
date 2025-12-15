@@ -13,7 +13,9 @@ public:
     );
 
     // 更新
-    void Update(float deltaTime);
+    void Update();
+
+    void Emit();
 
     // Setter
     void SetTransform(const Transform& transform)

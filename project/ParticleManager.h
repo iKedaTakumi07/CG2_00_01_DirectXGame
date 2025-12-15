@@ -74,7 +74,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView {};
-    VertexData* VertexData = nullptr;
+    VertexData* vertexData = nullptr;
 
     std::unordered_map<std::string, ParticleGroup> particleGroups;
 
