@@ -126,19 +126,19 @@ void ParticleManager::Draw()
 
     auto* commandList = dxCommon->GetCommandList();
 
-    // ===== ルートシグネチャ設定 =====
+    // ルートシグネチャ設定
     commandList->SetGraphicsRootSignature(rootSignature.Get());
 
-    // ===== PSO 設定 =====
+    // PSO設定
     commandList->SetPipelineState(graphicsPipelineState.Get());
 
-    // ===== プリミティブトポロジー =====
+    // プリミティブトポロジー
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    // ===== VBV 設定（板ポリ）=====
+    // VBV設定（板ポリ）
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
-    // ===== 全パーティクルグループ =====
+    // 全パーティクルグループ
     for (auto& [name, group] : particleGroups) {
 
         // 生存パーティクルがなければ描画しない
@@ -146,15 +146,16 @@ void ParticleManager::Draw()
             continue;
         }
 
-        // ===== テクスチャ SRV =====
+        commandList->SetGraphicsRootConstantBufferView(0, group.materialResource->GetGPUVirtualAddress());
+
+        // テクスチャSRV
         srvManager->SetGraphicsRootDescriptorTable(1, group.textureSrvIndex);
 
-        // ===== インスタンシング SRV =====
-        srvManager->SetGraphicsRootDescriptorTable(
-            2, group.instancingSrvIndex);
+        // インスタンシングSRV
+        srvManager->SetGraphicsRootDescriptorTable(2, group.instancingSrvIndex);
 
-        // ===== DrawCall（1グループ = 1回）=====
-        commandList->DrawInstanced(UINT(model.vertices.size()), group.instanceCount, 0, 0);
+        // DrawCall（1グループ = 1回）
+        commandList->DrawInstanced(6, group.instanceCount, 0, 0);
     }
 }
 
@@ -317,8 +318,8 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 void ParticleManager::VertexResourceInitialize()
 {
     // 頂点リソースを作成
-    //TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-    //model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);
+    // TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    // model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);
 
     vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
     // 頂点バッファビューを作成
@@ -366,6 +367,18 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
     // StructuredBuffer用SRV作成
     srvManager->CreateSRVforStructuredBuffer(group.instancingSrvIndex, group.instancingResource.Get(), kMaxInstanceCount, sizeof(ParticleForGPU));
+
+    // マテリアル用のリソースを作る
+    group.materialResource = dxCommon->CreateBufferResource(sizeof(Material));
+    // マテリアルにデータを書き込む
+    Material* materialData = nullptr;
+    // 書き込むためのアドレスを取得
+    group.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+
+    // 今回は赤を書き込んでみる
+    materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    materialData->enableLighting = false;
+    materialData->uvTransform = MakeIdentity4x4();
 
     // 登録
     particleGroups.emplace(name, std::move(group));

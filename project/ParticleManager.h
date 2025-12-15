@@ -27,6 +27,8 @@ public:
         uint32_t instanceCount = 0;
         // 6. インスタンシング用 SRV インデックス
         uint32_t instancingSrvIndex = 0;
+        // マテリアルリソース
+        Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
     };
 
     static ParticleManager* getInstance();

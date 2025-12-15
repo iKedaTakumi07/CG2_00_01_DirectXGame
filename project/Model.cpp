@@ -13,8 +13,8 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypat
     VertexResourceInitialize();
     MaterialResourceInitialize();
 
-    TextureManager::getInstance()->LoadTexture(modelData.material.textureFilePath);
-    modelData.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
+    //TextureManager::getInstance()->LoadTexture(modelData.material.textureFilePath);
+    //modelData.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 }
 
 void Model::Draw()
