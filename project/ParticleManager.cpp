@@ -301,7 +301,7 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     // depthを有効化
     depthStencilDesc.DepthEnable = true;
     // 書き込み
-    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
     // 比較関数はLessEqual
     depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
