@@ -33,6 +33,7 @@ public:
 private:
     static TextureManager* instance;
     SrvManager* srvManager = nullptr;
+    DirectXCommon* dxCommon;
 
     TextureManager() = default;
     ~TextureManager() = default;
@@ -52,7 +53,6 @@ private:
     // テクスチャデータ
     std::unordered_map<std::string, TextureData> textureDatas;
 
-    DirectXCommon* dxCommon;
 
     static uint32_t kSRVIndexTop;
 };

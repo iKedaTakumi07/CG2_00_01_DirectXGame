@@ -98,7 +98,8 @@ D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandelGPU(const std::string& f
 
 uint32_t TextureManager::GetSrvIndex(const std::string& filePath)
 {
-    return 0;
+    TextureData& textureData = textureDatas[filePath];
+    return textureData.srvIndex;
 }
 
 const DirectX::TexMetadata& TextureManager::GetMetadata(const std::string& filePath)

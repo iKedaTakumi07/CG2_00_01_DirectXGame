@@ -157,3 +157,32 @@ Matrix4x4 Inverse(const Matrix4x4& m)
 
     return num;
 }
+
+Vector3 Multiply(const Vector3& m1, const float& m2)
+{
+    Vector3 num;
+    num.x = m1.x * m2;
+    num.y = m1.y * m2;
+    num.z = m1.z * m2;
+
+    return num;
+}
+
+bool IsCollision(const AABB& aabb, const Vector3& point)
+{
+    if ((aabb.min.x <= point.x && aabb.max.x >= point.x)
+        && (aabb.min.y <= point.y && aabb.max.y >= point.y)
+        && (aabb.min.z <= point.z && aabb.max.z >= point.z)) {
+        return true;
+    }
+    return false;
+}
+
+Vector3 operator*(const Vector3& m1, const float& m2) { return Multiply(m1, m2); }
+Vector3& operator+=(Vector3& lhv, const Vector3& rhv)
+{
+    lhv.x += rhv.x;
+    lhv.y += rhv.y;
+    lhv.z += rhv.z;
+    return lhv;
+}
