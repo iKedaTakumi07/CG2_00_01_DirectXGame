@@ -149,10 +149,10 @@ void ParticleManager::Draw()
         commandList->SetGraphicsRootConstantBufferView(0, group.materialResource->GetGPUVirtualAddress());
 
         // テクスチャSRV
-        srvManager->SetGraphicsRootDescriptorTable(1, group.textureSrvIndex);
+        srvManager->SetGraphicsRootDescriptorTable(1, group.instancingSrvIndex);
 
         // インスタンシングSRV
-        srvManager->SetGraphicsRootDescriptorTable(2, group.instancingSrvIndex);
+        srvManager->SetGraphicsRootDescriptorTable(2, group.textureSrvIndex);
 
         // DrawCall（1グループ = 1回）
         commandList->DrawInstanced(6, group.instanceCount, 0, 0);
@@ -318,8 +318,8 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 void ParticleManager::VertexResourceInitialize()
 {
     // 頂点リソースを作成
-    // TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-    // model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);
+    /*TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);*/
 
     vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
     // 頂点バッファビューを作成

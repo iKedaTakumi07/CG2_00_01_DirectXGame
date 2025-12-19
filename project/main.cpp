@@ -379,8 +379,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         rotate2.y += -0.1f;
         object3d2->SetRotate(rotate2);
 
-        particleEmitter->Emit();
-
         particleEmitter->Update();
 
         ParticleManager::getInstance()->Update();
