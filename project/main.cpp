@@ -265,7 +265,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     ParticleManager::getInstance()->Initialize(dxCommon, srvManager, winApp);
     ParticleManager::getInstance()->SetDefaultCamera(camera);
-    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/uvChecker.png");
+    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
 
     /// ============================================================================================================
     /// 音声データ
