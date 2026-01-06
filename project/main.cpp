@@ -11,6 +11,9 @@
 #include "StringUtility.h"
 #include "TextureManager.h"
 #include "WinApp.h"
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#endif // USE_IMGUI
 
 #include "Camera.h"
 #include "ImGuiManager.h"
@@ -235,8 +238,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
 
     TextureManager::getInstance()->Initialize(dxCommon, srvManager);
-    // TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-    // TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
+     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
 
     ModelManager::GetInstance()->Initialize(dxCommon);
     ModelManager::GetInstance()->LoadModel("Plane.obj");
@@ -271,10 +274,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     bool isSprite = true;
     std::vector<Sprite*> sprites;
-    for (uint32_t i = 0; i < 5; ++i) {
+    for (uint32_t i = 0; i < 1; ++i) {
         Sprite* sprite = new Sprite();
         if (i % 2 == 0) {
             sprite->Initialize(spriteCommon, winApp, "resources/uvChecker.png");
+            sprite->SetPosition(Vector2(100.0f, 100.0f));
         } else {
             sprite->Initialize(spriteCommon, winApp, "resources/monsterBall.png");
         }
@@ -328,12 +332,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         // update/更新処理
 
         for (uint32_t i = 0; i < sprites.size(); ++i) {
-            Vector2 pos = sprites[i]->GetPosition();
-            pos.x = i * 100.0f;
-            pos.y = i * 100.0f;
-            sprites[i]->SetPosition(pos);
-            sprites[i]->SetAnchorPoint({ 0.5f, 0.5f });
-
             sprites[i]->Update();
         }
 
@@ -355,6 +353,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         camera->Update();
 
+        ImGui::ShowDemoWindow();
+
         imguiManager->End();
 
         // draw
@@ -370,15 +370,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         //
         spriteCommon->PrepareSpriteDraw();
 
-        ParticleManager::getInstance()->Draw();
+        for (uint32_t i = 0; i < sprites.size(); ++i) {
+            sprites[i]->Draw();
+        }
 
-        /* object3d->Draw();
-         object3d2->Draw();
+        //ParticleManager::getInstance()->Draw();
 
-
-         for (uint32_t i = 0; i < sprites.size(); ++i) {
-             sprites[i]->Draw();
-         }*/
+        // object3d->Draw();
+        // object3d2->Draw();
 
         //
         // モデルデータ
