@@ -13,6 +13,7 @@
 #include "WinApp.h"
 
 #include "Camera.h"
+#include "ImGuiManager.h"
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
@@ -23,14 +24,7 @@
 
 #include <DbgHelp.h>
 #include <cassert>
-#include <chrono>
-#include <dinput.h>
 
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
-
-#include <filesystem>
 #include <fstream>
 #include <strsafe.h>
 #include <vector>
@@ -41,8 +35,6 @@
 #pragma comment(lib, "dxcompiler.lib")
 #pragma comment(lib, "xaudio2.lib")
 #pragma comment(lib, "dinput8.lib")
-
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 struct ChunkHeader {
     char id[4]; // チャンク毎のID
@@ -202,23 +194,6 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
 // windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    // ログのディレクトリを用意
-    std::filesystem::create_directory("logs");
-    // 現在時刻を取得(UTC)
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    // ログファイルの名前にコンマ何秒はいらぬから削る
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
-    // 日本時間(pcの設定)に変更
-    std::chrono::zoned_time localTime { std::chrono::current_zone(), nowSeconds };
-    // formatを使って年月日_時分秒に変換
-    std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
-    // 時刻を使ってファイル名を決定
-    std::string logFilePath = std::string("logs/") + dateString + ".log";
-    // ファイルを作って書き込み準備
-    std::ofstream logStream(logFilePath);
-
-    D3dResourceLeakChecker leakChecl;
-
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
     SetUnhandledExceptionFilter(ExportDump);
 
@@ -239,6 +214,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     srvManager = new SrvManager();
     srvManager->Initialize(dxCommon);
 
+    ImGuiManager* imguiManager = nullptr;
+    imguiManager = new ImGuiManager();
+    imguiManager->Initialize(winApp, dxCommon, srvManager);
+
     SpriteCommon* spriteCommon = nullptr;
     spriteCommon = new SpriteCommon;
     spriteCommon->Initialize(dxCommon);
@@ -256,8 +235,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
 
     TextureManager::getInstance()->Initialize(dxCommon, srvManager);
-    //TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-    //TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
+    // TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    // TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
 
     ModelManager::GetInstance()->Initialize(dxCommon);
     ModelManager::GetInstance()->LoadModel("Plane.obj");
@@ -344,18 +323,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             OutputDebugStringA("hit 1\n");
         }
 
-        // ImGui_ImplDX12_NewFrame();
-        // ImGui_ImplWin32_NewFrame();
-        // ImGui::NewFrame();
-
-        // ImGui::Begin("Settings");
-
-        // ImGui::End();
+        imguiManager->Begin();
 
         // update/更新処理
-
-        // imguiのUI
-        /* ImGui::ShowDemoWindow();*/
 
         for (uint32_t i = 0; i < sprites.size(); ++i) {
             Vector2 pos = sprites[i]->GetPosition();
@@ -385,8 +355,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         camera->Update();
 
+        imguiManager->End();
+
         // draw
-        // ImGui::Render();
 
         dxCommon->PreDraw();
 
@@ -415,6 +386,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         // 実際のcommandListのImGuiの描画コマンドを詰む
         // ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
+        imguiManager->Draw();
 
         dxCommon->PostDraw();
     }
@@ -437,6 +409,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     TextureManager::getInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
     ParticleManager::getInstance()->Finalize();
+    imguiManager->Finalize();
+    delete imguiManager;
     delete srvManager;
     delete dxCommon;
     delete spriteCommon;

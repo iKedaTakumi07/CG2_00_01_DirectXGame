@@ -42,6 +42,8 @@ public:
     HANDLE GetfenceEvent() { return fenceEvent; }
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+
+    size_t GetSwapChainResourcesNum() const { return swapChainResources.size(); }
     
     // 最大SRV
     static const uint32_t kMaxSRVCount;

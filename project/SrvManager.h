@@ -25,6 +25,9 @@ public:
 
     void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
 
+    // getter
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetdescriptorHeap() const { return descriptorHeap; };
+
 private:
     DirectXCommon* directXCommon = nullptr;
 
