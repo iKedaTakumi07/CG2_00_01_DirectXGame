@@ -1,6 +1,9 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#endif // USE_IMGUI
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string texturefilePath)
 {
@@ -11,7 +14,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string 
     MaterialResourceInitialize();
     TransMatrixResourceInitialize();
 
-    //textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(texturefilePath);
+    // textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(texturefilePath);
     texturefilePath_ = texturefilePath;
     AdjustTextureSize(texturefilePath_);
 }
@@ -78,6 +81,10 @@ void Sprite::AdjustTextureSize(std::string texturefilePath)
 
 void Sprite::Update()
 {
+#ifdef USE_IMGUI
+    ImGui::SliderFloat2("pos", &position.x, 0.0f, 1280.0f, "%06.1f");
+#endif // USE_IMGUI
+
     float left = 0.0f - anchorPoint.x;
     float rigth = 1.0f - anchorPoint.x;
     float top = 0.0f - anchorPoint.y;
