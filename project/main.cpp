@@ -238,8 +238,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
 
     TextureManager::getInstance()->Initialize(dxCommon, srvManager);
-     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
+    TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
 
     ModelManager::GetInstance()->Initialize(dxCommon);
     ModelManager::GetInstance()->LoadModel("Plane.obj");
@@ -353,7 +353,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         camera->Update();
 
+#ifdef USE_IMGUI
         ImGui::ShowDemoWindow();
+#endif // USE_IMGUI
 
         imguiManager->End();
 
@@ -374,7 +376,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             sprites[i]->Draw();
         }
 
-        //ParticleManager::getInstance()->Draw();
+        // ParticleManager::getInstance()->Draw();
 
         // object3d->Draw();
         // object3d2->Draw();
