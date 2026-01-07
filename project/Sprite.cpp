@@ -81,6 +81,7 @@ void Sprite::AdjustTextureSize(std::string texturefilePath)
 
 void Sprite::Update()
 {
+
 #ifdef USE_IMGUI
     ImGui::SliderFloat2("pos", &position.x, 0.0f, 1280.0f, "%06.1f");
 #endif // USE_IMGUI
