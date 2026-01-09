@@ -93,3 +93,7 @@ Vector3 Multiply(const Vector3& m1, const float& m2);
 
 Vector3 operator*(const Vector3& m1, const float& m2);
 Vector3& operator+=(Vector3& lhv, const Vector3& rhv);
+
+Matrix4x4 MakeScaleMatrix(const Vector3& scale);
+
+Matrix4x4 MakeTranslateMatrix(const Vector3& translate);

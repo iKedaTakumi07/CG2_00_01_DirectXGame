@@ -30,15 +30,13 @@ public:
     Sound() = default;
     ~Sound() { Unload(); }
 
-    bool Load(const char* filename);
+    void SoundLoadFile(const std::string& filename);
     void Unload();
 
-    const WAVEFORMATEX& GetFormat() const { return wfex_; }
-    const BYTE* GetBuffer() const { return pBuffer_; }
-    UINT32 GetBufferSize() const { return bufferSize_; }
+    const WAVEFORMATEX& GetFormat() const { return soundData.wfex; }
+    const BYTE* GetBuffer() const { return soundData.pBuffer; }
+    UINT32 GetBufferSize() const { return soundData.bufferSize; }
 
 private:
-    WAVEFORMATEX wfex_ {};
-    BYTE* pBuffer_ = nullptr;
-    UINT32 bufferSize_ = 0;
+    SoundData soundData;
 };

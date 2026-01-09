@@ -1,9 +1,17 @@
+#pragma comment(lib, "mfplat.lib")
+
+#include <mfapi.h>
 #include "Audio.h"
 #include "Sound.h"
 #include <cassert>
 
 bool Audio::Initialize()
 {
+    HRESULT result;
+
+    result = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
+    assert(SUCCEEDED(result));
+
     HRESULT hr = XAudio2Create(&xAudio2_, 0);
     if (FAILED(hr))
         return false;
@@ -19,6 +27,11 @@ void Audio::Finalize()
         masterVoice_ = nullptr;
     }
     xAudio2_.Reset();
+
+    HRESULT result;
+
+    result = MFShutdown();
+    assert(SUCCEEDED(result));
 }
 
 void Audio::Play(const Sound& sound)
