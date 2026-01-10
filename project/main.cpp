@@ -259,6 +259,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 音声データ解放
     // SoundUhload(&soundData1);
     fanfare.Unload();
+    clearSe.Unload();
     audio.Finalize();
 
     CloseHandle(dxCommon->GetfenceEvent());

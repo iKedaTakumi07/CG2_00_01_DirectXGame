@@ -40,14 +40,17 @@ void Audio::Play(const Sound& sound)
 
     HRESULT hr = xAudio2_->CreateSourceVoice(
         &sourceVoice,
-        &sound.GetFormat());
+        &sound.GetSoundData().wfex);
     assert(SUCCEEDED(hr));
 
-    XAUDIO2_BUFFER buf {};
-    buf.pAudioData = sound.GetBuffer();
-    buf.AudioBytes = sound.GetBufferSize();
-    buf.Flags = XAUDIO2_END_OF_STREAM;
+    XAUDIO2_BUFFER buffer {};
+    buffer.pAudioData = sound.GetSoundData().buffer.data();
+    buffer.AudioBytes = static_cast<UINT32>(sound.GetSoundData().buffer.size());
+    buffer.Flags = XAUDIO2_END_OF_STREAM;
 
-    sourceVoice->SubmitSourceBuffer(&buf);
-    sourceVoice->Start();
+    hr = sourceVoice->SubmitSourceBuffer(&buffer);
+    assert(SUCCEEDED(hr));
+
+    hr = sourceVoice->Start();
+    assert(SUCCEEDED(hr));
 }

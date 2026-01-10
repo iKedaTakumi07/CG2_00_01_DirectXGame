@@ -12,19 +12,6 @@
 void Sound::SoundLoadFile(const std::string& filename)
 {
 
-    //// ファイル入力ストリームのインスタンス
-    // std::ifstream file;
-    //// .wavファイルをバイナリモードで開く
-    // file.open(filename, std::ios_base::binary);
-    //// ファイルオープン失敗を検出する
-    // assert(file.is_open());
-
-    // RiffHeader riff;
-    // file.read((char*)&riff, sizeof(riff));
-    // if (strncmp(riff.chunk.id, "RIFF", 4) != 0 || strncmp(riff.type, "WAVE", 4) != 0) {
-    //     assert(0);
-    // }
-
     // フルパスをワイド文字に変換
     std::wstring filePathW = StringUtility::ConvertString(filename);
     HRESULT result;
@@ -50,10 +37,47 @@ void Sound::SoundLoadFile(const std::string& filename)
     WAVEFORMATEX* waveFormat = nullptr;
     MFCreateWaveFormatExFromMFMediaType(pOutType.Get(), &waveFormat, nullptr);
 
-    // コンテナ
-
     // コンテナに格納する音声データ
+    soundData.wfex = *waveFormat;
 
+    CoTaskMemFree(waveFormat);
+
+    // PCMデータのバッファを構築
+    while (true) {
+        Microsoft::WRL::ComPtr<IMFSample> pSample;
+        DWORD streamIndex = 0, flags = 0;
+        LONGLONG llTimeStamp = 0;
+        // サンプルを読み込む
+        result = pReader->ReadSample(MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, &streamIndex, &flags, &llTimeStamp, &pSample);
+        // ストリームの末尾に達したら抜ける
+        if (flags & MF_SOURCE_READERF_ENDOFSTREAM) break;
+        if (pSample) {
+            Microsoft::WRL::ComPtr<IMFMediaBuffer> pBuffer;
+            // サンプルに含まれるサウンドデータのバッファを一繋ぎにして取得
+            pSample->ConvertToContiguousBuffer(&pBuffer);
+
+            BYTE* pData = nullptr;
+            DWORD maxLength = 0, currentLength = 0;
+            // バッファ読み込み用にロック
+            pBuffer->Lock(&pData, &maxLength, &currentLength);
+            // バッファの末尾にデータを追加
+            soundData.buffer.insert(soundData.buffer.end(), pData, pData + currentLength);
+            pBuffer->Unlock();
+        }
+    }
+
+    //// ファイル入力ストリームのインスタンス
+    // std::ifstream file;
+    //// .wavファイルをバイナリモードで開く
+    // file.open(filename, std::ios_base::binary);
+    //// ファイルオープン失敗を検出する
+    // assert(file.is_open());
+
+    // RiffHeader riff;
+    // file.read((char*)&riff, sizeof(riff));
+    // if (strncmp(riff.chunk.id, "RIFF", 4) != 0 || strncmp(riff.type, "WAVE", 4) != 0) {
+    //     assert(0);
+    // }
 
     //// Formatチャンクの読み込み
     // FormatChunk format = {};
@@ -78,21 +102,18 @@ void Sound::SoundLoadFile(const std::string& filename)
     //     assert(0);
     // }
 
-    soundData.pBuffer = new BYTE[data.size];
-    soundData.bufferSize = data.size;
-    soundData.wfex = format.fmt;
+    //soundData.pBuffer = new BYTE[data.size];
+    //soundData.bufferSize = data.size;
+    //soundData.wfex = format.fmt;
 
-    file.read((char*)soundData.pBuffer, data.size);
+    //file.read((char*)soundData.pBuffer, data.size);
 
-    // waveファイルを閉じる
-    file.close();
+    //// waveファイルを閉じる
+    //file.close();
 }
 
 void Sound::Unload()
 {
-
-    delete[] soundData.pBuffer;
-    soundData.pBuffer = nullptr;
-    soundData.bufferSize = 0;
+    soundData.buffer.clear();
     soundData.wfex = {};
 }
