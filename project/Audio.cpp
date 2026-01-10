@@ -1,9 +1,17 @@
+#pragma comment(lib, "mfplat.lib")
+
+#include <mfapi.h>
 #include "Audio.h"
 #include "Sound.h"
 #include <cassert>
 
 bool Audio::Initialize()
 {
+    HRESULT result;
+
+    result = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
+    assert(SUCCEEDED(result));
+
     HRESULT hr = XAudio2Create(&xAudio2_, 0);
     if (FAILED(hr))
         return false;
@@ -19,6 +27,11 @@ void Audio::Finalize()
         masterVoice_ = nullptr;
     }
     xAudio2_.Reset();
+
+    HRESULT result;
+
+    result = MFShutdown();
+    assert(SUCCEEDED(result));
 }
 
 void Audio::Play(const Sound& sound)
@@ -27,14 +40,17 @@ void Audio::Play(const Sound& sound)
 
     HRESULT hr = xAudio2_->CreateSourceVoice(
         &sourceVoice,
-        &sound.GetFormat());
+        &sound.GetSoundData().wfex);
     assert(SUCCEEDED(hr));
 
-    XAUDIO2_BUFFER buf {};
-    buf.pAudioData = sound.GetBuffer();
-    buf.AudioBytes = sound.GetBufferSize();
-    buf.Flags = XAUDIO2_END_OF_STREAM;
+    XAUDIO2_BUFFER buffer {};
+    buffer.pAudioData = sound.GetSoundData().buffer.data();
+    buffer.AudioBytes = static_cast<UINT32>(sound.GetSoundData().buffer.size());
+    buffer.Flags = XAUDIO2_END_OF_STREAM;
 
-    sourceVoice->SubmitSourceBuffer(&buf);
-    sourceVoice->Start();
+    hr = sourceVoice->SubmitSourceBuffer(&buffer);
+    assert(SUCCEEDED(hr));
+
+    hr = sourceVoice->Start();
+    assert(SUCCEEDED(hr));
 }

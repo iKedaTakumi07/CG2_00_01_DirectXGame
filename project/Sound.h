@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <vector>
 #include <xaudio2.h>
 
 #pragma comment(lib, "xaudio2.lib")
@@ -19,10 +20,8 @@ struct FormatChunk {
 struct SoundData {
     // 波型フォーマット
     WAVEFORMATEX wfex;
-    // バッフアの先頭アドレス
-    BYTE* pBuffer;
-    // バッフアのサイズ
-    unsigned int bufferSize;
+    // バッファ
+    std::vector<BYTE> buffer;
 };
 
 class Sound {
@@ -30,15 +29,11 @@ public:
     Sound() = default;
     ~Sound() { Unload(); }
 
-    bool Load(const char* filename);
+    void SoundLoadFile(const std::string& filename);
     void Unload();
 
-    const WAVEFORMATEX& GetFormat() const { return wfex_; }
-    const BYTE* GetBuffer() const { return pBuffer_; }
-    UINT32 GetBufferSize() const { return bufferSize_; }
+    const SoundData& GetSoundData() const { return soundData; }
 
 private:
-    WAVEFORMATEX wfex_ {};
-    BYTE* pBuffer_ = nullptr;
-    UINT32 bufferSize_ = 0;
+    SoundData soundData;
 };
