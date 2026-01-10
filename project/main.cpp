@@ -119,7 +119,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     Sound fanfare;
     fanfare.SoundLoadFile("resources/fanfare.wav");
     Sound clearSe;
-    clearSe.SoundLoadFile("resources/fanfare.wav");
+    clearSe.SoundLoadFile("resources/stage.mp3");
 
     audio.Play(fanfare);
     audio.Play(clearSe);
