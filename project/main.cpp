@@ -12,6 +12,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     while (true) {
         game.Update();
 
+        // windowにメッセージが来ていたら最優先で処理させる
+        if (game.IsEndRequst()) {
+            break;
+        }
+
         game.Draw();
     }
 

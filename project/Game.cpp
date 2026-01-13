@@ -2,7 +2,7 @@
 
 #define DIRECTINPUT_VERSION 0x0800
 
-#include "Audio.h"
+
 #include "D3dResourceLeakChecker.h"
 #include "DirectXCommon.h"
 #include "Input.h"
@@ -11,10 +11,10 @@
 #include "Object3dCommon.h"
 #include "ParticleEmitter.h"
 #include "ParticleManager.h"
-#include "Sound.h"
+
 #include "StringUtility.h"
 #include "TextureManager.h"
-#include "WinApp.h"
+
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -65,39 +65,31 @@ void Game::Initialize()
     SetUnhandledExceptionFilter(ExportDump);
 
     // winapp初期化
-    WinApp* winApp = nullptr;
     winApp = new WinApp();
     winApp->Initialize();
 
-    DirectXCommon* dxCommon = nullptr;
     dxCommon = new DirectXCommon();
     dxCommon->Initialize(winApp);
 
-    Input* input = nullptr;
     input = new Input();
     input->Initialize(winApp);
 
-    SrvManager* srvManager = nullptr;
     srvManager = new SrvManager();
     srvManager->Initialize(dxCommon);
 
-    ImGuiManager* imguiManager = nullptr;
     imguiManager = new ImGuiManager();
     imguiManager->Initialize(winApp, dxCommon, srvManager);
 
-    SpriteCommon* spriteCommon = nullptr;
     spriteCommon = new SpriteCommon;
     spriteCommon->Initialize(dxCommon);
 
-    Object3dCommon* object3dCommon = nullptr;
     object3dCommon = new Object3dCommon();
     object3dCommon->Initialize(dxCommon);
 
-    ModelCommon* modelCommon = nullptr;
     modelCommon = new ModelCommon();
     modelCommon->Initialize(dxCommon);
 
-    Camera* camera = new Camera();
+    camera = new Camera();
     camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
 
@@ -113,19 +105,15 @@ void Game::Initialize()
     ParticleManager::getInstance()->SetDefaultCamera(camera);
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
 
-    Audio audio;
     audio.Initialize();
 
-    Sound fanfare;
     fanfare.SoundLoadFile("resources/fanfare.wav");
-    Sound clearSe;
+
     clearSe.SoundLoadFile("resources/stage.mp3");
 
     audio.Play(fanfare);
     audio.Play(clearSe);
 
-    bool isSprite = true;
-    std::vector<Sprite*> sprites;
     for (uint32_t i = 0; i < 1; ++i) {
         Sprite* sprite = new Sprite();
         if (i % 2 == 0) {
@@ -140,17 +128,17 @@ void Game::Initialize()
 
     object3dCommon->SetDefaultCamera(camera);
 
-    Object3d* object3d2 = new Object3d();
+    object3d2 = new Object3d();
     object3d2->Initialize(object3dCommon, winApp);
 
-    Model* model2 = new Model();
+    model2 = new Model();
     model2->Initialize(modelCommon, "resources", "plane.obj");
     object3d2->SetModel("axis.obj");
 
-    Object3d* object3d = new Object3d();
+    object3d = new Object3d();
     object3d->Initialize(object3dCommon, winApp);
 
-    Model* model = new Model();
+    model = new Model();
     model->Initialize(modelCommon, "resources", "plane.obj");
     object3d->SetModel(model);
 
@@ -159,17 +147,11 @@ void Game::Initialize()
     emitter.translate = { 0.0f, 0.0f, 0.0f };
     emitter.rotate = { 0.0f, 0.0f, 0.0f };
     emitter.scale = { 1.0f, 1.0f, 1.0f };
-    ParticleEmitter* particleEmitter = new ParticleEmitter("pori", emitter, 1.0f, uint32_t(3));
+    particleEmitter = new ParticleEmitter("pori", emitter, 1.0f, uint32_t(3));
 }
 
 void Game::Update()
 {
-
-    // windowにメッセージが来ていたら最優先で処理させる
-    if (winApp->ProcessMessage()) {
-        break;
-    }
-
     input->Update();
 
     if (input->TriggerKey(DIK_0)) {
