@@ -32,9 +32,12 @@ public:
     // 終了
     void Finalize();
 
-    bool IsEndRequst() { return winApp->ProcessMessage(); }
+    bool IsEndRequst() { return endRequst_; }
 
 private:
+    // ゲーム終了クラス
+    bool endRequst_ = false;
+
     // winApp
     WinApp* winApp = nullptr;
     // dxCommon

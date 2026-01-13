@@ -64,6 +64,8 @@ void Game::Initialize()
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
     SetUnhandledExceptionFilter(ExportDump);
 
+    
+
     // winapp初期化
     winApp = new WinApp();
     winApp->Initialize();
@@ -152,6 +154,10 @@ void Game::Initialize()
 
 void Game::Update()
 {
+    if (winApp->ProcessMessage()) {
+        endRequst_ = true;
+    }
+
     input->Update();
 
     if (input->TriggerKey(DIK_0)) {
