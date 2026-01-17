@@ -1,16 +1,13 @@
 #pragma once
 #include <vector>
 
-#include "Audio.h"
 #include "Framework.h"
 #include "Sound.h"
 
-
-
-class Camera;
 class Sprite;
 class Object3d;
 class Model;
+
 class ParticleEmitter;
 
 class Game : public Framework {
@@ -28,15 +25,6 @@ public:
     void Finalize() override;
 
 private:
-    // ゲーム終了クラス
-    bool endRequst_ = false;
-
-    // カメラ
-    Camera* camera = nullptr;
-
-    // Audio
-    Audio audio;
-
     ///
     /// その他
     ///

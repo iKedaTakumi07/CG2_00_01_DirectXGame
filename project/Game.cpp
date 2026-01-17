@@ -2,16 +2,19 @@
 
 #include "D3dResourceLeakChecker.h"
 
+#include "ImGuiManager.h"
+#include "Input.h"
 #include "Logger.h"
 #include "Math.h"
 #include "Object3dCommon.h"
 #include "ParticleEmitter.h"
 #include "ParticleManager.h"
+#include "SrvManager.h"
 
+#include "Audio.h"
 #include "StringUtility.h"
 #include "TextureManager.h"
 
-#include "Camera.h"
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
@@ -25,23 +28,13 @@ void Game::Initialize()
     // 基底クラスの初期化処理
     Framework::Initialize();
 
-    camera = new Camera();
-    camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
-    camera->SetRotate({ 0.3f, 0.0f, 0.0f });
-
-    TextureManager::getInstance()->Initialize(dxCommon, srvManager);
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
 
-    ModelManager::GetInstance()->Initialize(dxCommon);
     ModelManager::GetInstance()->LoadModel("Plane.obj");
     ModelManager::GetInstance()->LoadModel("axis.obj");
 
-    ParticleManager::getInstance()->Initialize(dxCommon, srvManager, winApp);
-    ParticleManager::getInstance()->SetDefaultCamera(camera);
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
-
-    audio.Initialize();
 
     fanfare.SoundLoadFile("resources/fanfare.wav");
 
@@ -61,8 +54,6 @@ void Game::Initialize()
 
         sprites.push_back(sprite);
     }
-
-    object3dCommon->SetDefaultCamera(camera);
 
     object3d2 = new Object3d();
     object3d2->Initialize(object3dCommon, winApp);
@@ -88,9 +79,16 @@ void Game::Initialize()
 
 void Game::Update()
 {
-
     // update/更新処理
     Framework::Update();
+
+    if (input->TriggerKey(DIK_0)) {
+        OutputDebugStringA("hit 0\n");
+    }
+
+    if (input->PushKey(DIK_1)) {
+        OutputDebugStringA("hit 1\n");
+    }
 
     for (uint32_t i = 0; i < sprites.size(); ++i) {
         sprites[i]->Update();
@@ -109,10 +107,6 @@ void Game::Update()
     object3d2->SetRotate(rotate2);
 
     particleEmitter->Update();
-
-    ParticleManager::getInstance()->Update();
-
-    camera->Update();
 }
 
 void Game::Draw()
@@ -151,16 +145,10 @@ void Game::Draw()
 
 void Game::Finalize()
 {
-
     Framework::Finalize();
 
     fanfare.Unload();
     clearSe.Unload();
-    audio.Finalize();
-
-    TextureManager::getInstance()->Finalize();
-    ModelManager::GetInstance()->Finalize();
-    ParticleManager::getInstance()->Finalize();
 
     for (uint32_t i = 0; i < sprites.size(); ++i) {
         delete sprites[i];

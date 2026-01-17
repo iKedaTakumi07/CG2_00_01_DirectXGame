@@ -1,6 +1,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 
 #include "Framework.h"
+#include "Camera.h"
 #include "DirectXCommon.h"
 #include "Input.h"
 #include "ModelCommon.h"
@@ -16,6 +17,9 @@
 
 #include <wrl.h>
 
+#include "ModelManager.h"
+#include "ParticleManager.h"
+#include "TextureManager.h"
 #include <DbgHelp.h>
 #include <strsafe.h>
 
@@ -74,6 +78,19 @@ void Framework::Initialize()
 
     modelCommon = new ModelCommon();
     modelCommon->Initialize(dxCommon);
+
+    camera = new Camera();
+    camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
+    camera->SetRotate({ 0.3f, 0.0f, 0.0f });
+
+    object3dCommon->SetDefaultCamera(camera);
+
+    TextureManager::getInstance()->Initialize(dxCommon, srvManager);
+    ModelManager::GetInstance()->Initialize(dxCommon);
+    ParticleManager::getInstance()->Initialize(dxCommon, srvManager, winApp);
+    ParticleManager::getInstance()->SetDefaultCamera(camera);
+
+    audio.Initialize();
 }
 
 void Framework::Run()
@@ -81,7 +98,11 @@ void Framework::Run()
     Initialize();
 
     while (true) {
+
+        imguiManager->Begin();
         Update();
+        imguiManager->End();
+
         if (IsEndRequst()) {
             break;
         }
@@ -100,21 +121,13 @@ void Framework::Update()
 
     input->Update();
 
-    if (input->TriggerKey(DIK_0)) {
-        OutputDebugStringA("hit 0\n");
-    }
-
-    if (input->PushKey(DIK_1)) {
-        OutputDebugStringA("hit 1\n");
-    }
-
-    imguiManager->Begin();
-
 #ifdef USE_IMGUI
     ImGui::ShowDemoWindow();
 #endif // USE_IMGUI
 
-    imguiManager->End();
+    camera->Update();
+
+    ParticleManager::getInstance()->Update();
 }
 
 void Framework::Finalize()
@@ -123,6 +136,11 @@ void Framework::Finalize()
     CloseHandle(dxCommon->GetfenceEvent());
     winApp->Finalize();
 
+    TextureManager::getInstance()->Finalize();
+    ModelManager::GetInstance()->Finalize();
+    ParticleManager::getInstance()->Finalize();
+
+    audio.Finalize();
     delete input;
     delete winApp;
     imguiManager->Finalize();
@@ -132,25 +150,5 @@ void Framework::Finalize()
     delete spriteCommon;
     delete modelCommon;
     delete object3dCommon;
-}
-
-void Framework::Draw()
-{
-    // draw
-
-    dxCommon->PreDraw();
-
-    srvManager->PreDraw();
-
-    object3dCommon->PrepareObjectDraw();
-
-    //
-    // 2d/スプライト
-    //
-    spriteCommon->PrepareSpriteDraw();
-
-    // 実際のcommandListのImGuiの描画コマンドを詰む
-    imguiManager->Draw();
-
-    dxCommon->PostDraw();
+    delete camera;
 }

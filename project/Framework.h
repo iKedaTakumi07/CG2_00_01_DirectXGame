@@ -8,6 +8,8 @@ class ImGuiManager;
 class SpriteCommon;
 class Object3dCommon;
 class ModelCommon;
+class Camera;
+#include "Audio.h"
 
 class Framework {
 public:
@@ -30,7 +32,7 @@ public:
 
     virtual bool IsEndRequst() { return endRequst_; }
 
-private:
+protected:
     // ゲーム終了クラス
     bool endRequst_ = false;
 
@@ -50,4 +52,8 @@ private:
     Object3dCommon* object3dCommon = nullptr;
     // ModelCommon
     ModelCommon* modelCommon = nullptr;
+    // カメラ
+    Camera* camera = nullptr;
+    // Audio
+    Audio audio;
 };
