@@ -2,58 +2,35 @@
 #include <vector>
 
 #include "Audio.h"
+#include "Framework.h"
 #include "Sound.h"
-#include "WinApp.h"
 
-class DirectXCommon;
-class SrvManager;
-class Input;
-class ImGuiManager;
-class SpriteCommon;
-class Object3dCommon;
-class ModelCommon;
+
+
 class Camera;
 class Sprite;
 class Object3d;
 class Model;
 class ParticleEmitter;
 
-class Game {
+class Game : public Framework {
 public:
     // 初期化
-    void Initialize();
+    void Initialize() override;
 
     // 更新
-    void Update();
+    void Update() override;
 
     // 描画
-    void Draw();
+    void Draw() override;
 
     // 終了
-    void Finalize();
-
-    bool IsEndRequst() { return endRequst_; }
+    void Finalize() override;
 
 private:
     // ゲーム終了クラス
     bool endRequst_ = false;
 
-    // winApp
-    WinApp* winApp = nullptr;
-    // dxCommon
-    DirectXCommon* dxCommon = nullptr;
-    // srvマネージャー
-    SrvManager* srvManager = nullptr;
-    // input
-    Input* input = nullptr;
-    // Imguiマネージャー
-    ImGuiManager* imguiManager = nullptr;
-    // sprite
-    SpriteCommon* spriteCommon = nullptr;
-    // object3d
-    Object3dCommon* object3dCommon = nullptr;
-    // ModelCommon
-    ModelCommon* modelCommon = nullptr;
     // カメラ
     Camera* camera = nullptr;
 

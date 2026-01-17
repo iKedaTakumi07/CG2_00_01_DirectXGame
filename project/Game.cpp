@@ -1,11 +1,7 @@
 #include "Game.h"
 
-#define DIRECTINPUT_VERSION 0x0800
-
-
 #include "D3dResourceLeakChecker.h"
-#include "DirectXCommon.h"
-#include "Input.h"
+
 #include "Logger.h"
 #include "Math.h"
 #include "Object3dCommon.h"
@@ -15,81 +11,19 @@
 #include "StringUtility.h"
 #include "TextureManager.h"
 
-
-#ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
-#endif // USE_IMGUI
-
 #include "Camera.h"
-#include "ImGuiManager.h"
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
 #include "Object3d.h"
 #include "Sprite.h"
 #include "SpriteCommon.h"
-#include "SrvManager.h"
-
-#include <DbgHelp.h>
-#include <strsafe.h>
-
-#pragma comment(lib, "Dbghelp.lib")
-#pragma comment(lib, "dxcompiler.lib")
-
-static LONG WINAPI ExportDump(EXCEPTION_POINTERS* excption)
-{
-    SYSTEMTIME time;
-    GetLocalTime(&time);
-    wchar_t filePath[MAX_PATH] = { 0 };
-    CreateDirectory(L"./Dumps", nullptr);
-    StringCchPrintf(filePath, MAX_PATH, L"./Dumps/%04d-%02d%02d-%02d%02d.dmp", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute);
-    HANDLE dumpFileHandle = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
-    // processId とクラッシュの発生したthreadidを取得
-    DWORD processId = GetCurrentProcessId();
-    DWORD threadId = GetCurrentThreadId();
-    // 設定情報を入力
-    MINIDUMP_EXCEPTION_INFORMATION minidumpInformation { 0 };
-    minidumpInformation.ThreadId = threadId;
-    minidumpInformation.ExceptionPointers = excption;
-    minidumpInformation.ClientPointers = TRUE;
-
-    // Dumpを出力
-    MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
-
-    return EXCEPTION_EXECUTE_HANDLER;
-}
 
 void Game::Initialize()
 {
-    // 誰も捕捉しなかった場合に、捕捉する関数を登録
-    SetUnhandledExceptionFilter(ExportDump);
 
-    
-
-    // winapp初期化
-    winApp = new WinApp();
-    winApp->Initialize();
-
-    dxCommon = new DirectXCommon();
-    dxCommon->Initialize(winApp);
-
-    input = new Input();
-    input->Initialize(winApp);
-
-    srvManager = new SrvManager();
-    srvManager->Initialize(dxCommon);
-
-    imguiManager = new ImGuiManager();
-    imguiManager->Initialize(winApp, dxCommon, srvManager);
-
-    spriteCommon = new SpriteCommon;
-    spriteCommon->Initialize(dxCommon);
-
-    object3dCommon = new Object3dCommon();
-    object3dCommon->Initialize(dxCommon);
-
-    modelCommon = new ModelCommon();
-    modelCommon->Initialize(dxCommon);
+    // 基底クラスの初期化処理
+    Framework::Initialize();
 
     camera = new Camera();
     camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
@@ -154,9 +88,6 @@ void Game::Initialize()
 
 void Game::Update()
 {
-    if (winApp->ProcessMessage()) {
-        endRequst_ = true;
-    }
 
     input->Update();
 
@@ -232,7 +163,6 @@ void Game::Draw()
     //
 
     // 実際のcommandListのImGuiの描画コマンドを詰む
-    // ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
     imguiManager->Draw();
 
     dxCommon->PostDraw();
@@ -240,15 +170,6 @@ void Game::Draw()
 
 void Game::Finalize()
 {
-    // ImGuiの終了
-    /*ImGui_ImplDX12_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();*/
-
-    // XAuido2解放
-    // xAudio2.Reset();
-    // 音声データ解放
-    // SoundUhload(&soundData1);
 
     fanfare.Unload();
     clearSe.Unload();
