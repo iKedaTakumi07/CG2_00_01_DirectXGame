@@ -89,20 +89,8 @@ void Game::Initialize()
 void Game::Update()
 {
 
-    input->Update();
-
-    if (input->TriggerKey(DIK_0)) {
-        OutputDebugStringA("hit 0\n");
-        audio.Play(clearSe);
-    }
-
-    if (input->PushKey(DIK_1)) {
-        OutputDebugStringA("hit 1\n");
-    }
-
-    imguiManager->Begin();
-
     // update/更新処理
+    Framework::Update();
 
     for (uint32_t i = 0; i < sprites.size(); ++i) {
         sprites[i]->Update();
@@ -125,17 +113,10 @@ void Game::Update()
     ParticleManager::getInstance()->Update();
 
     camera->Update();
-
-#ifdef USE_IMGUI
-    ImGui::ShowDemoWindow();
-#endif // USE_IMGUI
-
-    imguiManager->End();
 }
 
 void Game::Draw()
 {
-
     // draw
 
     dxCommon->PreDraw();
@@ -171,30 +152,21 @@ void Game::Draw()
 void Game::Finalize()
 {
 
+    Framework::Finalize();
+
     fanfare.Unload();
     clearSe.Unload();
     audio.Finalize();
 
-    CloseHandle(dxCommon->GetfenceEvent());
-    winApp->Finalize();
-
-    delete input;
-    delete winApp;
     TextureManager::getInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
     ParticleManager::getInstance()->Finalize();
-    imguiManager->Finalize();
-    delete imguiManager;
-    delete srvManager;
-    delete dxCommon;
-    delete spriteCommon;
+
     for (uint32_t i = 0; i < sprites.size(); ++i) {
         delete sprites[i];
     }
-    delete object3dCommon;
     delete object3d;
     delete object3d2;
-    delete modelCommon;
     delete model;
     delete model2;
 }

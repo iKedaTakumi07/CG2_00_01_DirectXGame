@@ -3,6 +3,9 @@
 #include "Framework.h"
 #include "DirectXCommon.h"
 #include "Input.h"
+#include "ModelCommon.h"
+#include "Object3dCommon.h"
+#include "SpriteCommon.h"
 #include "SrvManager.h"
 #include "WinApp.h"
 
@@ -94,8 +97,60 @@ void Framework::Update()
     if (winApp->ProcessMessage()) {
         endRequst_ = true;
     }
+
+    input->Update();
+
+    if (input->TriggerKey(DIK_0)) {
+        OutputDebugStringA("hit 0\n");
+    }
+
+    if (input->PushKey(DIK_1)) {
+        OutputDebugStringA("hit 1\n");
+    }
+
+    imguiManager->Begin();
+
+#ifdef USE_IMGUI
+    ImGui::ShowDemoWindow();
+#endif // USE_IMGUI
+
+    imguiManager->End();
 }
 
 void Framework::Finalize()
 {
+
+    CloseHandle(dxCommon->GetfenceEvent());
+    winApp->Finalize();
+
+    delete input;
+    delete winApp;
+    imguiManager->Finalize();
+    delete imguiManager;
+    delete srvManager;
+    delete dxCommon;
+    delete spriteCommon;
+    delete modelCommon;
+    delete object3dCommon;
+}
+
+void Framework::Draw()
+{
+    // draw
+
+    dxCommon->PreDraw();
+
+    srvManager->PreDraw();
+
+    object3dCommon->PrepareObjectDraw();
+
+    //
+    // 2d/スプライト
+    //
+    spriteCommon->PrepareSpriteDraw();
+
+    // 実際のcommandListのImGuiの描画コマンドを詰む
+    imguiManager->Draw();
+
+    dxCommon->PostDraw();
 }
