@@ -36,7 +36,7 @@ public:
     void Finalize();
 
     // 初期化
-    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager, WinApp* winApp);
+    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager/*, WinApp* winApp*/);
 
     void Update();
 

@@ -1,8 +1,12 @@
 #pragma once
 #include "DirectXCommon.h"
+#include "wrl.h"
 
 class SpriteCommon {
 public:
+    // Singleton 取得
+    static SpriteCommon* GetInstance();
+
     // 初期化
     void Initialize(DirectXCommon* dxcommon);
 
@@ -10,6 +14,13 @@ public:
 
     // 共通描画設定
     void PrepareSpriteDraw();
+
+    SpriteCommon(const SpriteCommon&) = delete;
+    SpriteCommon& operator=(const SpriteCommon&) = delete;
+
+private:
+    SpriteCommon() = default;
+    ~SpriteCommon() = default;
 
 private:
     // ルートシグネチャの作成

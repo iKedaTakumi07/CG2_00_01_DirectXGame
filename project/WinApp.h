@@ -7,6 +7,9 @@ public:
     static LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 public:
+    // Singleton 取得
+    static WinApp* GetInstance();
+
     // 初期化
     void Initialize();
 
@@ -19,10 +22,16 @@ public:
     // メッセージ処理
     bool ProcessMessage();
 
-
     // getter
     HWND GetHwnd() const { return hwnd; }
     HINSTANCE GetHInstance() const { return wc.hInstance; }
+
+    WinApp(const WinApp&) = delete;
+    WinApp& operator=(const WinApp&) = delete;
+
+private:
+    WinApp() = default;
+    ~WinApp() = default;
 
 public:
     // クライアント領域のサイズ

@@ -4,11 +4,11 @@
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 
-void ImGuiManager::Initialize([[maybe_unused]] WinApp* winApp, [[maybe_unused]] DirectXCommon* dxCommon, [[maybe_unused]] SrvManager* srvManager)
+void ImGuiManager::Initialize(/*[[maybe_unused]] WinApp* winApp,*/ [[maybe_unused]] DirectXCommon* dxCommon, [[maybe_unused]] SrvManager* srvManager)
 {
 #ifdef USE_IMGUI
 
-    winApp_ = winApp;
+    winApp_ = WinApp::GetInstance();
     dxCommon_ = dxCommon;
     srvManager_ = srvManager;
 

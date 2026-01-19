@@ -14,7 +14,7 @@ class SrvManager;
 class ImGuiManager {
 public:
     // 初期化
-    void Initialize(WinApp* winApp, DirectXCommon* dxCommon, SrvManager* srvManager);
+    void Initialize(/*WinApp* winApp,*/ DirectXCommon* dxCommon, SrvManager* srvManager);
 
     // imgui受付開始
     void Begin();

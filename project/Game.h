@@ -8,6 +8,8 @@ class Sprite;
 class Object3d;
 class Model;
 
+class GamePlayScene;
+
 class ParticleEmitter;
 
 class Game : public Framework {
@@ -29,20 +31,5 @@ private:
     /// その他
     ///
 
-    // 3dモデル
-    Model* model;
-    Model* model2;
-    Object3d* object3d;
-    Object3d* object3d2;
-
-    // パーティクル
-    ParticleEmitter* particleEmitter;
-
-    // スプライト
-    std::vector<Sprite*> sprites;
-    bool isSprite = true;
-
-    // 音声データ
-    Sound fanfare;
-    Sound clearSe;
+    GamePlayScene* scene_ = nullptr;
 };

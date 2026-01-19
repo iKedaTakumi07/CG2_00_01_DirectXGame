@@ -14,7 +14,7 @@ public:
 
 public:
     // 初期化
-    void Initialize(WinApp* winApp);
+    void Initialize(/*WinApp* winApp*/);
     // 更新
     void Update();
 

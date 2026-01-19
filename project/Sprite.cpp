@@ -5,10 +5,10 @@
 #include "externals/imgui/imgui.h"
 #endif // USE_IMGUI
 
-void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string texturefilePath)
+void Sprite::Initialize(/*SpriteCommon* spriteCommon, WinApp* winApp,*/ std::string texturefilePath)
 {
-    this->spriteCommon_ = spriteCommon;
-    this->winApp_ = winApp;
+    /*this->spriteCommon_ = SpriteCommon::GetInstance();
+    this->winApp_ = WinApp::GetInstance();*/
 
     VertexResourceInitialize();
     MaterialResourceInitialize();
@@ -22,7 +22,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string 
 void Sprite::VertexResourceInitialize()
 {
 
-    vertexResource = spriteCommon_->GetDxCommon()->CreateBufferResource(sizeof(VertexData) * 4);
+    vertexResource = SpriteCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(VertexData) * 4);
     // リソースの先端のアドレスから使う
     vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
     // 使用するサイズ
@@ -33,7 +33,7 @@ void Sprite::VertexResourceInitialize()
     vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
     // インデックスリソースにデータを書き込む
-    indexResource = spriteCommon_->GetDxCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
+    indexResource = SpriteCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
     // リソースの先頭のアドレスから使う
     indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
     // 使用するリソースのサイズはインデックス6つ分のサイズ
@@ -45,7 +45,7 @@ void Sprite::VertexResourceInitialize()
 void Sprite::MaterialResourceInitialize()
 {
     // Sprite用のマテリアルリソースを作る
-    materialResource = spriteCommon_->GetDxCommon()->CreateBufferResource(sizeof(Material));
+    materialResource = SpriteCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(Material));
     // mapして書き込み
     materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
@@ -59,7 +59,7 @@ void Sprite::MaterialResourceInitialize()
 void Sprite::TransMatrixResourceInitialize()
 {
 
-    transformationMatrixResource = spriteCommon_->GetDxCommon()->CreateBufferResource(sizeof(TransformationMatrix));
+    transformationMatrixResource = SpriteCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(TransformationMatrix));
 
     // 書き込むためのアドレス取得
     transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
@@ -136,7 +136,7 @@ void Sprite::Update()
 
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-    Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(winApp_->KClientWidth), float(winApp_->KClientHeight), 0.0f, 100.0f);
+    Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::GetInstance()->KClientWidth), float(WinApp::GetInstance()->KClientHeight), 0.0f, 100.0f);
     Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrix, Multiply(viewMatrixSprite, projectionMatrixSprite));
     transformationMatrixData->WVP = worldViewProjectionMatrixSprite;
     transformationMatrixData->world = worldMatrix;
@@ -146,17 +146,17 @@ void Sprite::Draw()
 {
     // Spriteの描画
     // VertexBufferView
-    spriteCommon_->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+    SpriteCommon::GetInstance()->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
     // IndexBufferView
-    spriteCommon_->GetDxCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+    SpriteCommon::GetInstance()->GetDxCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 
     // マテリアルCBufferの場所を設定
-    spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+    SpriteCommon::GetInstance()->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
     // wvp用のCBufferの場所を設定
-    spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+    SpriteCommon::GetInstance()->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
-    spriteCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
+    SpriteCommon::GetInstance()->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
 
     // 描画
-    spriteCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+    SpriteCommon::GetInstance()->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }

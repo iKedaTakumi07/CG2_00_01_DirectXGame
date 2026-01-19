@@ -30,6 +30,12 @@ LRESULT CALLBACK WinApp::Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
+WinApp* WinApp::GetInstance()
+{
+    static WinApp instance;
+    return &instance;
+}
+
 void WinApp::Initialize()
 {
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);

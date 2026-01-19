@@ -4,6 +4,12 @@
 #include <d3d12.h>
 #include <wrl.h>
 
+Object3dCommon* Object3dCommon::GetInstance()
+{
+    static Object3dCommon instance;
+    return &instance;
+}
+
 void Object3dCommon::Initialize(DirectXCommon* dxcommon)
 {
     dxCommon_ = dxcommon;

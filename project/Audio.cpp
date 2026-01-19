@@ -5,6 +5,11 @@
 #include "Sound.h"
 #include <cassert>
 
+Audio* Audio::GetInstance()
+{
+    static Audio instance;
+    return &instance;
+}
 bool Audio::Initialize()
 {
     HRESULT result;

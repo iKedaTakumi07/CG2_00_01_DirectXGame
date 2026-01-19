@@ -28,7 +28,7 @@ public:
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
     // 初期化
-    void Initialize(Object3dCommon* object3dCommon, WinApp* winApp);
+    void Initialize(/*Object3dCommon* object3dCommon, WinApp* winApp*/);
 
     void Update();
 

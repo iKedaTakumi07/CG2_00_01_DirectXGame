@@ -40,11 +40,11 @@ void ParticleManager::Finalize()
     instance = nullptr;
 }
 
-void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager, WinApp* winApp)
+void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager /*, WinApp* winApp*/)
 {
     dxCommon = DirectXCollision;
     this->srvManager = srvManager;
-    this->winApp_ = winApp;
+    this->winApp_ = WinApp::GetInstance();
 
     // ランダムエンジン初期化
     std::random_device seedGenerator;
