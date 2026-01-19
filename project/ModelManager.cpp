@@ -14,7 +14,7 @@ void ModelManager::LoadModel(const std::string& filePath)
     }
 
     std::unique_ptr<Model> model = std::make_unique<Model>();
-    model->Initialize(modelCommon, "resources", filePath);
+    model->Initialize(/*modelCommon,*/ "resources", filePath);
 
     models.insert(std::make_pair(filePath, std::move(model)));
 }
@@ -51,6 +51,6 @@ void ModelManager::Finalize()
 
 void ModelManager::Initialize(DirectXCommon* dxCommon)
 {
-    modelCommon = new ModelCommon;
-    modelCommon->Initialize(dxCommon);
+    //modelCommon = new ModelCommon;
+    ModelCommon::GetInstance()->Initialize(dxCommon);
 }

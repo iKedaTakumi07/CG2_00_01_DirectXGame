@@ -107,10 +107,11 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
     return modelData;
 }
 
-void Object3d::Initialize(Object3dCommon* object3dCommon, WinApp* winApp)
+void Object3d::Initialize(/*Object3dCommon* object3dCommon, WinApp* winApp*/)
 {
-    this->object3dCommon = object3dCommon;
-    this->winApp_ = winApp;
+    this->object3dCommon = Object3dCommon::GetInstance();
+
+    this->winApp_ = WinApp::GetInstance();
 
     this->camera = object3dCommon->GetDefaultCamera();
 

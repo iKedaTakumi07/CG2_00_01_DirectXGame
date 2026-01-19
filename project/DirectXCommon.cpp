@@ -206,15 +206,15 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(const Mi
     return intermediateResourec;
 }
 
-void DirectXCommon::Initialize(WinApp* winApp)
+void DirectXCommon::Initialize(/*WinApp* winApp*/)
 {
     // null検出
-    assert(winApp);
+    //assert(winApp);
 
     // FPS固定
     InitializeFixFPS();
 
-    this->winApp_ = winApp;
+    this->winApp_ = WinApp::GetInstance();
 
     deviceInitialize(); // デバイス
     CommonInitialize(); // コマンド関連

@@ -3,9 +3,9 @@
 #include "Object3d.h"
 #include "TextureManager.h"
 
-void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
+void Model::Initialize(/*ModelCommon* modelCommon,*/ const std::string& directorypath, const std::string& filename)
 {
-    modelCommon_ = modelCommon;
+    modelCommon_ = ModelCommon::GetInstance();
 
     modelData = Object3d::LoadObjFile(directorypath, filename);
 

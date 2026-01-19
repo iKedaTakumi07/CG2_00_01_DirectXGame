@@ -4,6 +4,9 @@ class Camera;
 
 class Object3dCommon {
 public:
+    // Singleton 取得
+    static Object3dCommon* GetInstance();
+
     // 初期化
     void Initialize(DirectXCommon* dxcommon);
 
@@ -16,6 +19,15 @@ public:
 
     // set
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
+
+    // コピー禁止
+    Object3dCommon(const Object3dCommon&) = delete;
+    Object3dCommon& operator=(const Object3dCommon&) = delete;
+
+private:
+    // コンストラクタ・デストラクタは private
+    Object3dCommon() = default;
+    ~Object3dCommon() = default;
 
 private:
     Camera* defaultCamera_ = nullptr;

@@ -9,10 +9,11 @@ class SpriteCommon;
 class Object3dCommon;
 class ModelCommon;
 class Camera;
-#include "Audio.h"
+//#include "Audio.h"
 
 class Framework {
 public:
+
     virtual ~Framework() = default;
 
     // 実行
@@ -37,7 +38,7 @@ protected:
     bool endRequst_ = false;
 
     // winApp
-    WinApp* winApp = nullptr;
+    //WinApp* winApp = nullptr;
     // dxCommon
     DirectXCommon* dxCommon = nullptr;
     // srvマネージャー
@@ -47,13 +48,13 @@ protected:
     // Imguiマネージャー
     ImGuiManager* imguiManager = nullptr;
     // sprite
-    SpriteCommon* spriteCommon = nullptr;
+    //SpriteCommon* spriteCommon = nullptr;
     // object3d
-    Object3dCommon* object3dCommon = nullptr;
+    //Object3dCommon* object3dCommon = nullptr;
     // ModelCommon
-    ModelCommon* modelCommon = nullptr;
+    //ModelCommon* modelCommon = nullptr;
     // カメラ
     Camera* camera = nullptr;
     // Audio
-    Audio audio;
+    //Audio* audio;
 };

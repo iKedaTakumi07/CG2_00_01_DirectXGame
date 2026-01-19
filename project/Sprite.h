@@ -14,7 +14,7 @@ public:
   
 
     // 初期化
-    void Initialize(SpriteCommon* spriteCommon, WinApp* winApp, std::string texturefilePath);
+    void Initialize(/*SpriteCommon* spriteCommon, WinApp* winApp,*/ std::string texturefilePath);
 
     // 更新
     void Update();
@@ -50,8 +50,8 @@ private:
     void MaterialResourceInitialize();
     void TransMatrixResourceInitialize();
 
-    SpriteCommon* spriteCommon_ = nullptr;
-    WinApp* winApp_ = nullptr;
+    //SpriteCommon* spriteCommon_ = nullptr;
+    //WinApp* winApp_ = nullptr;
 
     // Sprite用の頂点リソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;

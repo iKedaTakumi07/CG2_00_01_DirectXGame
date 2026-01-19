@@ -4,9 +4,15 @@
 #include "externals/DirectXTex/d3dx12.h"
 #include <cassert>
 
+SpriteCommon* SpriteCommon::GetInstance()
+{
+    static SpriteCommon instance;
+    return &instance;
+}
 
 void SpriteCommon::Initialize(DirectXCommon* dxcommon)
 {
+    assert(dxcommon);
     dxCommon_ = dxcommon;
 
     graphicsPipelineInitialize(dxCommon_);

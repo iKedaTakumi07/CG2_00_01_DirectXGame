@@ -22,6 +22,7 @@
 #include "TextureManager.h"
 #include <DbgHelp.h>
 #include <strsafe.h>
+#include "Audio.h"
 
 #pragma comment(lib, "Dbghelp.lib")
 #pragma comment(lib, "dxcompiler.lib")
@@ -55,42 +56,43 @@ void Framework::Initialize()
     SetUnhandledExceptionFilter(ExportDump);
 
     // winapp初期化
-    winApp = new WinApp();
-    winApp->Initialize();
+    /* winApp = new WinApp();
+     winApp->Initialize();*/
+    WinApp::GetInstance()->Initialize();
 
     dxCommon = new DirectXCommon();
-    dxCommon->Initialize(winApp);
+    dxCommon->Initialize(/*winApp*/);
 
     input = new Input();
-    input->Initialize(winApp);
+    input->Initialize(/*winApp*/);
 
     srvManager = new SrvManager();
     srvManager->Initialize(dxCommon);
 
     imguiManager = new ImGuiManager();
-    imguiManager->Initialize(winApp, dxCommon, srvManager);
+    imguiManager->Initialize(/*winApp,*/ dxCommon, srvManager);
 
-    spriteCommon = new SpriteCommon;
-    spriteCommon->Initialize(dxCommon);
+    SpriteCommon::GetInstance()->Initialize(dxCommon);
 
-    object3dCommon = new Object3dCommon();
-    object3dCommon->Initialize(dxCommon);
+    Object3dCommon::GetInstance()->Initialize(dxCommon);
 
-    modelCommon = new ModelCommon();
-    modelCommon->Initialize(dxCommon);
+    /* modelCommon = new ModelCommon();
+     modelCommon->Initialize(dxCommon);*/
+    ModelCommon::GetInstance()->Initialize(dxCommon);
 
     camera = new Camera();
     camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
 
-    object3dCommon->SetDefaultCamera(camera);
+    Object3dCommon::GetInstance()->SetDefaultCamera(camera);
 
     TextureManager::getInstance()->Initialize(dxCommon, srvManager);
     ModelManager::GetInstance()->Initialize(dxCommon);
-    ParticleManager::getInstance()->Initialize(dxCommon, srvManager, winApp);
+    ParticleManager::getInstance()->Initialize(dxCommon, srvManager /*, winApp*/);
     ParticleManager::getInstance()->SetDefaultCamera(camera);
 
-    audio.Initialize();
+    // audio.Initialize();
+    Audio::GetInstance()->Initialize();
 }
 
 void Framework::Run()
@@ -115,7 +117,7 @@ void Framework::Run()
 
 void Framework::Update()
 {
-    if (winApp->ProcessMessage()) {
+    if (WinApp::GetInstance()->ProcessMessage()) {
         endRequst_ = true;
     }
 
@@ -134,21 +136,19 @@ void Framework::Finalize()
 {
 
     CloseHandle(dxCommon->GetfenceEvent());
-    winApp->Finalize();
+    // winApp->Finalize();
 
     TextureManager::getInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
     ParticleManager::getInstance()->Finalize();
 
-    audio.Finalize();
+    // audio.Finalize();
     delete input;
-    delete winApp;
+    // delete winApp;
     imguiManager->Finalize();
     delete imguiManager;
     delete srvManager;
     delete dxCommon;
-    delete spriteCommon;
-    delete modelCommon;
-    delete object3dCommon;
+    //delete modelCommon;
     delete camera;
 }
