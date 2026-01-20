@@ -22,31 +22,48 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 
+#include "BaseScene.h"
 #include "GamePlayScene.h"
+#include "TitleScene.h"
 
 void Game::Initialize()
 {
     // 基底クラスの初期化処理
     Framework::Initialize();
 
-    scene_ = new GamePlayScene();
+    baseScene = Framework::GetBaseScene();
+    baseScene->Finalize();
+    baseScene = new TitleScene;
+    baseScene->Initialize();
 
-    scene_->Initialize();
+    // scene_ = new GamePlayScene();
+
+    // scene_->Initialize();
 }
 
 void Game::Update()
 {
     // update/更新処理
     Framework::Update();
-    scene_->Update();
 
     if (input->TriggerKey(DIK_0)) {
-        OutputDebugStringA("hit 0\n");
+        // OutputDebugStringA("hit 0\n");
+
+        baseScene->Finalize();
+        baseScene = new GamePlayScene();
+        baseScene->Initialize();
     }
 
-    if (input->PushKey(DIK_1)) {
-        OutputDebugStringA("hit 1\n");
+    if (input->TriggerKey(DIK_1)) {
+        // OutputDebugStringA("hit 1\n");
+
+        baseScene->Finalize();
+        baseScene = new TitleScene();
+        baseScene->Initialize();
     }
+
+    // scene_->Update();
+    baseScene->Update();
 }
 
 void Game::Draw()
@@ -57,7 +74,8 @@ void Game::Draw()
 
     srvManager->PreDraw();
 
-    scene_->Draw();
+    // scene_->Draw();
+    baseScene->Draw();
 
     // 実際のcommandListのImGuiの描画コマンドを詰む
     imguiManager->Draw();
@@ -69,5 +87,6 @@ void Game::Finalize()
 {
     Framework::Finalize();
 
-    scene_->Finalize();
+    // scene_->Finalize();
+    baseScene->Finalize();
 }
