@@ -9,6 +9,7 @@ class Object3d;
 class Model;
 
 class GamePlayScene;
+class BaseScene;
 
 class ParticleEmitter;
 
@@ -30,6 +31,9 @@ private:
     ///
     /// その他
     ///
+    
+    Framework* framework = nullptr;
+    BaseScene* baseScene = nullptr;
 
-    GamePlayScene* scene_ = nullptr;
+    //GamePlayScene* scene_ = nullptr;
 };

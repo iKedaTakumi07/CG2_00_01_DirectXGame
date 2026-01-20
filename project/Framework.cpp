@@ -1,6 +1,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 
 #include "Framework.h"
+#include "BaseScene.h"
 #include "Camera.h"
 #include "DirectXCommon.h"
 #include "Input.h"
@@ -17,12 +18,12 @@
 
 #include <wrl.h>
 
+#include "Audio.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
 #include "TextureManager.h"
 #include <DbgHelp.h>
 #include <strsafe.h>
-#include "Audio.h"
 
 #pragma comment(lib, "Dbghelp.lib")
 #pragma comment(lib, "dxcompiler.lib")
@@ -91,6 +92,8 @@ void Framework::Initialize()
     ParticleManager::getInstance()->Initialize(dxCommon, srvManager /*, winApp*/);
     ParticleManager::getInstance()->SetDefaultCamera(camera);
 
+    baseScene = new BaseScene();
+
     // audio.Initialize();
     Audio::GetInstance()->Initialize();
 }
@@ -149,6 +152,6 @@ void Framework::Finalize()
     delete imguiManager;
     delete srvManager;
     delete dxCommon;
-    //delete modelCommon;
+    // delete modelCommon;
     delete camera;
 }

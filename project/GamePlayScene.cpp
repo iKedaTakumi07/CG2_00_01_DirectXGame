@@ -2,7 +2,7 @@
 
 #include "WinApp.h"
 
-//#include "Sprite.h"
+// #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
 
@@ -26,6 +26,8 @@ void GamePlayScene::Finalize()
     delete object3d2;
     delete model;
     delete model2;
+
+    delete particleEmitter;
 }
 
 void GamePlayScene::Initialize()
@@ -62,6 +64,7 @@ void GamePlayScene::Initialize()
     model2->Initialize(/*modelCommon,*/ "resources", "axis.obj");
     object3d2->SetModel(model2);
 
+    
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
 
     // 板ポリ

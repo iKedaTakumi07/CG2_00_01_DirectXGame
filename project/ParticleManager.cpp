@@ -342,7 +342,10 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 {
     // 登録済みチェック
     auto it = particleGroups.find(name);
-    assert(it == particleGroups.end());
+    if (particleGroups.contains(name)) {
+        return;
+        // assert(it == particleGroups.end());
+    }
 
     //  空のグループを作成＆登録
     ParticleGroup group {};

@@ -1,14 +1,10 @@
 #pragma once
-#include <vector>
 #include "BaseScene.h"
 
 class Model;
 class Object3d;
-#include "Sprite.h"
-class ParticleEmitter;
-#include "Sound.h"
 
-class GamePlayScene : public BaseScene{
+class TitleScene : public BaseScene {
 public:
     // 初期化
     void Initialize() override;
@@ -28,14 +24,4 @@ private:
     Model* model2;
     Object3d* object3d;
     Object3d* object3d2;
-
-    // スプライト
-    std::list<Sprite*> sprites;
-
-    // パーティクル
-    ParticleEmitter* particleEmitter;
-
-    // 音声データ
-    Sound fanfare;
-    Sound clearSe;
 };

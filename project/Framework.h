@@ -9,6 +9,7 @@ class SpriteCommon;
 class Object3dCommon;
 class ModelCommon;
 class Camera;
+class BaseScene;
 //#include "Audio.h"
 
 class Framework {
@@ -33,6 +34,9 @@ public:
 
     virtual bool IsEndRequst() { return endRequst_; }
 
+    //get
+    BaseScene* GetBaseScene() { return baseScene; }
+
 protected:
     // ゲーム終了クラス
     bool endRequst_ = false;
@@ -55,6 +59,8 @@ protected:
     //ModelCommon* modelCommon = nullptr;
     // カメラ
     Camera* camera = nullptr;
+
+    BaseScene* baseScene = nullptr;
     // Audio
     //Audio* audio;
 };
