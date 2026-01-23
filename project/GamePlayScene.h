@@ -1,6 +1,6 @@
 #pragma once
-#include <vector>
 #include "BaseScene.h"
+#include <vector>
 
 class Model;
 class Object3d;
@@ -8,7 +8,7 @@ class Object3d;
 class ParticleEmitter;
 #include "Sound.h"
 
-class GamePlayScene : public BaseScene{
+class GamePlayScene : public BaseScene {
 public:
     // 初期化
     void Initialize() override;

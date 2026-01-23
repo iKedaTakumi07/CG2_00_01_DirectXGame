@@ -10,11 +10,10 @@ class Object3dCommon;
 class ModelCommon;
 class Camera;
 class BaseScene;
-//#include "Audio.h"
+// #include "Audio.h"
 
 class Framework {
 public:
-
     virtual ~Framework() = default;
 
     // 実行
@@ -34,15 +33,20 @@ public:
 
     virtual bool IsEndRequst() { return endRequst_; }
 
-    //get
+    // get
     BaseScene* GetBaseScene() { return baseScene; }
+    DirectXCommon* GetDirectXCommon() { return dxCommon; }
+    SrvManager* GetSrvManager() { return srvManager; }
+    Input* GetInput() { return input; }
+    ImGuiManager* GetImGuiManager() { return imguiManager; }
 
-protected:
+
+private:
     // ゲーム終了クラス
     bool endRequst_ = false;
 
     // winApp
-    //WinApp* winApp = nullptr;
+    // WinApp* winApp = nullptr;
     // dxCommon
     DirectXCommon* dxCommon = nullptr;
     // srvマネージャー
@@ -52,15 +56,15 @@ protected:
     // Imguiマネージャー
     ImGuiManager* imguiManager = nullptr;
     // sprite
-    //SpriteCommon* spriteCommon = nullptr;
+    // SpriteCommon* spriteCommon = nullptr;
     // object3d
-    //Object3dCommon* object3dCommon = nullptr;
+    // Object3dCommon* object3dCommon = nullptr;
     // ModelCommon
-    //ModelCommon* modelCommon = nullptr;
+    // ModelCommon* modelCommon = nullptr;
     // カメラ
     Camera* camera = nullptr;
 
     BaseScene* baseScene = nullptr;
     // Audio
-    //Audio* audio;
+    // Audio* audio;
 };
