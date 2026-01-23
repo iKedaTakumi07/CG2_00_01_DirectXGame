@@ -3,6 +3,7 @@
 
 class Model;
 class Object3d;
+class Input;
 
 class TitleScene : public BaseScene {
 public:

@@ -144,7 +144,6 @@ void Framework::Finalize()
     TextureManager::getInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
     ParticleManager::getInstance()->Finalize();
-
     // audio.Finalize();
     delete input;
     // delete winApp;

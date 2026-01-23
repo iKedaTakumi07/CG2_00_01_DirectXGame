@@ -1,10 +1,14 @@
 #include "TitleScene.h"
+#include "GamePlayScene.h"
+#include "SceneManager.h"
 
+#include "Input.h"
 #include "Model.h"
 #include "ModelManager.h"
 #include "Object3d.h"
 #include "Object3dCommon.h"
 
+#include "Game.h"
 #include "TextureManager.h"
 
 void TitleScene::Initialize()
@@ -39,6 +43,15 @@ void TitleScene::Finalize()
 
 void TitleScene::Update()
 {
+    Input* input = BaseScene::GetInput();
+
+    if (input->TriggerKey(DIK_0)) {
+
+        BaseScene* scene = new GamePlayScene();
+        scene->SetInput(BaseScene::GetInput());
+        BaseScene::GetSceneManager()->SetNextScene(scene);
+    }
+
     Vector3 rotate = object3d->GetRotate();
     rotate.x += 0.1f;
     rotate.y += 0.1f;

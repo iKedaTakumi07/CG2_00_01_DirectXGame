@@ -14,6 +14,10 @@
 #include "ParticleEmitter.h"
 #include "ParticleManager.h"
 
+#include "Input.h"
+#include "SceneManager.h"
+#include "TitleScene.h"
+
 void GamePlayScene::Finalize()
 {
     fanfare.Unload();
@@ -64,7 +68,6 @@ void GamePlayScene::Initialize()
     model2->Initialize(/*modelCommon,*/ "resources", "axis.obj");
     object3d2->SetModel(model2);
 
-    
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
 
     // 板ポリ
@@ -83,6 +86,15 @@ void GamePlayScene::Initialize()
 
 void GamePlayScene::Update()
 {
+    Input* input = BaseScene::GetInput();
+
+    if (input->TriggerKey(DIK_0)) {
+
+        BaseScene* scene = new TitleScene();
+        scene->SetInput(BaseScene::GetInput());
+        BaseScene::GetSceneManager()->SetNextScene(scene);
+    }
+
     for (Sprite* sprite : sprites) {
         sprite->Update();
     }
