@@ -311,13 +311,11 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-DirectXGame/DirectXGame.exe
-DirectXGame/imgui.ini
 
 # Project-specific ignore
-/project/Dumps/
-/project/logs/
-/project/imgui.ini
+Dumps/
+logs/
+imgui.ini
 
 # DirectXTex Compiled Shaders
 **/DirectXTex/Shaders/Compiled/
