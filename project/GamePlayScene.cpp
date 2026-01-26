@@ -134,5 +134,5 @@ void GamePlayScene::Draw()
         sprite->Draw();
     }
 
-    // ParticleManager::getInstance()->Draw();
+     ParticleManager::getInstance()->Draw();
 }
