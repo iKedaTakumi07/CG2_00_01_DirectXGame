@@ -61,38 +61,38 @@ void Framework::Initialize()
      winApp->Initialize();*/
     WinApp::GetInstance()->Initialize();
 
-    dxCommon = new DirectXCommon();
+    dxCommon = std::make_unique<DirectXCommon>();
     dxCommon->Initialize(/*winApp*/);
 
-    input = new Input();
+    input = std::make_unique<Input>();
     input->Initialize(/*winApp*/);
 
-    srvManager = new SrvManager();
-    srvManager->Initialize(dxCommon);
+    srvManager = std::make_unique<SrvManager>();
+    srvManager->Initialize(dxCommon.get());
 
-    imguiManager = new ImGuiManager();
-    imguiManager->Initialize(/*winApp,*/ dxCommon, srvManager);
+    imguiManager = std::make_unique<ImGuiManager>();
+    imguiManager->Initialize(/*winApp,*/ dxCommon.get(), srvManager.get());
 
-    SpriteCommon::GetInstance()->Initialize(dxCommon);
+    SpriteCommon::GetInstance()->Initialize(dxCommon.get());
 
-    Object3dCommon::GetInstance()->Initialize(dxCommon);
+    Object3dCommon::GetInstance()->Initialize(dxCommon.get());
 
     /* modelCommon = new ModelCommon();
-     modelCommon->Initialize(dxCommon);*/
-    ModelCommon::GetInstance()->Initialize(dxCommon);
+     modelCommonaInitialize(dxCommon);*/
+    ModelCommon::GetInstance()->Initialize(dxCommon.get());
 
-    camera = new Camera();
+    camera = std::make_unique<Camera>();
     camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
 
-    Object3dCommon::GetInstance()->SetDefaultCamera(camera);
+    Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
 
-    TextureManager::getInstance()->Initialize(dxCommon, srvManager);
-    ModelManager::GetInstance()->Initialize(dxCommon);
-    ParticleManager::getInstance()->Initialize(dxCommon, srvManager /*, winApp*/);
-    ParticleManager::getInstance()->SetDefaultCamera(camera);
+    TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
+    ModelManager::GetInstance()->Initialize(dxCommon.get());
+    ParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get() /*, winApp*/);
+    ParticleManager::getInstance()->SetDefaultCamera(camera.get());
 
-    baseScene = new BaseScene();
+    baseScene = std::make_unique<BaseScene>();
 
     // audio.Initialize();
     Audio::GetInstance()->Initialize();
@@ -149,12 +149,9 @@ void Framework::Finalize()
     ModelManager::GetInstance()->Finalize();
     ParticleManager::getInstance()->Finalize();
     // audio.Finalize();
-    delete input;
+
     // delete winApp;
     imguiManager->Finalize();
-    delete imguiManager;
-    delete srvManager;
-    delete dxCommon;
+
     // delete modelCommon;
-    delete camera;
 }

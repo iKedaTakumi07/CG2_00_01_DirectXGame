@@ -2,20 +2,19 @@
 #include <memory>
 
 class WinApp;
-class DirectXCommon;
-class SrvManager;
-class Input;
-class ImGuiManager;
+#include "DirectXCommon.h"
+#include "SrvManager.h"
+#include "Input.h"
+#include "ImGuiManager.h"
 class SpriteCommon;
 class Object3dCommon;
 class ModelCommon;
-class Camera;
-class BaseScene;
+#include "Camera.h"
+#include "BaseScene.h"
 // #include "Audio.h"
 
 class Framework {
 public:
-
     virtual ~Framework() = default;
 
     // 実行
@@ -36,12 +35,11 @@ public:
     virtual bool IsEndRequst() { return endRequst_; }
 
     // get
-    BaseScene* GetBaseScene() { return baseScene; }
-    DirectXCommon* GetDirectXCommon() { return dxCommon; }
-    SrvManager* GetSrvManager() { return srvManager; }
-    Input* GetInput() { return input; }
-    ImGuiManager* GetImGuiManager() { return imguiManager; }
-
+    BaseScene* GetBaseScene() { return baseScene.get(); }
+    DirectXCommon* GetDirectXCommon() { return dxCommon.get(); }
+    SrvManager* GetSrvManager() { return srvManager.get(); }
+    Input* GetInput() { return input.get(); }
+    ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
 
 private:
     // ゲーム終了クラス
@@ -50,13 +48,13 @@ private:
     // winApp
     // WinApp* winApp = nullptr;
     // dxCommon
-    DirectXCommon* dxCommon = nullptr;
+    std::unique_ptr<DirectXCommon> dxCommon = nullptr;
     // srvマネージャー
-    SrvManager* srvManager = nullptr;
+    std::unique_ptr<SrvManager> srvManager = nullptr;
     // input
-    Input* input = nullptr;
+    std::unique_ptr<Input> input = nullptr;
     // Imguiマネージャー
-    ImGuiManager* imguiManager = nullptr;
+    std::unique_ptr<ImGuiManager> imguiManager = nullptr;
     // sprite
     // SpriteCommon* spriteCommon = nullptr;
     // object3d
@@ -64,9 +62,9 @@ private:
     // ModelCommon
     // ModelCommon* modelCommon = nullptr;
     // カメラ
-    Camera* camera = nullptr;
+    std::unique_ptr<Camera> camera = nullptr;
 
-    BaseScene* baseScene = nullptr;
+    std::unique_ptr<BaseScene> baseScene = nullptr;
     // Audio
     // Audio* audio;
 };
