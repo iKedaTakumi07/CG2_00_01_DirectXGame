@@ -89,10 +89,10 @@ void GamePlayScene::Update()
     Input* input = BaseScene::GetInput();
 
     if (input->TriggerKey(DIK_0)) {
+        auto scene = std::make_unique<TitleScene>();
+        scene->SetInput(GetInput());
 
-        BaseScene* scene = new TitleScene();
-        scene->SetInput(BaseScene::GetInput());
-        BaseScene::GetSceneManager()->SetNextScene(scene);
+        SceneManager::GetInstance()->SetNextScene(std::move(scene));
     }
 
     for (Sprite* sprite : sprites) {

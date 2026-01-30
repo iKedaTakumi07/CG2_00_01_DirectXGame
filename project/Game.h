@@ -10,7 +10,6 @@ class Object3d;
 class Model;
 
 class GamePlayScene;
-// class BaseScene;
 
 class ParticleEmitter;
 
@@ -28,9 +27,6 @@ public:
     // 終了
     void Finalize() override;
 
-    // get
-    Input* GetInput() { return input_; }
-
 private:
     ///
     /// その他
@@ -40,7 +36,6 @@ private:
     // BaseScene* baseScene = nullptr;
     SceneManager* sceneManager_ = nullptr;
 
-    Input* input_ = nullptr;
-
+ 
     // GamePlayScene* scene_ = nullptr;
 };

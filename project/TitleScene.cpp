@@ -43,13 +43,14 @@ void TitleScene::Finalize()
 
 void TitleScene::Update()
 {
+  
     Input* input = BaseScene::GetInput();
 
     if (input->TriggerKey(DIK_0)) {
-
-        BaseScene* scene = new GamePlayScene();
+        auto scene = std::make_unique<GamePlayScene>();
         scene->SetInput(BaseScene::GetInput());
-        BaseScene::GetSceneManager()->SetNextScene(scene);
+
+        SceneManager::GetInstance()->SetNextScene(std::move(scene));
     }
 
     Vector3 rotate = object3d->GetRotate();
