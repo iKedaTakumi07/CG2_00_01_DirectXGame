@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 class WinApp;
 class DirectXCommon;
@@ -14,6 +15,7 @@ class BaseScene;
 
 class Framework {
 public:
+
     virtual ~Framework() = default;
 
     // 実行
@@ -26,7 +28,7 @@ public:
     virtual void Update();
 
     // 描画
-    virtual void Draw() = 0;
+    virtual void Draw();
 
     // 終了
     virtual void Finalize();

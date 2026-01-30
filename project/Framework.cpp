@@ -135,6 +135,10 @@ void Framework::Update()
     ParticleManager::getInstance()->Update();
 }
 
+void Framework::Draw()
+{
+}
+
 void Framework::Finalize()
 {
 

@@ -1,4 +1,5 @@
 #include "WinApp.h"
+#include <memory>
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui_impl_win32.h"
