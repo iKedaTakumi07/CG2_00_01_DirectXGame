@@ -23,14 +23,6 @@ void GamePlayScene::Finalize()
     fanfare.Unload();
     clearSe.Unload();
 
-    for (Sprite* sprite : sprites) {
-        delete sprite;
-    }
-    delete object3d;
-    delete object3d2;
-    delete model;
-    delete model2;
-
     delete particleEmitter;
 }
 
@@ -40,33 +32,35 @@ void GamePlayScene::Initialize()
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
 
-    // for (uint32_t i = 0; i < 1; ++i) {
-    Sprite* sprite = new Sprite();
-    // if (i % 2 == 0) {
-    sprite->Initialize(/*spriteCommon, winApp,*/ "resources/uvChecker.png");
-    sprite->SetPosition(Vector2(100.0f, 100.0f));
-    //} else {
-    //    sprite->Initialize(/*spriteCommon, winApp,*/ "resources/monsterBall.png");
-    //}
-    sprites.push_back(sprite);
-    //}
+    for (uint32_t i = 0; i < 1; ++i) {
+        auto sprite = std::make_unique<Sprite>();
+
+        if (i % 2 == 0) {
+            sprite->Initialize("resources/uvChecker.png");
+            sprite->SetPosition(Vector2(100.0f, 100.0f));
+        } else {
+            sprite->Initialize("resources/monsterBall.png");
+        }
+
+        sprites.push_back(std::move(sprite));
+    }
 
     ModelManager::GetInstance()->LoadModel("Plane.obj");
     ModelManager::GetInstance()->LoadModel("axis.obj");
 
-    object3d = new Object3d();
+    object3d = std::make_unique<Object3d>();
     object3d->Initialize(/*object3dCommon, winapp*/);
 
-    model = new Model();
+    model = std::make_unique<Model>();
     model->Initialize(/*modelCommon,*/ "resources", "plane.obj");
-    object3d->SetModel(model);
+    object3d->SetModel(model.get());
 
-    object3d2 = new Object3d();
+    object3d2 = std::make_unique<Object3d>();
     object3d2->Initialize(/*object3dCommon, winApp*/);
 
-    model2 = new Model();
+    model2 = std::make_unique<Model>();
     model2->Initialize(/*modelCommon,*/ "resources", "axis.obj");
-    object3d2->SetModel(model2);
+    object3d2->SetModel(model2.get());
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
 
@@ -89,13 +83,13 @@ void GamePlayScene::Update()
     Input* input = BaseScene::GetInput();
 
     if (input->TriggerKey(DIK_0)) {
+        auto scene = std::make_unique<TitleScene>();
+        scene->SetInput(GetInput());
 
-        BaseScene* scene = new TitleScene();
-        scene->SetInput(BaseScene::GetInput());
-        BaseScene::GetSceneManager()->SetNextScene(scene);
+        SceneManager::GetInstance()->SetNextScene(std::move(scene));
     }
 
-    for (Sprite* sprite : sprites) {
+    for (auto& sprite : sprites) {
         sprite->Update();
     }
 
@@ -130,9 +124,9 @@ void GamePlayScene::Draw()
     //
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
 
-    for (Sprite* sprite : sprites) {
+    for (auto& sprite : sprites) {
         sprite->Draw();
     }
 
-     ParticleManager::getInstance()->Draw();
+    ParticleManager::getInstance()->Draw();
 }

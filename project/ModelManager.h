@@ -22,7 +22,6 @@ public:
     /// <returns></returns>
     Model* FindModel(const std::string& filePath);
 
-
     // シングルトンインスタンスの取得
     static ModelManager* GetInstance();
     // 終了

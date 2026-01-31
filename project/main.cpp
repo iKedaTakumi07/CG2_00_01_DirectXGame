@@ -1,15 +1,16 @@
 #include "Framework.h"
 #include "Game.h"
+#include <memory>
 #include <wrl.h>
 
 // windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    Framework* game = new Game();
+    std::unique_ptr<Framework> game;
+
+    game = std::make_unique<Game>();
 
     game->Run();
-
-    delete game;
 
     return 0;
 }

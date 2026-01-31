@@ -18,38 +18,35 @@ void TitleScene::Initialize()
     ModelManager::GetInstance()->LoadModel("Plane.obj");
     ModelManager::GetInstance()->LoadModel("axis.obj");
 
-    object3d = new Object3d();
+    object3d = std::make_unique<Object3d>();
     object3d->Initialize(/*object3dCommon, winapp*/);
 
-    model = new Model();
+    model = std::make_unique<Model>();
     model->Initialize(/*modelCommon,*/ "resources", "plane.obj");
-    object3d->SetModel(model);
+    object3d->SetModel(model.get());
 
-    object3d2 = new Object3d();
+    object3d2 = std::make_unique<Object3d>();
     object3d2->Initialize(/*object3dCommon, winApp*/);
 
-    model2 = new Model();
+    model2 = std::make_unique<Model>();
     model2->Initialize(/*modelCommon,*/ "resources", "axis.obj");
-    object3d2->SetModel(model2);
+    object3d2->SetModel(model2.get());
 }
 
 void TitleScene::Finalize()
 {
-    delete object3d;
-    delete object3d2;
-    delete model;
-    delete model2;
 }
 
 void TitleScene::Update()
 {
+
     Input* input = BaseScene::GetInput();
 
     if (input->TriggerKey(DIK_0)) {
-
-        BaseScene* scene = new GamePlayScene();
+        auto scene = std::make_unique<GamePlayScene>();
         scene->SetInput(BaseScene::GetInput());
-        BaseScene::GetSceneManager()->SetNextScene(scene);
+
+        SceneManager::GetInstance()->SetNextScene(std::move(scene));
     }
 
     Vector3 rotate = object3d->GetRotate();

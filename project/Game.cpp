@@ -32,18 +32,15 @@ void Game::Initialize()
     // 基底クラスの初期化処理
     Framework::Initialize();
 
-    BaseScene* scene = new TitleScene();
-    scene->SetInput(Framework::GetInput());
-
-    SceneManager::GetInstance()->SetNextScene(scene);
-    // sceneManager_->SetNextScene(baseScene);
+    auto title = std::make_unique<TitleScene>();
+    title->SetInput(Framework::GetInput());
+    SceneManager::GetInstance()->SetNextScene(std::move(title));
 }
 
 void Game::Update()
 {
     // update/更新処理
     Framework::Update();
-    input_ = Framework::GetInput();
 
     SceneManager::GetInstance()->Update();
 }

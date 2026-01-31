@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseScene.h"
+#include <memory>
 #include <vector>
 
 class Model;
@@ -24,13 +25,13 @@ public:
 
 private:
     // 3dモデル
-    Model* model;
-    Model* model2;
-    Object3d* object3d;
-    Object3d* object3d2;
+    std::unique_ptr<Model> model;
+    std::unique_ptr<Model> model2;
+    std::unique_ptr<Object3d> object3d;
+    std::unique_ptr<Object3d> object3d2;
 
     // スプライト
-    std::list<Sprite*> sprites;
+    std::list<std::unique_ptr<Sprite>> sprites;
 
     // パーティクル
     ParticleEmitter* particleEmitter;

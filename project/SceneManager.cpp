@@ -3,14 +3,18 @@
 
 SceneManager* SceneManager::GetInstance()
 {
-    static SceneManager instance;
-    return &instance;
+
+    static std::unique_ptr<SceneManager> instance  (new SceneManager());
+
+    return instance.get();
 }
 
 void SceneManager::Finalize()
 {
-    scene_->Finalize();
-    delete scene_;
+    if (scene_) {
+        scene_->Finalize();
+        scene_.reset();
+    }
 }
 
 void SceneManager::Update()
@@ -18,14 +22,10 @@ void SceneManager::Update()
     if (nextScene_) {
         if (scene_) {
             scene_->Finalize();
-            delete scene_;
         }
 
-        scene_ = nextScene_;
-        nextScene_ = nullptr;
-
+        scene_ = std::move(nextScene_);
         scene_->SetSceneManager(this);
-
 
         // シーンの初期化
         scene_->Initialize();
