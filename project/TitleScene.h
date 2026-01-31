@@ -1,5 +1,7 @@
 #pragma once
 #include "BaseScene.h"
+#include <memory>
+
 
 class Model;
 class Object3d;
@@ -21,8 +23,8 @@ public:
 
 private:
     // 3dモデル
-    Model* model;
-    Model* model2;
-    Object3d* object3d;
-    Object3d* object3d2;
+    std::unique_ptr<Model> model;
+    std::unique_ptr<Model> model2;
+    std::unique_ptr<Object3d> object3d;
+    std::unique_ptr<Object3d> object3d2;
 };

@@ -32,10 +32,7 @@ private:
     /// その他
     ///
 
-    Framework* framework = nullptr;
     // BaseScene* baseScene = nullptr;
-    SceneManager* sceneManager_ = nullptr;
-
  
     // GamePlayScene* scene_ = nullptr;
 };

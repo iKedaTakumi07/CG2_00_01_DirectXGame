@@ -32,9 +32,6 @@ void Game::Initialize()
     // 基底クラスの初期化処理
     Framework::Initialize();
 
-    BaseScene* scene = new TitleScene();
-    scene->SetInput(Framework::GetInput());
-
     auto title = std::make_unique<TitleScene>();
     title->SetInput(Framework::GetInput());
     SceneManager::GetInstance()->SetNextScene(std::move(title));
