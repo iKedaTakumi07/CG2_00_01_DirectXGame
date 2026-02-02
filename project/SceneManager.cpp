@@ -4,9 +4,13 @@
 SceneManager* SceneManager::GetInstance()
 {
 
-    static std::unique_ptr<SceneManager> instance  (new SceneManager());
+    std::make_unique<SceneManager>();
 
-    return instance.get();
+    return nullptr;
+
+    //static std::unique_ptr<SceneManager> instance = std::make_unique<SceneManager>();
+
+    //return instance.get();
 }
 
 void SceneManager::Finalize()
