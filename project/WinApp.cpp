@@ -33,8 +33,9 @@ LRESULT CALLBACK WinApp::Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
 
 WinApp* WinApp::GetInstance()
 {
-    static WinApp instance;
-    return &instance;
+    static std::unique_ptr<WinApp> instance = std::make_unique<WinApp>(ConstructorKey());
+
+    return instance.get();
 }
 
 void WinApp::Initialize()

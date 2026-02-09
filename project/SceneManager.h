@@ -5,6 +5,16 @@ class BaseScene;
 
 class SceneManager {
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class SceneManager;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit SceneManager(ConstructorKey) { }
+
     // Singleton 取得
     static SceneManager* GetInstance();
 
@@ -24,11 +34,10 @@ public:
     SceneManager& operator=(const SceneManager&) = delete;
 
 private:
-    SceneManager() = default;
+     friend struct std::default_delete<SceneManager>;
+
+    // SceneManager() = default;
     ~SceneManager() = default;
-
-    friend struct std::default_delete<SceneManager>;
-
 private:
     std::unique_ptr<BaseScene> nextScene_ = nullptr;
     std::unique_ptr<BaseScene> scene_ = nullptr;

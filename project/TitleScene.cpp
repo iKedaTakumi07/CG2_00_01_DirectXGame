@@ -50,15 +50,15 @@ void TitleScene::Update()
     }
 
     Vector3 rotate = object3d->GetRotate();
-    rotate.x += 0.1f;
-    rotate.y += 0.1f;
+    rotate.x += -0.1f;
+    rotate.y += -0.1f;
     object3d->SetRotate(rotate);
     object3d->Update();
 
     object3d2->Update();
     Vector3 rotate2 = object3d2->GetRotate();
-    rotate2.x += -0.1f;
-    rotate2.y += -0.1f;
+    rotate2.x += 0.1f;
+    rotate2.y += 0.1f;
     object3d2->SetRotate(rotate2);
 }
 
