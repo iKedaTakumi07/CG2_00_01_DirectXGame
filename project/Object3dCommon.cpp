@@ -6,8 +6,9 @@
 
 Object3dCommon* Object3dCommon::GetInstance()
 {
-    static Object3dCommon instance;
-    return &instance;
+    static std::unique_ptr<Object3dCommon> instance = std::make_unique<Object3dCommon>(ConstructorKey());
+
+    return instance.get();
 }
 
 void Object3dCommon::Initialize(DirectXCommon* dxcommon)

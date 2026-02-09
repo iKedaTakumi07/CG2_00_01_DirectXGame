@@ -6,8 +6,9 @@
 
 SpriteCommon* SpriteCommon::GetInstance()
 {
-    static SpriteCommon instance;
-    return &instance;
+    static std::unique_ptr<SpriteCommon> instance = std::make_unique<SpriteCommon>(ConstructorKey());
+
+    return instance.get();
 }
 
 void SpriteCommon::Initialize(DirectXCommon* dxcommon)

@@ -3,7 +3,7 @@
 
 SceneManager* SceneManager::GetInstance()
 {
-    static std::unique_ptr<SceneManager> instance(new SceneManager());
+    static std::unique_ptr<SceneManager> instance = std::make_unique<SceneManager>(ConstructorKey());
 
     return instance.get();
 }

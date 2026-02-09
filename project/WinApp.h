@@ -1,12 +1,24 @@
 #pragma once
 #include <Windows.h>
 #include <cstdint>
+#include <memory>
 
 class WinApp {
 public:
     static LRESULT CALLBACK Windowproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class WinApp;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit WinApp(ConstructorKey) { }
+
+
     // Singleton 取得
     static WinApp* GetInstance();
 
@@ -30,8 +42,10 @@ public:
     WinApp& operator=(const WinApp&) = delete;
 
 private:
-    WinApp() = default;
+    //WinApp() = default;
     ~WinApp() = default;
+
+     friend struct std::default_delete<WinApp>;
 
 public:
     // クライアント領域のサイズ

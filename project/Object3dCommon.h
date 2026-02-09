@@ -1,9 +1,20 @@
 #pragma once
 #include "DirectXCommon.h"
+#include <memory>
 class Camera;
 
 class Object3dCommon {
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class Object3dCommon;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit Object3dCommon(ConstructorKey) { }
+
     // Singleton 取得
     static Object3dCommon* GetInstance();
 
@@ -25,8 +36,10 @@ public:
     Object3dCommon& operator=(const Object3dCommon&) = delete;
 
 private:
+    friend struct std::default_delete<Object3dCommon>;
+
     // コンストラクタ・デストラクタは private
-    Object3dCommon() = default;
+    // Object3dCommon() = default;
     ~Object3dCommon() = default;
 
 private:

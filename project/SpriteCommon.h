@@ -1,9 +1,19 @@
 #pragma once
 #include "DirectXCommon.h"
 #include "wrl.h"
+#include <memory>
 
 class SpriteCommon {
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class SpriteCommon;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit SpriteCommon(ConstructorKey) { }
     // Singleton 取得
     static SpriteCommon* GetInstance();
 
@@ -19,9 +29,10 @@ public:
     SpriteCommon& operator=(const SpriteCommon&) = delete;
 
 private:
-    SpriteCommon() = default;
+    friend struct std::default_delete<SpriteCommon>;
+    
+    // SpriteCommon() = default;
     ~SpriteCommon() = default;
-
 private:
     // ルートシグネチャの作成
     void RootSignatureInitialize(DirectXCommon* dxcommon);
