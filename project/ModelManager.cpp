@@ -35,7 +35,7 @@ ModelManager* ModelManager::GetInstance()
     assert(!finalized && "ModelManager was already finalized!");
 
     if (instance == nullptr) {
-        static ModelManager instance;
+        instance = new ModelManager();
     }
     return instance;
 }
@@ -47,6 +47,6 @@ void ModelManager::Finalize()
 
 void ModelManager::Initialize(DirectXCommon* dxCommon)
 {
-    //modelCommon = new ModelCommon;
+    // modelCommon = new ModelCommon;
     ModelCommon::GetInstance()->Initialize(dxCommon);
 }

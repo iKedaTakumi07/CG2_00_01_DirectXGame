@@ -15,7 +15,7 @@ void TitleScene::Initialize()
 {
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
 
-    ModelManager::GetInstance()->LoadModel("Plane.obj");
+    ModelManager::GetInstance()->LoadModel("plane.obj");
     ModelManager::GetInstance()->LoadModel("axis.obj");
 
     object3d = std::make_unique<Object3d>();
