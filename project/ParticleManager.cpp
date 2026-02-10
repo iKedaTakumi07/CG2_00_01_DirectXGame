@@ -24,20 +24,18 @@ Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
     return particle;
 }
 
-ParticleManager* ParticleManager::instance = nullptr;
+std::unique_ptr<ParticleManager> ParticleManager::instance = nullptr;
 
 ParticleManager* ParticleManager::getInstance()
 {
     if (instance == nullptr) {
-        instance = new ParticleManager;
+        instance = std::make_unique<ParticleManager>(ConstructorKey());
     }
-    return instance;
+    return instance.get();
 }
 
 void ParticleManager::Finalize()
 {
-    delete instance;
-    instance = nullptr;
 }
 
 void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager /*, WinApp* winApp*/)

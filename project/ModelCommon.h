@@ -1,11 +1,21 @@
 #pragma once
 #include "DirectXCommon.h"
+#include <memory>
 
 class ModelCommon {
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class ModelCommon;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit ModelCommon(ConstructorKey) { }
+
     // Singleton 取得
     static ModelCommon* GetInstance();
-
 
     void Initialize(DirectXCommon* dxCommon);
 
@@ -14,10 +24,11 @@ public:
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
 
 private:
-    ModelCommon() = default;
+    // ModelCommon() = default;
     ~ModelCommon() = default;
 
+    friend struct std::default_delete<ModelCommon>;
 
 private:
-    DirectXCommon* dxCommon_;
+    DirectXCommon* dxCommon_ = nullptr;
 };

@@ -2,6 +2,7 @@
 #include "Math.h"
 #include <d3d12.h>
 #include <list>
+#include <memory>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -14,6 +15,16 @@ class WinApp;
 
 class ParticleManager {
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class ParticleManager;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit ParticleManager(ConstructorKey) { }
+
     struct ParticleGroup {
         // 1. マテリアルデータ
         MaterialData material;
@@ -36,7 +47,7 @@ public:
     void Finalize();
 
     // 初期化
-    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager/*, WinApp* winApp*/);
+    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager /*, WinApp* winApp*/);
 
     void Update();
 
@@ -49,25 +60,29 @@ public:
     // set
     void SetDefaultCamera(Camera* camera) { this->Camera_ = camera; }
 
+    ParticleManager(ParticleManager&) = delete;
+    ParticleManager& operator=(ParticleManager&) = delete;
+
+private:
+    // ParticleManager() = default;
+    ~ParticleManager() = default;
+
+    friend struct std::default_delete<ParticleManager>;
+
 private:
     SrvManager* srvManager = nullptr;
-    DirectXCommon* dxCommon;
+    DirectXCommon* dxCommon = nullptr;
     WinApp* winApp_ = nullptr;
 
     Camera* Camera_ = nullptr;
 
     ModelData model;
 
-    static ParticleManager* instance;
+    static std::unique_ptr<ParticleManager> instance;
     const uint32_t kMaxInstanceCount = 100;
     const float kDeltaTime = 1.0f / 60.0f;
 
     bool useBillboard = false;
-
-    ParticleManager() = default;
-    ~ParticleManager() = default;
-    ParticleManager(ParticleManager&) = delete;
-    ParticleManager& operator=(ParticleManager&) = delete;
 
     void RootSignatureInitialize(DirectXCommon* dxcommon);
     void graphicsPipelineInitialize(DirectXCommon* dxcommon);

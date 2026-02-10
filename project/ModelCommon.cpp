@@ -2,8 +2,9 @@
 
 ModelCommon* ModelCommon::GetInstance()
 {
-    static ModelCommon instance;
-    return &instance;
+    static std::unique_ptr<ModelCommon> instance = std::make_unique<ModelCommon>(ConstructorKey());
+
+    return instance.get();
 }
 
 void ModelCommon::Initialize(DirectXCommon* dxCommon)

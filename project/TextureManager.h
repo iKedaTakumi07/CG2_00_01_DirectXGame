@@ -2,6 +2,7 @@
 #include "StringUtility.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <d3d12.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <wrl.h>
@@ -11,6 +12,16 @@ class SrvManager;
 
 class TextureManager {
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class TextureManager;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit TextureManager(ConstructorKey) { }
+
     static TextureManager* getInstance();
 
     void Finalize();
@@ -30,15 +41,19 @@ public:
 
     const DirectX::TexMetadata& GetMetadata(const std::string& filePath);
 
-private:
-    static TextureManager* instance;
-    SrvManager* srvManager = nullptr;
-    DirectXCommon* dxCommon;
-
-    TextureManager() = default;
-    ~TextureManager() = default;
     TextureManager(TextureManager&) = delete;
     TextureManager& operator=(TextureManager&) = delete;
+
+private:
+    // TextureManager() = default;
+    ~TextureManager() = default;
+
+    friend struct std::default_delete<TextureManager>;
+
+private:
+    static std::unique_ptr<TextureManager> instance;
+    SrvManager* srvManager = nullptr;
+    DirectXCommon* dxCommon = nullptr;
 
     // テクスチャデータ
     struct TextureData {
@@ -52,7 +67,6 @@ private:
 
     // テクスチャデータ
     std::unordered_map<std::string, TextureData> textureDatas;
-
 
     static uint32_t kSRVIndexTop;
 };
