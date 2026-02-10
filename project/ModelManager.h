@@ -3,12 +3,23 @@
 #include <memory>
 #include <string>
 
+#include "Model.h"
+
 class DirectXCommon;
-class Model;
 class ModelCommon;
 
 class ModelManager {
 public:
+    // コンストラクタに渡すための鍵
+    class ConstructorKey {
+    private:
+        ConstructorKey() = default;
+        friend class ModelManager;
+    };
+
+    // passkeyを受け取るコンストラクタ
+    explicit ModelManager(ConstructorKey) { }
+
     /// <summary>
     /// モデルファイルの読み込み
     /// </summary>
@@ -30,17 +41,20 @@ public:
     // 初期化
     void Initialize(DirectXCommon* dxCommon);
 
+    ModelManager(const ModelManager&) = delete;
+    ModelManager& operator=(const ModelManager&) = delete;
+
+private:
+    // ModelManager() = default;
+    ~ModelManager() = default;
+
+    friend struct std::default_delete<ModelManager>;
+
 private:
     // モデルデータ
     std::map<std::string, std::unique_ptr<Model>> models;
     ModelCommon* modelCommon = nullptr;
 
-    static ModelManager* instance;
+    static std::unique_ptr<ModelManager> instance;
     static bool finalized;
-
-    ModelManager() = default;
-    ~ModelManager() = default;
-
-    ModelManager(const ModelManager&) = delete;
-    ModelManager& operator=(const ModelManager&) = delete;
 };

@@ -77,8 +77,6 @@ void Framework::Initialize()
 
     Object3dCommon::GetInstance()->Initialize(dxCommon.get());
 
-    /* modelCommon = new ModelCommon();
-     modelCommonaInitialize(dxCommon);*/
     ModelCommon::GetInstance()->Initialize(dxCommon.get());
 
     camera = std::make_unique<Camera>();
@@ -94,7 +92,6 @@ void Framework::Initialize()
 
     baseScene = std::make_unique<BaseScene>();
 
-    // audio.Initialize();
     Audio::GetInstance()->Initialize();
 }
 

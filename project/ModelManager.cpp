@@ -4,7 +4,7 @@
 #include "ModelCommon.h"
 #include <cassert>
 
-ModelManager* ModelManager::instance = nullptr;
+std::unique_ptr<ModelManager> ModelManager::instance = nullptr;
 bool ModelManager::finalized = false;
 
 void ModelManager::LoadModel(const std::string& filePath)
@@ -35,9 +35,9 @@ ModelManager* ModelManager::GetInstance()
     assert(!finalized && "ModelManager was already finalized!");
 
     if (instance == nullptr) {
-        instance = new ModelManager();
+        instance = std::make_unique<ModelManager>(ConstructorKey());
     }
-    return instance;
+    return instance.get();
 }
 
 void ModelManager::Finalize()

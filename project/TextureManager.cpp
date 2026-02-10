@@ -4,19 +4,19 @@
 
 uint32_t TextureManager::kSRVIndexTop = 1;
 
-TextureManager* TextureManager::instance = nullptr;
+std::unique_ptr<TextureManager> TextureManager::instance = nullptr;
 
 TextureManager* TextureManager::getInstance()
 {
     if (instance == nullptr) {
-        instance = new TextureManager;
+        instance = std::make_unique<TextureManager>(ConstructorKey());
     }
-    return instance;
+    return instance.get();
 }
 
 void TextureManager::Finalize()
 {
-    delete instance;
+    //delete instance;
     instance = nullptr;
 }
 

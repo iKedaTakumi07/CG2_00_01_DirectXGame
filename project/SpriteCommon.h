@@ -30,9 +30,10 @@ public:
 
 private:
     friend struct std::default_delete<SpriteCommon>;
-    
+
     // SpriteCommon() = default;
     ~SpriteCommon() = default;
+
 private:
     // ルートシグネチャの作成
     void RootSignatureInitialize(DirectXCommon* dxcommon);
@@ -40,8 +41,8 @@ private:
     // グラフィックスパイプラインの生成
     void graphicsPipelineInitialize(DirectXCommon* dxcommon);
 
-    DirectXCommon* dxCommon_;
+    DirectXCommon* dxCommon_ = nullptr;
 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 };

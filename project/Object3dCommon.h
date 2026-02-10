@@ -51,7 +51,7 @@ private:
     // グラフィックスパイプラインの生成
     void graphicsPipelineInitialize(DirectXCommon* dxcommon);
 
-    DirectXCommon* dxCommon_;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
+    DirectXCommon* dxCommon_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 };
