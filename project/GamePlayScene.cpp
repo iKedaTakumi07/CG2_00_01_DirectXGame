@@ -21,8 +21,6 @@ void GamePlayScene::Finalize()
 {
     fanfare.Unload();
     clearSe.Unload();
-
-    delete particleEmitter;
 }
 
 void GamePlayScene::Initialize()
@@ -51,14 +49,14 @@ void GamePlayScene::Initialize()
     object3d->Initialize();
 
     model = std::make_unique<Model>();
-    model->Initialize( "resources", "plane.obj");
+    model->Initialize("resources", "plane.obj");
     object3d->SetModel(model.get());
 
     object3d2 = std::make_unique<Object3d>();
     object3d2->Initialize();
 
     model2 = std::make_unique<Model>();
-    model2->Initialize( "resources", "axis.obj");
+    model2->Initialize("resources", "axis.obj");
     object3d2->SetModel(model2.get());
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
@@ -68,7 +66,7 @@ void GamePlayScene::Initialize()
     emitter.translate = { 0.0f, 0.0f, 0.0f };
     emitter.rotate = { 0.0f, 0.0f, 0.0f };
     emitter.scale = { 1.0f, 1.0f, 1.0f };
-    particleEmitter = new ParticleEmitter("pori", emitter, 1.0f, uint32_t(3));
+    particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 3);
 
     fanfare.SoundLoadFile("resources/fanfare.wav");
     clearSe.SoundLoadFile("resources/stage.mp3");

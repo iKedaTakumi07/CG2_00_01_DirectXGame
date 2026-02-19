@@ -5,9 +5,9 @@
 
 #include "Sound.h"
 #include "Sprite.h"
+#include "ParticleEmitter.h"
 class Model;
 class Object3d;
-class ParticleEmitter;
 
 class GamePlayScene : public BaseScene {
 public:
@@ -33,8 +33,8 @@ private:
     // スプライト
     std::list<std::unique_ptr<Sprite>> sprites;
 
-    // パーティクル(後日シングルトン化予定)
-    ParticleEmitter* particleEmitter;
+    // パーティクル
+    std::unique_ptr<ParticleEmitter> particleEmitter;
 
     // 音声データ
     Sound fanfare;
