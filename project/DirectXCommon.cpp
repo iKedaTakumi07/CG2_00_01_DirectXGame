@@ -73,7 +73,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring
 
     // これからシェーダーにコンパイルするログを出す
     Logger::Log(logStream, StringUtility::ConvertString(std::format(L"Bggin CompileShader,path:{}, profile:{}\n", filePath, profile)));
-    // hlslファイルを読む
+    // .hlslファイルを読む
     Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSourec = nullptr;
     HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSourec);
     // 読めなかったら止める
@@ -155,7 +155,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_
 
 Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata)
 {
-    // metadataを基にResourecの設定
+    // metadataを基にResourceの設定
     D3D12_RESOURCE_DESC resourceDesc {};
     resourceDesc.Width = UINT(metadata.width); // 幅
     resourceDesc.Height = UINT(metadata.height); // 高さ
@@ -177,7 +177,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(cons
         &heapProperties, // Heapの設定
         D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定
         &resourceDesc, // Resourceの設定
-        D3D12_RESOURCE_STATE_COPY_DEST, // 初回のResourcestate
+        D3D12_RESOURCE_STATE_COPY_DEST, // 初回のResourceState
         nullptr, // clear最適値
         IID_PPV_ARGS(&resource)); // 作成するResourceポインタへのポインタ
     assert(SUCCEEDED(hr));
@@ -191,7 +191,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(const Mi
     uint64_t intermediateSize = GetRequiredIntermediateSize(texture.Get(), 0, UINT(subresources.size()));
     Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResourec = CreateBufferResource(intermediateSize);
     UpdateSubresources(commandList.Get(), texture.Get(), intermediateResourec.Get(), 0, 0, UINT(subresources.size()), subresources.data());
-    // teture
+    // texture
     D3D12_RESOURCE_BARRIER barrier {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -206,11 +206,8 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(const Mi
     return intermediateResourec;
 }
 
-void DirectXCommon::Initialize(/*WinApp* winApp*/)
+void DirectXCommon::Initialize()
 {
-    // null検出
-    //assert(winApp);
-
     // FPS固定
     InitializeFixFPS();
 
@@ -227,7 +224,7 @@ void DirectXCommon::Initialize(/*WinApp* winApp*/)
     viewportInitialize(); // ビューポート
     scissorRectInitialize(); // シザリング矩形
     dxcCompilerInitialize(); // DXCコンパイラ
-    ImguiInitialize(); // Imgui
+    ImguiInitialize(); // IMGUI
 }
 
 void DirectXCommon::PreDraw()
@@ -237,7 +234,7 @@ void DirectXCommon::PreDraw()
 
     // TransitionBarrierの設定
     D3D12_RESOURCE_BARRIER barrier {};
-    // 今回のバリアはTransutuion
+    // 今回のバリアはTransition
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     // noneにしておく
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -278,7 +275,7 @@ void DirectXCommon::PostDraw()
 
     // 画面に各処理は全て終わり、画面に移すので、状態を遷移
 
-    // 今回のバリアはTransutuion
+    // 今回のバリアはTransition
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     // noneにしておく
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -317,7 +314,7 @@ void DirectXCommon::FlushCommandQueue()
     commandQueue->Signal(fence.Get(), fenceValue);
 
     // Fenceの値が指定したSignal値にたどり着いているか確認する
-    // GetcompletedValueの初期値はFence作成時に渡した初期値
+    // GetCompletedValueの初期値はFence作成時に渡した初期値
     if (fence->GetCompletedValue() < fenceValue) {
         // 指定したSignalにたどり着いてないので、たどり着くまで待つようにイベントを設定する
         fence->SetEventOnCompletion(fenceValue, fenceEvent);
@@ -477,7 +474,7 @@ void DirectXCommon::DepthBufferInitialize()
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-    // 利用するheaoの設定
+    // 利用するheapの設定
     D3D12_HEAP_PROPERTIES heapProperties {};
     heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
@@ -505,9 +502,9 @@ void DirectXCommon::DescriptorInitialize()
 
     // RTVデスクリプタヒープの生成
     rtvDescripotrHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-    // SRV用のヒープでディスクリプタの数128。SRVはShadre内で触るものなので、ShaderVisiblrはtrue
+    // SRV用のヒープでディスクリプタの数128。SRVはSharda内で触るものなので、ShaderVisibleはtrue
     srvDescriptorHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
-    // DSV用のひーぷでディスクリプタの数は1
+    // DSV用のヒープでディスクリプタの数は1
     dsvDescriptorHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 }
 
@@ -542,7 +539,7 @@ void DirectXCommon::DepthStencilInitialize()
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc {};
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    // DSVheapの先頭にDSVを作る
+    // DSVHeapの先頭にDSVを作る
     device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
@@ -589,7 +586,7 @@ void DirectXCommon::dxcCompilerInitialize()
     hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
     assert(SUCCEEDED(hr));
 
-    // 現時点ではincludeはしないが、nicludeに対するための設定を行っておく
+    // 現時点ではincludeはしないが、includeに対するための設定を行っておく
 
     hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
     assert(SUCCEEDED(hr));

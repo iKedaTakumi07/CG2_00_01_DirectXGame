@@ -1,17 +1,16 @@
 #pragma once
 #include <memory>
 
-class WinApp;
+#include "BaseScene.h"
+#include "Camera.h"
 #include "DirectXCommon.h"
-#include "SrvManager.h"
-#include "Input.h"
 #include "ImGuiManager.h"
+#include "Input.h"
+#include "SrvManager.h"
+class WinApp;
 class SpriteCommon;
 class Object3dCommon;
 class ModelCommon;
-#include "Camera.h"
-#include "BaseScene.h"
-// #include "Audio.h"
 
 class Framework {
 public:
@@ -45,26 +44,16 @@ private:
     // ゲーム終了クラス
     bool endRequst_ = false;
 
-    // winApp
-    // WinApp* winApp = nullptr;
     // dxCommon
     std::unique_ptr<DirectXCommon> dxCommon = nullptr;
     // srvマネージャー
     std::unique_ptr<SrvManager> srvManager = nullptr;
     // input
     std::unique_ptr<Input> input = nullptr;
-    // Imguiマネージャー
+    // IMGUIマネージャー
     std::unique_ptr<ImGuiManager> imguiManager = nullptr;
-    // sprite
-    // SpriteCommon* spriteCommon = nullptr;
-    // object3d
-    // Object3dCommon* object3dCommon = nullptr;
-    // ModelCommon
-    // ModelCommon* modelCommon = nullptr;
     // カメラ
     std::unique_ptr<Camera> camera = nullptr;
-
+    // ベースシーン
     std::unique_ptr<BaseScene> baseScene = nullptr;
-    // Audio
-    // Audio* audio;
 };

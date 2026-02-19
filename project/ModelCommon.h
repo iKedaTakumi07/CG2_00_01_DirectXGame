@@ -24,7 +24,6 @@ public:
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
 
 private:
-    // ModelCommon() = default;
     ~ModelCommon() = default;
 
     friend struct std::default_delete<ModelCommon>;

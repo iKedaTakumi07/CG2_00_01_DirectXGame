@@ -3,7 +3,7 @@
 #include "Object3d.h"
 #include "TextureManager.h"
 
-void Model::Initialize(/*ModelCommon* modelCommon,*/ const std::string& directorypath, const std::string& filename)
+void Model::Initialize(const std::string& directorypath, const std::string& filename)
 {
     modelCommon_ = ModelCommon::GetInstance();
 
@@ -12,9 +12,6 @@ void Model::Initialize(/*ModelCommon* modelCommon,*/ const std::string& director
     // 頂点データ初期化
     VertexResourceInitialize();
     MaterialResourceInitialize();
-
-    //TextureManager::getInstance()->LoadTexture(modelData.material.textureFilePath);
-    //modelData.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 }
 
 void Model::Draw()

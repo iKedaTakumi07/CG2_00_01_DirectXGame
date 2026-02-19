@@ -1,15 +1,16 @@
 #pragma comment(lib, "mfplat.lib")
 
-#include <mfapi.h>
 #include "Audio.h"
 #include "Sound.h"
 #include <cassert>
+#include <mfapi.h>
 
 Audio* Audio::GetInstance()
 {
     static Audio instance;
     return &instance;
 }
+
 bool Audio::Initialize()
 {
     HRESULT result;

@@ -19,7 +19,7 @@ MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath
         std::istringstream s(line);
         s >> identifier;
 
-        // identfierに応じた処理
+        // identifierに応じた処理
         if (identifier == "map_Kd") {
             std::string textureFilename;
             s >> textureFilename;

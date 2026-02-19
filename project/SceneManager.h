@@ -35,9 +35,8 @@ public:
 
 private:
      friend struct std::default_delete<SceneManager>;
-
-    // SceneManager() = default;
     ~SceneManager() = default;
+
 private:
     std::unique_ptr<BaseScene> nextScene_ = nullptr;
     std::unique_ptr<BaseScene> scene_ = nullptr;

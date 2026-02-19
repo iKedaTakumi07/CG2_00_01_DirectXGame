@@ -4,7 +4,7 @@
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 
-void ImGuiManager::Initialize(/*[[maybe_unused]] WinApp* winApp,*/ [[maybe_unused]] DirectXCommon* dxCommon, [[maybe_unused]] SrvManager* srvManager)
+void ImGuiManager::Initialize([[maybe_unused]] DirectXCommon* dxCommon, [[maybe_unused]] SrvManager* srvManager)
 {
 #ifdef USE_IMGUI
 
@@ -12,10 +12,10 @@ void ImGuiManager::Initialize(/*[[maybe_unused]] WinApp* winApp,*/ [[maybe_unuse
     dxCommon_ = dxCommon;
     srvManager_ = srvManager;
 
-    // imguiのコンテキスト生成
+    // IMGUIのコンテキスト生成
     ImGui::CreateContext();
 
-    // imguiのスタイルを設定
+    // IMGUIのスタイルを設定
     ImGui::StyleColorsDark();
 
     // win32初期化

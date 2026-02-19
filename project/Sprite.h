@@ -11,10 +11,8 @@ class TextureManager;
 
 class Sprite {
 public:
-  
-
     // 初期化
-    void Initialize(/*SpriteCommon* spriteCommon, WinApp* winApp,*/ std::string texturefilePath);
+    void Initialize(std::string texturefilePath);
 
     // 更新
     void Update();
@@ -50,9 +48,6 @@ private:
     void MaterialResourceInitialize();
     void TransMatrixResourceInitialize();
 
-    //SpriteCommon* spriteCommon_ = nullptr;
-    //WinApp* winApp_ = nullptr;
-
     // Sprite用の頂点リソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
     Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
@@ -73,7 +68,7 @@ private:
     // バッファリソース
     TransformationMatrix* transformationMatrixData;
 
-    // Sprite用のtransformmatrix用のリソースを作る
+    // Sprite用のtransformMatrix用のリソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
 
     // 動かす用のtransform

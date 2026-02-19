@@ -14,12 +14,12 @@ class SrvManager;
 class ImGuiManager {
 public:
     // 初期化
-    void Initialize(/*WinApp* winApp,*/ DirectXCommon* dxCommon, SrvManager* srvManager);
+    void Initialize( DirectXCommon* dxCommon, SrvManager* srvManager);
 
-    // imgui受付開始
+    // IMGUI受付開始
     void Begin();
 
-    // imgui受付終了
+    // IMGUI受付終了
     void End();
 
     // 画面絵の描画
@@ -29,7 +29,7 @@ public:
     void Finalize();
 
 private:
-    // WindousAPI
+    // WindowsAPI
     WinApp* winApp_ = nullptr;
 
     DirectXCommon* dxCommon_;

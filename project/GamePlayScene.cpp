@@ -2,7 +2,6 @@
 
 #include "WinApp.h"
 
-// #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
 
@@ -49,17 +48,17 @@ void GamePlayScene::Initialize()
     ModelManager::GetInstance()->LoadModel("axis.obj");
 
     object3d = std::make_unique<Object3d>();
-    object3d->Initialize(/*object3dCommon, winapp*/);
+    object3d->Initialize();
 
     model = std::make_unique<Model>();
-    model->Initialize(/*modelCommon,*/ "resources", "plane.obj");
+    model->Initialize( "resources", "plane.obj");
     object3d->SetModel(model.get());
 
     object3d2 = std::make_unique<Object3d>();
-    object3d2->Initialize(/*object3dCommon, winApp*/);
+    object3d2->Initialize();
 
     model2 = std::make_unique<Model>();
-    model2->Initialize(/*modelCommon,*/ "resources", "axis.obj");
+    model2->Initialize( "resources", "axis.obj");
     object3d2->SetModel(model2.get());
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
@@ -74,6 +73,7 @@ void GamePlayScene::Initialize()
     fanfare.SoundLoadFile("resources/fanfare.wav");
     clearSe.SoundLoadFile("resources/stage.mp3");
 
+    // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
     // Audio::GetInstance()->Play(clearSe);
 }

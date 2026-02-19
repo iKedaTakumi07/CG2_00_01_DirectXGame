@@ -3,11 +3,11 @@
 #include <memory>
 #include <vector>
 
+#include "Sound.h"
+#include "Sprite.h"
 class Model;
 class Object3d;
-#include "Sprite.h"
 class ParticleEmitter;
-#include "Sound.h"
 
 class GamePlayScene : public BaseScene {
 public:
@@ -33,7 +33,7 @@ private:
     // スプライト
     std::list<std::unique_ptr<Sprite>> sprites;
 
-    // パーティクル
+    // パーティクル(後日シングルトン化予定)
     ParticleEmitter* particleEmitter;
 
     // 音声データ

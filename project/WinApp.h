@@ -18,7 +18,6 @@ public:
     // passkeyを受け取るコンストラクタ
     explicit WinApp(ConstructorKey) { }
 
-
     // Singleton 取得
     static WinApp* GetInstance();
 
@@ -42,10 +41,9 @@ public:
     WinApp& operator=(const WinApp&) = delete;
 
 private:
-    //WinApp() = default;
     ~WinApp() = default;
 
-     friend struct std::default_delete<WinApp>;
+    friend struct std::default_delete<WinApp>;
 
 public:
     // クライアント領域のサイズ

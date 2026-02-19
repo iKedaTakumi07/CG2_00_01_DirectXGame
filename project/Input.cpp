@@ -4,7 +4,7 @@
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
-void Input::Initialize(/*WinApp* winApp*/)
+void Input::Initialize()
 {
     this->winApp_ = WinApp::GetInstance();
 

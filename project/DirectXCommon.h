@@ -27,7 +27,7 @@ public:
    
 
     // 初期化
-    void Initialize(/*WinApp* winApp*/);
+    void Initialize();
 
     void PreDraw();
 
@@ -49,7 +49,7 @@ public:
     static const uint32_t kMaxSRVCount;
 
 private:
-    // WindousAPI
+    // WindowsAPI
     WinApp* winApp_ = nullptr;
 
     void deviceInitialize();
@@ -97,7 +97,7 @@ private:
     void DepthStencilInitialize();
 
     void fenceInitialize();
-    // 初期値0でfenecを作る
+    // 初期値0でfenceを作る
     Microsoft::WRL::ComPtr<ID3D12Fence> fence;
     uint64_t fenceValue = 0;
     HANDLE fenceEvent;

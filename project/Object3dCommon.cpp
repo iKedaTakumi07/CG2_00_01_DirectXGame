@@ -126,7 +126,7 @@ void Object3dCommon::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
-    // RasiterzerStateの設定
+    // RasterizerStateの設定
     D3D12_RASTERIZER_DESC rasterizerDesc {};
     // 裏面(時計回り)を表示しない
     rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;

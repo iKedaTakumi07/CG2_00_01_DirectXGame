@@ -28,7 +28,7 @@ public:
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
     // 初期化
-    void Initialize(/*Object3dCommon* object3dCommon, WinApp* winApp*/);
+    void Initialize();
 
     void Update();
 
@@ -59,7 +59,7 @@ private:
 
     // バッファリソース
     TransformationMatrix* transformationMatrixData;
-    // model用のtransformmatrix用のリソースを作る
+    // model用のtransformMatrix用のリソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
 
     // 平行光源
