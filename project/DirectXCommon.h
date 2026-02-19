@@ -85,7 +85,6 @@ private:
 
     void rtvInitialize();
     // SwapChainResource
-    /*Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2];*/
     std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
 
