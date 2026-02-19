@@ -315,8 +315,6 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 
 void ParticleManager::VertexResourceInitialize()
 {
-   
-
     vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
     // 頂点バッファビューを作成
     vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress(); // リソースの先頭のアドレスから使用
@@ -340,7 +338,6 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     auto it = particleGroups.find(name);
     if (particleGroups.contains(name)) {
         return;
-        // assert(it == particleGroups.end());
     }
 
     //  空のグループを作成＆登録

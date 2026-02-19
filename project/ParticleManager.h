@@ -47,7 +47,7 @@ public:
     void Finalize();
 
     // 初期化
-    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager );
+    void Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager);
 
     void Update();
 
@@ -64,10 +64,9 @@ public:
     ParticleManager& operator=(ParticleManager&) = delete;
 
 private:
-    // ParticleManager() = default;
+    friend struct std::default_delete<ParticleManager>;
     ~ParticleManager() = default;
 
-    friend struct std::default_delete<ParticleManager>;
 
 private:
     SrvManager* srvManager = nullptr;
