@@ -14,7 +14,7 @@ public:
 
 public:
     // 初期化
-    void Initialize(/*WinApp* winApp*/);
+    void Initialize();
     // 更新
     void Update();
 
@@ -31,6 +31,6 @@ private:
     // DirectInputの初期化
     ComPtr<IDirectInput8> directInput;
 
-    // wnidousAPI
+    // windowsAPI
     WinApp* winApp_ = nullptr;
 };

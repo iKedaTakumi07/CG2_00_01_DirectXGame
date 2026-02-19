@@ -1,6 +1,6 @@
 #pragma once
 class D3dResourceLeakChecker {
 public:
-    // ですトラ
+    // デストラクタ
     ~D3dResourceLeakChecker();
 };

@@ -36,7 +36,7 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* excption)
     CreateDirectory(L"./Dumps", nullptr);
     StringCchPrintf(filePath, MAX_PATH, L"./Dumps/%04d-%02d%02d-%02d%02d.dmp", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute);
     HANDLE dumpFileHandle = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
-    // processId とクラッシュの発生したthreadidを取得
+    // processId とクラッシュの発生したthreadedを取得
     DWORD processId = GetCurrentProcessId();
     DWORD threadId = GetCurrentThreadId();
     // 設定情報を入力
@@ -56,22 +56,19 @@ void Framework::Initialize()
     // 誰も捕捉しなかった場合に、捕捉する関数を登録
     SetUnhandledExceptionFilter(ExportDump);
 
-    // winapp初期化
-    /* winApp = new WinApp();
-     winApp->Initialize();*/
     WinApp::GetInstance()->Initialize();
 
     dxCommon = std::make_unique<DirectXCommon>();
-    dxCommon->Initialize(/*winApp*/);
+    dxCommon->Initialize();
 
     input = std::make_unique<Input>();
-    input->Initialize(/*winApp*/);
+    input->Initialize();
 
     srvManager = std::make_unique<SrvManager>();
     srvManager->Initialize(dxCommon.get());
 
     imguiManager = std::make_unique<ImGuiManager>();
-    imguiManager->Initialize(/*winApp,*/ dxCommon.get(), srvManager.get());
+    imguiManager->Initialize(dxCommon.get(), srvManager.get());
 
     SpriteCommon::GetInstance()->Initialize(dxCommon.get());
 
@@ -87,7 +84,7 @@ void Framework::Initialize()
 
     TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     ModelManager::GetInstance()->Initialize(dxCommon.get());
-    ParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get() /*, winApp*/);
+    ParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     ParticleManager::getInstance()->SetDefaultCamera(camera.get());
 
     baseScene = std::make_unique<BaseScene>();
@@ -140,15 +137,10 @@ void Framework::Finalize()
 {
 
     CloseHandle(dxCommon->GetfenceEvent());
-    // winApp->Finalize();
 
     TextureManager::getInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
     ParticleManager::getInstance()->Finalize();
-    // audio.Finalize();
 
-    // delete winApp;
     imguiManager->Finalize();
-
-    // delete modelCommon;
 }

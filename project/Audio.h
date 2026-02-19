@@ -11,10 +11,14 @@ class Audio {
 public:
     // Singleton 取得
     static Audio* GetInstance();
-
+  
     Audio() = default;
     ~Audio() { Finalize(); }
 
+    /// <summary>
+    /// 初期化
+    /// </summary>
+    /// <returns></returns>
     bool Initialize();
     void Finalize();
 

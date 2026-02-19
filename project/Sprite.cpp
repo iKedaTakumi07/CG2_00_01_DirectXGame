@@ -5,16 +5,12 @@
 #include "externals/imgui/imgui.h"
 #endif // USE_IMGUI
 
-void Sprite::Initialize(/*SpriteCommon* spriteCommon, WinApp* winApp,*/ std::string texturefilePath)
+void Sprite::Initialize( std::string texturefilePath)
 {
-    /*this->spriteCommon_ = SpriteCommon::GetInstance();
-    this->winApp_ = WinApp::GetInstance();*/
-
     VertexResourceInitialize();
     MaterialResourceInitialize();
     TransMatrixResourceInitialize();
 
-    // textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(texturefilePath);
     texturefilePath_ = texturefilePath;
     AdjustTextureSize(texturefilePath_);
 }

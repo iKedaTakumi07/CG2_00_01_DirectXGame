@@ -45,7 +45,6 @@ public:
     TextureManager& operator=(TextureManager&) = delete;
 
 private:
-    // TextureManager() = default;
     ~TextureManager() = default;
 
     friend struct std::default_delete<TextureManager>;
