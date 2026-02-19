@@ -32,7 +32,7 @@ MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath
 
 ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
-    ModelData modelData; // 構築するmodeldata
+    ModelData modelData; // 構築するmodelData
     std::vector<Vector4> positions; // 位置
     std::vector<Vector3> normals; // 法線
     std::vector<Vector2> texcoords; // テクスチャ座標
@@ -81,13 +81,10 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
                 Vector4 position = positions[elementIndeices[0] - 1];
                 Vector2 texcoord = texcoords[elementIndeices[1] - 1];
                 Vector3 normal = normals[elementIndeices[2] - 1];
-
                 // 位置の反転&法線の反転&左下原点
-
+                position.x *= -1.0f;
+                normal.x *= -1.0f;
                 texcoord.y = 1.0f - texcoord.y;
-
-                // VertexData vertex = { position, texcoord, normal };
-                // modelData.vertices.push_back(vertex);
 
                 triangle[faceVertex] = { position, texcoord, normal };
             }
