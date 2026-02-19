@@ -104,7 +104,7 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
     return modelData;
 }
 
-void Object3d::Initialize(/*Object3dCommon* object3dCommon, WinApp* winApp*/)
+void Object3d::Initialize()
 {
     this->object3dCommon = Object3dCommon::GetInstance();
 

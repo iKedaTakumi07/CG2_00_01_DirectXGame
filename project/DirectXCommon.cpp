@@ -2,7 +2,6 @@
 #include "Logger.h"
 #include "StringUtility.h"
 
-
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -224,7 +223,6 @@ void DirectXCommon::Initialize()
     viewportInitialize(); // ビューポート
     scissorRectInitialize(); // シザリング矩形
     dxcCompilerInitialize(); // DXCコンパイラ
-    ImguiInitialize(); // IMGUI
 }
 
 void DirectXCommon::PreDraw()
@@ -594,17 +592,6 @@ void DirectXCommon::dxcCompilerInitialize()
 
 void DirectXCommon::ImguiInitialize()
 {
-    // ImGui初期化
-   /* IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplWin32_Init(winApp_->GetHwnd());
-    ImGui_ImplDX12_Init(device.Get(),
-        swapChainDesc.BufferCount,
-        rtvDesc.Format,
-        srvDescriptorHeap.Get(),
-        srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-        srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());*/
 }
 
 void DirectXCommon::InitializeFixFPS()

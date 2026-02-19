@@ -315,9 +315,7 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 
 void ParticleManager::VertexResourceInitialize()
 {
-    // 頂点リソースを作成
-    /*TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
-    model.material.textureIndex = TextureManager::getInstance()->GetTextureIndexByFilePath(model.material.textureFilePath);*/
+   
 
     vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
     // 頂点バッファビューを作成
