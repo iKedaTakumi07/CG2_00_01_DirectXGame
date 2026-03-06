@@ -17,21 +17,19 @@ void ParticleEmitter::Update()
     }
 
     // 時刻を進める
-    elapsedTime_ += 1.0f/60.0f;
+    elapsedTime_ += 1.0f / 60.0f;
 
     // 1回発生するのに必要な時間
     const float emitInterval = 1.0f / emitRate_;
 
     // 発生可能な回数を計算（余剰時間を保持）
     while (elapsedTime_ >= emitInterval) {
-
-        ParticleManager::getInstance()->Emit(groupName_, transform_.translate, emitCount_);
-
+        Emit();
         elapsedTime_ -= emitInterval;
     }
 }
 
 void ParticleEmitter::Emit()
 {
-    ParticleManager::getInstance()->Emit("pori", transform_.translate, 3);
+    ParticleManager::getInstance()->Emit(groupName_, transform_.translate, emitCount_);
 }
