@@ -1,11 +1,11 @@
 #pragma once
 #include <memory>
 
-#include "../scene/BaseScene.h"
 #include "../3d/Camera.h"
+#include "../io/Input.h"
+#include "../scene/BaseScene.h"
 #include "DirectXCommon.h"
 #include "ImGuiManager.h"
-#include "../io/Input.h"
 #include "SrvManager.h"
 class WinApp;
 class SpriteCommon;
@@ -26,7 +26,7 @@ public:
     virtual void Update();
 
     // 描画
-    virtual void Draw();
+    virtual void Draw() = 0;
 
     // 終了
     virtual void Finalize();
