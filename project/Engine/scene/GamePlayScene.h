@@ -35,7 +35,7 @@ private:
 
     // パーティクル
     std::unique_ptr<ParticleEmitter> particleEmitter;
-
+    std::unique_ptr<ParticleEmitter> particleEmitterPlane;
     // 音声データ
     Sound fanfare;
     Sound clearSe;

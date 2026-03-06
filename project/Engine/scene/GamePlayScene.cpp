@@ -62,6 +62,7 @@ void GamePlayScene::Initialize()
     object3d2->SetModel(model2.get());
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
+    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png");
 
     // 板ポリ
     Transform emitter {};
@@ -69,6 +70,12 @@ void GamePlayScene::Initialize()
     emitter.rotate = { 0.0f, 0.0f, 0.0f };
     emitter.scale = { 1.0f, 1.0f, 1.0f };
     particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 3);
+
+    Transform emitterPlane {};
+    emitterPlane.translate = { 4.0f, 4.0f, 0.0f };
+    emitterPlane.rotate = { 0.0f, 0.0f, 0.0f };
+    emitterPlane.scale = { 1.0f, 1.0f, 1.0f };
+    particleEmitterPlane = std::make_unique<ParticleEmitter>("Plane", emitterPlane, 1.0f, 5);
 
     fanfare.SoundLoadFile("resources/fanfare.wav");
     clearSe.SoundLoadFile("resources/stage.mp3");
@@ -101,6 +108,7 @@ void GamePlayScene::Update()
     object3d2->SetRotate(rotate2);
 
     particleEmitter->Update();
+    particleEmitterPlane->Update();
 }
 
 void GamePlayScene::Draw()
