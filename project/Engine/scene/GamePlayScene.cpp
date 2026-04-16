@@ -30,6 +30,7 @@ void GamePlayScene::Initialize()
 
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
+    TextureManager::getInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
 
     for (uint32_t i = 0; i < 1; ++i) {
         auto sprite = std::make_unique<Sprite>();
