@@ -79,11 +79,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /Zc:enumTypes- %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir)CG2_00_01_DirectXGame\Engine\base</AdditionalIncludeDirectories>
+      <EnforceTypeConversionRules>false</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,10 +108,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /Zc:enumTypes- %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)CG2_00_01_DirectXGame\Engine\base</AdditionalIncludeDirectories>
+      <EnforceTypeConversionRules>false</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,12 +136,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <PreprocessorDefinitions>_CONSOLE;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /Zc:enumTypes- %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <AdditionalIncludeDirectories>$(ProjectDir)CG2_00_01_DirectXGame\Engine\base</AdditionalIncludeDirectories>
+      <EnforceTypeConversionRules>false</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
