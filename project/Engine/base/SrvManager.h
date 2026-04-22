@@ -5,6 +5,7 @@
 #include <chrono>
 #include <dxgi1_6.h>
 #include <wrl.h>
+#include "../../externals/DirectXTex/DirectXTex.h"
 
 class DirectXCommon;
 
@@ -18,7 +19,7 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
 
-    void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels);
+    void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DirectX::TexMetadata metadata, UINT MipLevels);
     void CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 
     void PreDraw();

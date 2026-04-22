@@ -36,12 +36,21 @@ void TextureManager::LoadTexture(const std::string& filePath)
     // テクスチャファイルを読み込んでプログラムで使えるようにする
     DirectX::ScratchImage image {};
     std::wstring filePathW = StringUtility::ConvertString(filePath);
-    HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    HRESULT hr;
+    if (filePathW.ends_with(L".dds")) { //.ddsで終わっていたらddsとみなす。
+        hr = DirectX::LoadFromDDSFile(filePathW.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+    } else {
+        hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+    }
     assert(SUCCEEDED(hr));
 
     // ミップマップの作成
     DirectX::ScratchImage mipImages {};
-    hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+    if (DirectX::IsCompressed(image.GetMetadata().format)) { // 圧縮フォーマットかどうか
+        mipImages = std::move(image); // 圧縮フォーマットなのでmove
+    } else {
+        hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+    }
 
     // 追加したテクスチャデータの参照を取得
     TextureData& textureData = textureDatas[filePath];
@@ -59,7 +68,7 @@ void TextureManager::LoadTexture(const std::string& filePath)
     textureData.srvHandleGPU = srvManager->GetGPUDescriptorHandle(textureData.srvIndex);
 
     // SRVの生成
-    srvManager->CreateSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(), textureData.metadata.format, UINT(textureData.metadata.mipLevels));
+    srvManager->CreateSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(), textureData.metadata, UINT(textureData.metadata.mipLevels));
 
     Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureData.resource, mipImages);
 
