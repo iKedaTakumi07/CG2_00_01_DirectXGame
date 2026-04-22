@@ -51,6 +51,8 @@ void Game::Draw()
 
     Framework::GetDirectXCommon()->PreDraw();
 
+    //ここにRenderTextureのPreDraw(上のものをimgui前に移動)
+
     Framework::GetSrvManager()->PreDraw();
 
     SceneManager::GetInstance()->Draw();

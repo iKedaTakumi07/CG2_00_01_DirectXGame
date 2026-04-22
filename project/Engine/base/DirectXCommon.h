@@ -1,13 +1,14 @@
 #pragma once
 #include "../externals/DirectXTex/d3dx12.h"
 
-#include "WinApp.h"
 #include "../../externals/DirectXTex/DirectXTex.h"
+#include "Math.h"
+#include "WinApp.h"
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <d3d12.h>
 #include <dxcapi.h>
-#include <chrono>
 #include <dxgi1_6.h>
 #include <wrl.h>
 
@@ -24,7 +25,6 @@ public:
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
     // テクスチャデータの転送
     Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
-   
 
     // 初期化
     void Initialize();
@@ -35,16 +35,19 @@ public:
     void FlushCommandQueue();
 
     // getter
-    ID3D12Device* GetDevice() const {
+    ID3D12Device* GetDevice() const
+    {
         return device.Get();
     };
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
     HANDLE GetfenceEvent() { return fenceEvent; }
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+    // オフスクリーンレンダリング用テクスチャの生成（汎用化）
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, Vector4& clearColor);
 
     size_t GetSwapChainResourcesNum() const { return swapChainResources.size(); }
-    
+
     // 最大SRV
     static const uint32_t kMaxSRVCount;
 
@@ -122,6 +125,4 @@ private:
     void UpdateFixFPS();
     // 記録時間FPS固定用
     std::chrono::steady_clock::time_point reference_;
-
-
 };
