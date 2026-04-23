@@ -39,6 +39,7 @@ public:
     SrvManager* GetSrvManager() { return srvManager.get(); }
     Input* GetInput() { return input.get(); }
     ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
+    Camera* GetCamera() { return camera.get(); }
 
 private:
     // ゲーム終了クラス

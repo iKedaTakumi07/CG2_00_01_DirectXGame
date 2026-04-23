@@ -2,12 +2,18 @@
 #include "BaseScene.h"
 #include <memory>
 
-
+#include "../2d/Sprite.h"
+#include "../3d/ParticleEmitter.h"
+#include "../audio/Sound.h"
 class Model;
 class Object3d;
-class Input;
+class Skybox;
 
 class TitleScene : public BaseScene {
+public:
+    TitleScene();
+    ~TitleScene();
+
 public:
     // 初期化
     void Initialize() override;
@@ -27,4 +33,6 @@ private:
     std::unique_ptr<Model> model2;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Object3d> object3d2;
+
+    std::unique_ptr<Skybox> skydox;
 };

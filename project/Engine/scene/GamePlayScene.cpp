@@ -1,4 +1,6 @@
 #include "GamePlayScene.h"
+#include "SceneManager.h"
+#include "TitleScene.h"
 
 #include "../base/WinApp.h"
 
@@ -14,8 +16,6 @@
 #include "../3d/ParticleManager.h"
 
 #include "../io/Input.h"
-#include "SceneManager.h"
-#include "TitleScene.h"
 
 #include "math.h"
 

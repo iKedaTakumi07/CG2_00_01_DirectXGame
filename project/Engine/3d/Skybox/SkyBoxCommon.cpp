@@ -1,5 +1,7 @@
 #include "SkyBoxCommon.h"
 #include "../../base/Logger.h"
+#include <cassert>
+
 
 SkyBoxCommon* SkyBoxCommon::GetInstance()
 {
