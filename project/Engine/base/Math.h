@@ -36,6 +36,10 @@ struct VertexData {
     Vector2 texcoord;
     Vector3 normal;
 };
+struct SkyboxVertexData {
+    Vector4 position;
+    Vector3 texcoord;
+};
 struct ParticleForGPU {
     Matrix4x4 WVP;
     Matrix4x4 world;

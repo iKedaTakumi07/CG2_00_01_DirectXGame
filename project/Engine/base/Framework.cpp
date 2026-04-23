@@ -1,13 +1,14 @@
 #define DIRECTINPUT_VERSION 0x0800
 
 #include "Framework.h"
-#include "../scene/BaseScene.h"
+#include "../2d/SpriteCommon.h"
 #include "../3d/Camera.h"
-#include "DirectXCommon.h"
-#include "../io/Input.h"
 #include "../3d/ModelCommon.h"
 #include "../3d/Object3dCommon.h"
-#include "../2d/SpriteCommon.h"
+#include "../3d/Skybox/SkyBoxCommon.h"
+#include "../io/Input.h"
+#include "../scene/BaseScene.h"
+#include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "WinApp.h"
 
@@ -18,9 +19,9 @@
 
 #include <wrl.h>
 
-#include "../audio/Audio.h"
 #include "../3d/ModelManager.h"
 #include "../3d/ParticleManager.h"
+#include "../audio/Audio.h"
 #include "TextureManager.h"
 #include <DbgHelp.h>
 #include <strsafe.h>
@@ -76,6 +77,8 @@ void Framework::Initialize()
 
     ModelCommon::GetInstance()->Initialize(dxCommon.get());
 
+    SkyBoxCommon::GetInstance()->Initialize(dxCommon.get());
+
     camera = std::make_unique<Camera>();
     camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
@@ -124,12 +127,21 @@ void Framework::Update()
     ImGui::ShowDemoWindow();
 #endif // USE_IMGUI
 
+    Vector3 cameraPos = camera->GetTranslate();
+    Vector3 cameraRot = camera->GetRotate();
+
+    ImGui::Begin("Camera Debug");
+    ImGui::DragFloat3("Position", &cameraPos.x, 0.1f);
+    ImGui::DragFloat3("Rotation", &cameraRot.x, 0.01f);
+    ImGui::End();
+
+    camera->SetTranslate(cameraPos);
+    camera->SetRotate(cameraRot);
+
     camera->Update();
 
     ParticleManager::getInstance()->Update();
 }
-
-
 
 void Framework::Finalize()
 {

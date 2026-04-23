@@ -1,6 +1,7 @@
 #include "Skybox.h"
-#include "SkyBoxCommon.h"
+#include "../../3d/Camera.h"
 #include "../../base/TextureManager.h"
+#include "SkyBoxCommon.h"
 
 void Skybox::Initialize(std::string texturefilePath)
 {
@@ -12,70 +13,31 @@ void Skybox::Initialize(std::string texturefilePath)
     VertexResourceInitialize();
     MaterialResourceInitialize();
     TransMatrixResourceInitialize();
+}
 
-//    #ifdef USE_IMGUI
-//    ImGui::SliderFloat2("pos", &position.x, 0.0f, 1280.0f, "%06.1f");
-//#endif // USE_IMGUI
-//
-//    float left = 0.0f - anchorPoint.x;
-//    float rigth = 1.0f - anchorPoint.x;
-//    float top = 0.0f - anchorPoint.y;
-//    float bottom = 1.0f - anchorPoint.y;
-//
-//    // 左右反転,上下反転
-//    if (isFlipX_) {
-//        left = -left;
-//        rigth = -rigth;
-//    }
-//    if (isFlipY_) {
-//        top = -top;
-//        bottom = -bottom;
-//    }
-//
-//    const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(texturefilePath_);
-//    float tex_left = textureLeftTop.x / metadata.width;
-//    float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
-//    float tex_top = textureLeftTop.y / metadata.height;
-//    float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height;
+void Skybox::Update()
+{
+    
 
-    // 頂点リソースにデータを書き込む
-    //vertexData[0].position = { left, bottom, 0.0f, 1.0f };
-    //vertexData[0].texcoord = { tex_left, tex_bottom };
-    //vertexData[0].normal = { 0.0f, 0.0f, -1.0f };
-    //vertexData[1].position = { left, top, 0.0f, 1.0f };
-    //vertexData[1].texcoord = { tex_left, tex_top };
-    //vertexData[1].normal = { 0.0f, 0.0f, -1.0f };
-    //vertexData[2].position = { rigth, bottom, 0.0f, 1.0f };
-    //vertexData[2].texcoord = { tex_right, tex_bottom };
-    //vertexData[2].normal = { 0.0f, 0.0f, -1.0f };
-    //vertexData[3].position = { rigth, top, 0.0f, 1.0f };
-    //vertexData[3].texcoord = { tex_right, tex_top };
-    //vertexData[3].normal = { 0.0f, 0.0f, -1.0f };
-    //// インデックスリソースにデータを書きこむ
-    //indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-    //indexData[0] = 0;
-    //indexData[1] = 1;
-    //indexData[2] = 2;
-    //indexData[3] = 1;
-    //indexData[4] = 3;
-    //indexData[5] = 2;
+    Matrix4x4 worldMatrix = MakeIdentity4x4();
 
-    //// sprite用
-    //transform.translate = { position.x, position.y, 0.0f };
-    //transform.rotate = { 0.0f, 0.0f, rotation };
-    //transform.scale = { size.x, size.y, 1.0f };
+    // 2. View行列（カメラの回転だけを反映し、平行移動を無効化する）
+    Matrix4x4 viewMatrix = camera->GetViewMatrix();
+    viewMatrix.m[3][0] = 0.0f; // X移動をリセット
+    viewMatrix.m[3][1] = 0.0f; // Y移動をリセット
+    viewMatrix.m[3][2] = 0.0f; // Z移動をリセット
 
-    //Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-    //Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-    //Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::GetInstance()->KClientWidth), float(WinApp::GetInstance()->KClientHeight), 0.0f, 100.0f);
-    //Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrix, Multiply(viewMatrixSprite, projectionMatrixSprite));
-    //transformationMatrixData->WVP = worldViewProjectionMatrixSprite;
-    //transformationMatrixData->world = worldMatrix;
+    // 3. Projection行列（遠近投影行列を使用）
+    Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
+
+    // 合成：WVP
+    transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+    transformationMatrixData->world = worldMatrix;
 }
 
 void Skybox::Draw()
 {
-    // Spriteの描画
+    // skyBoxの描画
     // VertexBufferView
     SkyBoxCommon::GetInstance()->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
     // IndexBufferView
@@ -89,29 +51,103 @@ void Skybox::Draw()
     SkyBoxCommon::GetInstance()->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
 
     // 描画
-    SkyBoxCommon::GetInstance()->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+    SkyBoxCommon::GetInstance()->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 }
 
 void Skybox::VertexResourceInitialize()
 {
-    vertexResource = SkyBoxCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(VertexData) * 4);
+    vertexResource = SkyBoxCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(SkyboxVertexData) * 24);
     // リソースの先端のアドレスから使う
     vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
     // 使用するサイズ
-    vertexBufferView.SizeInBytes = sizeof(VertexData) * 4;
+    vertexBufferView.SizeInBytes = sizeof(SkyboxVertexData) * 24;
     // 1ツ当たりのサイズ
-    vertexBufferView.StrideInBytes = sizeof(VertexData);
+    vertexBufferView.StrideInBytes = sizeof(SkyboxVertexData);
 
     vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
     // インデックスリソースにデータを書き込む
-    indexResource = SkyBoxCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
+    indexResource = SkyBoxCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(uint32_t) * 36);
     // リソースの先頭のアドレスから使う
     indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
     // 使用するリソースのサイズはインデックス6つ分のサイズ
-    indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+    indexBufferView.SizeInBytes = sizeof(uint32_t) * 36;
     // インデックスはuint32_Tとする
     indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+    // インデックスリソースにデータを書きこむ
+    indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+
+    vertexData[0].position = { 1.0f, 1.0f, 1.0f, 1.0f };
+    vertexData[0].texcoord = { 1.0f, 1.0f, 1.0f };
+    vertexData[1].position = { 1.0f, 1.0f, -1.0f, 1.0f };
+    vertexData[1].texcoord = { 1.0f, 1.0f, -1.0f };
+    vertexData[2].position = { 1.0f, -1.0f, 1.0f, 1.0f };
+    vertexData[2].texcoord = { 1.0f, -1.0f, 1.0f };
+    vertexData[3].position = { 1.0f, -1.0f, -1.0f, 1.0f };
+    vertexData[3].texcoord = { 1.0f, -1.0f, -1.0f };
+
+    // 左面 (X-)
+    vertexData[4].position = { -1.0f, 1.0f, -1.0f, 1.0f };
+    vertexData[4].texcoord = { -1.0f, 1.0f, -1.0f };
+    vertexData[5].position = { -1.0f, 1.0f, 1.0f, 1.0f };
+    vertexData[5].texcoord = { -1.0f, 1.0f, 1.0f };
+    vertexData[6].position = { -1.0f, -1.0f, -1.0f, 1.0f };
+    vertexData[6].texcoord = { -1.0f, -1.0f, -1.0f };
+    vertexData[7].position = { -1.0f, -1.0f, 1.0f, 1.0f };
+    vertexData[7].texcoord = { -1.0f, -1.0f, 1.0f };
+
+    // 前面 (Z+)
+    vertexData[8].position = { -1.0f, 1.0f, 1.0f, 1.0f };
+    vertexData[8].texcoord = { -1.0f, 1.0f, 1.0f };
+    vertexData[9].position = { 1.0f, 1.0f, 1.0f, 1.0f };
+    vertexData[9].texcoord = { 1.0f, 1.0f, 1.0f };
+    vertexData[10].position = { -1.0f, -1.0f, 1.0f, 1.0f };
+    vertexData[10].texcoord = { -1.0f, -1.0f, 1.0f };
+    vertexData[11].position = { 1.0f, -1.0f, 1.0f, 1.0f };
+    vertexData[11].texcoord = { 1.0f, -1.0f, 1.0f };
+
+    // 後面 (Z-)
+    vertexData[12].position = { 1.0f, 1.0f, -1.0f, 1.0f };
+    vertexData[12].texcoord = { 1.0f, 1.0f, -1.0f };
+    vertexData[13].position = { -1.0f, 1.0f, -1.0f, 1.0f };
+    vertexData[13].texcoord = { -1.0f, 1.0f, -1.0f };
+    vertexData[14].position = { 1.0f, -1.0f, -1.0f, 1.0f };
+    vertexData[14].texcoord = { 1.0f, -1.0f, -1.0f };
+    vertexData[15].position = { -1.0f, -1.0f, -1.0f, 1.0f };
+    vertexData[15].texcoord = { -1.0f, -1.0f, -1.0f };
+
+    // 上面 (Y+)
+    vertexData[16].position = { -1.0f, 1.0f, -1.0f, 1.0f };
+    vertexData[16].texcoord = { -1.0f, 1.0f, -1.0f };
+    vertexData[17].position = { 1.0f, 1.0f, -1.0f, 1.0f };
+    vertexData[17].texcoord = { 1.0f, 1.0f, -1.0f };
+    vertexData[18].position = { -1.0f, 1.0f, 1.0f, 1.0f };
+    vertexData[18].texcoord = { -1.0f, 1.0f, 1.0f };
+    vertexData[19].position = { 1.0f, 1.0f, 1.0f, 1.0f };
+    vertexData[19].texcoord = { 1.0f, 1.0f, 1.0f };
+
+    // 下面 (Y-)
+    vertexData[20].position = { -1.0f, -1.0f, 1.0f, 1.0f };
+    vertexData[20].texcoord = { -1.0f, -1.0f, 1.0f };
+    vertexData[21].position = { 1.0f, -1.0f, 1.0f, 1.0f };
+    vertexData[21].texcoord = { 1.0f, -1.0f, 1.0f };
+    vertexData[22].position = { -1.0f, -1.0f, -1.0f, 1.0f };
+    vertexData[22].texcoord = { -1.0f, -1.0f, -1.0f };
+    vertexData[23].position = { 1.0f, -1.0f, -1.0f, 1.0f };
+    vertexData[23].texcoord = { 1.0f, -1.0f, -1.0f };
+
+    // インデックス設定 (ループで全6面分生成)
+    for (uint32_t i = 0; i < 6; ++i) {
+        uint32_t vOff = i * 4;
+        uint32_t iOff = i * 6;
+        indexData[iOff] = vOff;
+        indexData[iOff + 1] = vOff + 1;
+        indexData[iOff + 2] = vOff + 2;
+        indexData[iOff + 3] = vOff + 1;
+        indexData[iOff + 4] = vOff + 3;
+        indexData[iOff + 5] = vOff + 2;
+    }
 }
 
 void Skybox::MaterialResourceInitialize()

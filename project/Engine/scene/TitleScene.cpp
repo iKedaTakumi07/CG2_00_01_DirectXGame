@@ -2,35 +2,39 @@
 #include "GamePlayScene.h"
 #include "SceneManager.h"
 
-#include "../io/Input.h"
+#include "../3d/Camera.h"
+#include "../base/WinApp.h"
+
+#include "../2d/SpriteCommon.h"
+#include "../base/TextureManager.h"
+
 #include "../3d/Model.h"
 #include "../3d/ModelManager.h"
 #include "../3d/Object3d.h"
 #include "../3d/Object3dCommon.h"
 
-#include "../base/Game.h"
-#include "../base/TextureManager.h"
+#include "../3d/Skybox/SkyBoxCommon.h"
+#include "../3d/Skybox/Skybox.h"
+
+#include "../3d/ParticleEmitter.h"
+#include "../3d/ParticleManager.h"
+
+#include "../io/Input.h"
+
+#include "math.h"
+
+TitleScene::TitleScene()
+{
+}
+
+TitleScene::~TitleScene() = default;
 
 void TitleScene::Initialize()
 {
-    TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    TextureManager::getInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
 
-    ModelManager::GetInstance()->LoadModel("plane.obj");
-    ModelManager::GetInstance()->LoadModel("axis.obj");
-
-    object3d = std::make_unique<Object3d>();
-    object3d->Initialize();
-
-    model = std::make_unique<Model>();
-    model->Initialize("resources", "plane.obj");
-    object3d->SetModel(model.get());
-
-    object3d2 = std::make_unique<Object3d>();
-    object3d2->Initialize();
-
-    model2 = std::make_unique<Model>();
-    model2->Initialize("resources", "axis.obj");
-    object3d2->SetModel(model2.get());
+    skydox = std::make_unique<Skybox>();
+    skydox->Initialize("resources/rostock_laage_airport_4k.dds");
 }
 
 void TitleScene::Finalize()
@@ -41,6 +45,9 @@ void TitleScene::Update()
 {
 
     Input* input = BaseScene::GetInput();
+    Camera* camera = BaseScene::GetCamera();
+
+    skydox->SetCamera(camera);
 
     if (input->TriggerKey(DIK_0)) {
         auto scene = std::make_unique<GamePlayScene>();
@@ -49,24 +56,15 @@ void TitleScene::Update()
         SceneManager::GetInstance()->SetNextScene(std::move(scene));
     }
 
-    Vector3 rotate = object3d->GetRotate();
-    rotate.x += -0.1f;
-    rotate.y += -0.1f;
-    object3d->SetRotate(rotate);
-    object3d->Update();
-
-    object3d2->Update();
-    Vector3 rotate2 = object3d2->GetRotate();
-    rotate2.x += 0.1f;
-    rotate2.y += 0.1f;
-    object3d2->SetRotate(rotate2);
+    skydox->Update();
 }
 
 void TitleScene::Draw()
 {
     Object3dCommon::GetInstance()->PrepareObjectDraw();
 
-    // モデルデータ
-    object3d->Draw();
-    object3d2->Draw();
+    SkyBoxCommon::GetInstance()->PrepareObjectDraw();
+    skydox->Draw();
+
+    SpriteCommon::GetInstance()->PrepareSpriteDraw();
 }

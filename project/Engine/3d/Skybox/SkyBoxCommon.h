@@ -1,5 +1,6 @@
 #pragma once
 #include "../../base/DirectXCommon.h"
+#include <wrl.h>
 #include <memory>
 
 class Camera;
