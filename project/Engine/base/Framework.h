@@ -6,6 +6,7 @@
 #include "../scene/BaseScene.h"
 #include "DirectXCommon.h"
 #include "ImGuiManager.h"
+#include "OffscreenSurface.h"
 #include "SrvManager.h"
 class WinApp;
 class SpriteCommon;
@@ -39,6 +40,7 @@ public:
     SrvManager* GetSrvManager() { return srvManager.get(); }
     Input* GetInput() { return input.get(); }
     ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
+    OffscreenSurface* GetOffScreenSurface() { return offscreenSurface.get(); }
 
 private:
     // ゲーム終了クラス
@@ -56,4 +58,6 @@ private:
     std::unique_ptr<Camera> camera = nullptr;
     // ベースシーン
     std::unique_ptr<BaseScene> baseScene = nullptr;
+    // offscreen
+    std::unique_ptr<OffscreenSurface> offscreenSurface = nullptr;
 };

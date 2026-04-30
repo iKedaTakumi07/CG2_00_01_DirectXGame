@@ -177,7 +177,7 @@
     <ClCompile Include="Engine\3d\Skybox\SkyBoxCommon.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="OffscreenSuface.cpp">
+    <ClCompile Include="Engine\base\OffscreenSurface.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -308,7 +308,7 @@
     <ClInclude Include="Engine\3d\Skybox\SkyBoxCommon.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="OffscreenSuface.h">
+    <ClInclude Include="Engine\base\OffscreenSurface.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -49,13 +49,18 @@ void Game::Draw()
 {
     // draw
 
-    Framework::GetDirectXCommon()->PreDraw();
-
-    //ここにRenderTextureのPreDraw(上のものをimgui前に移動)
-
+    // srv表示
     Framework::GetSrvManager()->PreDraw();
 
+    // オフスクリーン描画
+    Framework::GetOffScreenSurface()->PreDraw();
+
     SceneManager::GetInstance()->Draw();
+
+    Framework::GetOffScreenSurface()->PostDraw();
+
+    // スワップチェーンの描画
+    Framework::GetDirectXCommon()->PreDraw();
 
     // 実際のcommandListのImGuiの描画コマンドを詰む
     Framework::GetImGuiManager()->Draw();

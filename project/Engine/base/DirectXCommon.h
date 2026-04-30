@@ -14,8 +14,19 @@
 
 class DirectXCommon {
 public:
+    D3D12_CPU_DESCRIPTOR_HANDLE GetRTVCPUDescriptorHandle(uint32_t index);
+
     D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
     D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE GetDSVCPUDescriptorHandle() const;
+
+    // rtvを獲得するためのやつ
+    uint32_t AllocateRTVIndex()
+    {
+        assert(nextRtvIndex_ < kMaxRTVCount); // 16個超えたらエラー
+        return nextRtvIndex_++;
+    }
 
     // シェーダーのコンパイル
     Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
@@ -76,7 +87,7 @@ private:
 
     void DepthBufferInitialize();
     // Resourceの設定
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+    Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 
     void DescriptorInitialize();
     uint32_t desriptorSizeSRV;
@@ -91,8 +102,12 @@ private:
     std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc {};
 
-    // RTVを二つ作るのでディスクリプタを2用意
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+    // ディスクリプタテーブル用の数
+    static inline const int kMaxRTVCount = 16;
+    uint32_t nextRtvIndex_ = 2;
+
+    // RTVを二つ作るのでディスクリプタを2つ用意[更新]オフスクリーンように増やした
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[kMaxRTVCount];
     static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
     static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
