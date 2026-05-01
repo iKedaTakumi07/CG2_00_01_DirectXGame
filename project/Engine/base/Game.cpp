@@ -62,6 +62,8 @@ void Game::Draw()
     // スワップチェーンの描画
     Framework::GetDirectXCommon()->PreDraw();
 
+    PostProcess::GetInstance()->PrepareObjectDraw();
+
     // 実際のcommandListのImGuiの描画コマンドを詰む
     Framework::GetImGuiManager()->Draw();
 

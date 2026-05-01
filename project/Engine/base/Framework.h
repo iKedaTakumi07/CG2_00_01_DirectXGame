@@ -8,6 +8,7 @@
 #include "ImGuiManager.h"
 #include "OffscreenSurface.h"
 #include "SrvManager.h"
+#include "PostProcess.h"
 class WinApp;
 class SpriteCommon;
 class Object3dCommon;
@@ -60,4 +61,6 @@ private:
     std::unique_ptr<BaseScene> baseScene = nullptr;
     // offscreen
     std::unique_ptr<OffscreenSurface> offscreenSurface = nullptr;
+    // postProcess
+    std::unique_ptr<PostProcess> postProcess = nullptr;
 };

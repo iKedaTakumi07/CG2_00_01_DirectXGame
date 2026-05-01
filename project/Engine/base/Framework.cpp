@@ -1,13 +1,13 @@
 #define DIRECTINPUT_VERSION 0x0800
 
 #include "Framework.h"
-#include "../scene/BaseScene.h"
+#include "../2d/SpriteCommon.h"
 #include "../3d/Camera.h"
-#include "DirectXCommon.h"
-#include "../io/Input.h"
 #include "../3d/ModelCommon.h"
 #include "../3d/Object3dCommon.h"
-#include "../2d/SpriteCommon.h"
+#include "../io/Input.h"
+#include "../scene/BaseScene.h"
+#include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "WinApp.h"
 
@@ -18,9 +18,9 @@
 
 #include <wrl.h>
 
-#include "../audio/Audio.h"
 #include "../3d/ModelManager.h"
 #include "../3d/ParticleManager.h"
+#include "../audio/Audio.h"
 #include "TextureManager.h"
 #include <DbgHelp.h>
 #include <strsafe.h>
@@ -70,6 +70,9 @@ void Framework::Initialize()
     uint32_t index = dxCommon->AllocateRTVIndex();
     offscreenSurface = std::make_unique<OffscreenSurface>();
     offscreenSurface->Initialize(dxCommon.get(), srvManager.get(), index);
+
+    PostProcess::GetInstance()->Initialize(dxCommon.get());
+    PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
 
     imguiManager = std::make_unique<ImGuiManager>();
     imguiManager->Initialize(dxCommon.get(), srvManager.get());
@@ -132,8 +135,6 @@ void Framework::Update()
 
     ParticleManager::getInstance()->Update();
 }
-
-
 
 void Framework::Finalize()
 {
