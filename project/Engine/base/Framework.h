@@ -6,7 +6,9 @@
 #include "../scene/BaseScene.h"
 #include "DirectXCommon.h"
 #include "ImGuiManager.h"
+#include "OffscreenSurface.h"
 #include "SrvManager.h"
+#include "PostProcess.h"
 class WinApp;
 class SpriteCommon;
 class Object3dCommon;
@@ -39,6 +41,7 @@ public:
     SrvManager* GetSrvManager() { return srvManager.get(); }
     Input* GetInput() { return input.get(); }
     ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
+    OffscreenSurface* GetOffScreenSurface() { return offscreenSurface.get(); }
     Camera* GetCamera() { return camera.get(); }
 
 private:
@@ -57,4 +60,8 @@ private:
     std::unique_ptr<Camera> camera = nullptr;
     // ベースシーン
     std::unique_ptr<BaseScene> baseScene = nullptr;
+    // offscreen
+    std::unique_ptr<OffscreenSurface> offscreenSurface = nullptr;
+    // postProcess
+    std::unique_ptr<PostProcess> postProcess = nullptr;
 };

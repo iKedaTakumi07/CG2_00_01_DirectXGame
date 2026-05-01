@@ -177,6 +177,12 @@
     <ClCompile Include="Engine\3d\Skybox\SkyBoxCommon.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\base\OffscreenSurface.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\base\PostProcess.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d.PS.hlsl">
@@ -187,6 +193,10 @@
     </FxCompile>
     <FxCompile Include="resources\shaders\Particle.PS.hlsl" />
     <FxCompile Include="resources\shaders\Particle.VS.hlsl" />
+    <FxCompile Include="resources\shaders\SkyboxVS.hlsl" />
+    <FxCompile Include="resources\shaders\SkyboxPS.hlsl" />
+    <FxCompile Include="resources\shaders\CopyImage.VS.hlsl" />
+    <FxCompile Include="resources\shaders\CopyImage.PS.hlsl" />
     <FxCompile Include="resources\shaders\Skybox.VS.hlsl" />
     <FxCompile Include="resources\shaders\Skybox.PS.hlsl" />
   </ItemGroup>
@@ -305,6 +315,12 @@
     <ClInclude Include="Engine\3d\Skybox\SkyBoxCommon.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\base\OffscreenSurface.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\base\PostProcess.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\Object3d.hlsli">
@@ -312,6 +328,7 @@
     </None>
     <None Include="resources\shaders\Particle.hlsli" />
     <None Include="resources\shaders\Skybox.hlsli" />
+    <None Include="resources\shaders\CopyImage.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

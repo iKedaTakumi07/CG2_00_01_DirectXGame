@@ -68,6 +68,13 @@ void Framework::Initialize()
     srvManager = std::make_unique<SrvManager>();
     srvManager->Initialize(dxCommon.get());
 
+    uint32_t index = dxCommon->AllocateRTVIndex();
+    offscreenSurface = std::make_unique<OffscreenSurface>();
+    offscreenSurface->Initialize(dxCommon.get(), srvManager.get(), index);
+
+    PostProcess::GetInstance()->Initialize(dxCommon.get());
+    PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
+
     imguiManager = std::make_unique<ImGuiManager>();
     imguiManager->Initialize(dxCommon.get(), srvManager.get());
 

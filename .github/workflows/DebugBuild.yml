@@ -6,10 +6,9 @@ on:
 env:
   SOLUTION_FILE_PATH: project/CG2.sln
   CONFIGURATION: Debug
-  PLATFORM_TOOLSET: v143
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Checkout

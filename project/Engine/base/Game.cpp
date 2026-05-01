@@ -50,11 +50,20 @@ void Game::Draw()
 {
     // draw
 
-    Framework::GetDirectXCommon()->PreDraw();
-
+    // srv表示
     Framework::GetSrvManager()->PreDraw();
 
+    // オフスクリーン描画
+    Framework::GetOffScreenSurface()->PreDraw();
+
     SceneManager::GetInstance()->Draw();
+
+    Framework::GetOffScreenSurface()->PostDraw();
+
+    // スワップチェーンの描画
+    Framework::GetDirectXCommon()->PreDraw();
+
+    PostProcess::GetInstance()->PrepareObjectDraw();
 
     // 実際のcommandListのImGuiの描画コマンドを詰む
     Framework::GetImGuiManager()->Draw();

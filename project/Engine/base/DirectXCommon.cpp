@@ -14,6 +14,11 @@ using namespace Microsoft::WRL;
 
 const uint32_t DirectXCommon::kMaxSRVCount = 512;
 
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetRTVCPUDescriptorHandle(uint32_t index)
+{
+    return GetCPUDescriptorHandle(rtvDescripotrHeap, desriptorSizeRTV, index);
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index)
 {
     return GetCPUDescriptorHandle(srvDescriptorHeap, desriptorSizeSRV, index);
@@ -22,6 +27,11 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t in
 D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index)
 {
     return GetGPUDescriptorHandle(srvDescriptorHeap, desriptorSizeSRV, index);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetDSVCPUDescriptorHandle() const
+{
+    return dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
@@ -37,6 +47,35 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::createDescriptorHeap
     // ディスクリプタヒープが作れなかったので起動できない
     assert(SUCCEEDED(hr));
     return DescripotrHeap;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, Vector4& clearColor)
+{
+    D3D12_RESOURCE_DESC desc {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 1;
+    desc.DepthOrArraySize = 1;
+    desc.Format = format;
+    desc.SampleDesc.Count = 1;
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    // レンダーターゲットとして使う
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    D3D12_HEAP_PROPERTIES heapProperies {};
+    heapProperies.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に作成
+
+    D3D12_CLEAR_VALUE clearValue;
+    clearValue.Format = format;
+    clearValue.Color[0] = clearColor.x;
+    clearValue.Color[1] = clearColor.y;
+    clearValue.Color[2] = clearColor.z;
+    clearValue.Color[3] = clearColor.w;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+    device->CreateCommittedResource(&heapProperies, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, IID_PPV_ARGS(&resource));
+
+    return resource;
 };
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
@@ -486,7 +525,7 @@ void DirectXCommon::DepthBufferInitialize()
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &depthClearValue, IID_PPV_ARGS(&resource));
+        &depthClearValue, IID_PPV_ARGS(&depthStencilResource));
 
     assert(SUCCEEDED(hr));
 }
@@ -499,7 +538,7 @@ void DirectXCommon::DescriptorInitialize()
     desriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
     // RTVデスクリプタヒープの生成
-    rtvDescripotrHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+    rtvDescripotrHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kMaxRTVCount, false);
     // SRV用のヒープでディスクリプタの数128。SRVはSharda内で触るものなので、ShaderVisibleはtrue
     srvDescriptorHeap = createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
     // DSV用のヒープでディスクリプタの数は1
@@ -538,7 +577,7 @@ void DirectXCommon::DepthStencilInitialize()
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
     // DSVHeapの先頭にDSVを作る
-    device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 void DirectXCommon::fenceInitialize()
