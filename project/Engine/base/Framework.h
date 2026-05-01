@@ -42,6 +42,7 @@ public:
     Input* GetInput() { return input.get(); }
     ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
     OffscreenSurface* GetOffScreenSurface() { return offscreenSurface.get(); }
+    Camera* GetCamera() { return camera.get(); }
 
 private:
     // ゲーム終了クラス

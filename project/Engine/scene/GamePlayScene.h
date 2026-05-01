@@ -8,6 +8,7 @@
 #include "../3d/ParticleEmitter.h"
 class Model;
 class Object3d;
+class Skybox;
 
 class GamePlayScene : public BaseScene {
 public:
@@ -29,7 +30,7 @@ private:
     std::unique_ptr<Model> model2;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Object3d> object3d2;
-
+   
     // スプライト
     std::list<std::unique_ptr<Sprite>> sprites;
 

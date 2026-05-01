@@ -34,6 +34,7 @@ void Game::Initialize()
 
     auto title = std::make_unique<TitleScene>();
     title->SetInput(Framework::GetInput());
+    title->SetCamera(Framework::GetCamera());
     SceneManager::GetInstance()->SetNextScene(std::move(title));
 }
 

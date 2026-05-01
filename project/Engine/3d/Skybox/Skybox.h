@@ -1,7 +1,16 @@
 #pragma once
+#include <cstdint>
+#include <d3d12.h>
+#include <string>
+#include <wrl.h>
+
 #include "../../base/Math.h"
+
 class SkyBoxCommon;
-class SpriteCommon;
+class Camera;
+
+class WinApp;
+class TextureManager;
 
 class Skybox {
 public:
@@ -9,17 +18,24 @@ public:
     void Initialize(std::string texturefilePath);
 
     // 更新
+    void Update();
+
+    // 更新
     void Draw();
+
+    // Set
+    void SetCamera(Camera* camera) { this->camera = camera; }
 
 private:
     void VertexResourceInitialize();
     void MaterialResourceInitialize();
     void TransMatrixResourceInitialize();
 
+private:
     SkyBoxCommon* SkyBoxCommon_ = nullptr;
     Camera* camera = nullptr;
 
-    VertexData* vertexData = nullptr;
+    SkyboxVertexData* vertexData = nullptr;
 
     // Skybox用のマテリアルリソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
@@ -40,5 +56,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
 
     uint32_t textureIndex_ = 0;
+    uint32_t* indexData = nullptr;
     std::string texturefilePath_;
 };
