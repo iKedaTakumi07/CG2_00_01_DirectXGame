@@ -193,8 +193,6 @@
     </FxCompile>
     <FxCompile Include="resources\shaders\Particle.PS.hlsl" />
     <FxCompile Include="resources\shaders\Particle.VS.hlsl" />
-    <FxCompile Include="resources\shaders\SkyboxVS.hlsl" />
-    <FxCompile Include="resources\shaders\SkyboxPS.hlsl" />
     <FxCompile Include="resources\shaders\CopyImage.VS.hlsl" />
     <FxCompile Include="resources\shaders\CopyImage.PS.hlsl" />
     <FxCompile Include="resources\shaders\Skybox.VS.hlsl" />
