@@ -63,6 +63,32 @@ Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2)
     return num;
 }
 
+Matrix4x4 Transpose(const Matrix4x4& m)
+{
+    Matrix4x4 num;
+    num.m[0][0] = m.m[0][0];
+    num.m[1][0] = m.m[0][1];
+    num.m[2][0] = m.m[0][2];
+    num.m[3][0] = m.m[0][3];
+
+    num.m[0][1] = m.m[1][0];
+    num.m[1][1] = m.m[1][1];
+    num.m[2][1] = m.m[1][2];
+    num.m[3][1] = m.m[1][3];
+
+    num.m[0][2] = m.m[2][0];
+    num.m[1][2] = m.m[2][1];
+    num.m[2][2] = m.m[2][2];
+    num.m[3][2] = m.m[2][3];
+
+    num.m[0][3] = m.m[3][0];
+    num.m[1][3] = m.m[3][1];
+    num.m[2][3] = m.m[3][2];
+    num.m[3][3] = m.m[3][3];
+
+    return num;
+}
+
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
 {
     Matrix4x4 rotateX = MakeRotateXMatrix(rotate.x);

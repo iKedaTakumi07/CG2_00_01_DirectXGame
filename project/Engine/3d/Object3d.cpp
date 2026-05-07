@@ -1,11 +1,12 @@
 #include "Object3d.h"
+#include "../base/TextureManager.h"
 #include "Camera.h"
 #include "Model.h"
 #include "ModelManager.h"
 #include "Object3dCommon.h"
-#include "../base/TextureManager.h"
 #include <cassert>
 #include <fstream>
+#include <numbers>
 
 MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
@@ -117,6 +118,9 @@ void Object3d::Initialize()
 
     TransMatrixResourceInitialize();
     directionalLightInitialize();
+    cameraDataResourceInitialize();
+    pointLightInitialize();
+    spotLightInitialize();
 }
 
 void Object3d::Update()
@@ -131,7 +135,9 @@ void Object3d::Update()
     }
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
+    transformationMatrixData->worldInverseTranspose = Transpose(Inverse(worldMatrix));
 
+    CameraForGPUData->worldPosition = camera->GetTranslate();
     directionalLightData->direction = Normalize(directionalLightData->direction);
 }
 
@@ -139,7 +145,9 @@ void Object3d::Draw()
 {
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
-
+    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(4, CameraDataResourceModel->GetGPUVirtualAddress());
+    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLigth->GetGPUVirtualAddress());
+    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLigth->GetGPUVirtualAddress());
     if (model) {
         model->Draw();
     }
@@ -171,4 +179,46 @@ void Object3d::directionalLightInitialize()
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
     directionalLightData->intensity = 1.0f;
+}
+
+void Object3d::cameraDataResourceInitialize()
+{
+    // sphere用のマテリアルリソースを作る
+    CameraDataResourceModel = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(CameraForGPU));
+  
+    // mapして書き込み
+    CameraDataResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&CameraForGPUData));
+    // 今回は白を書き込んでみる
+    CameraForGPUData->worldPosition = cameraTransform.translate;
+}
+
+void Object3d::pointLightInitialize()
+{
+    pointLigth = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(PointLigth));
+   
+    // mapして書き込み
+    pointLigth->Map(0, nullptr, reinterpret_cast<void**>(&PointLigthData));
+    // 今回は白を書き込んでみる
+    PointLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    PointLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
+    PointLigthData->intensity = 1.0f;
+    PointLigthData->decay = 0.1f;
+    PointLigthData->radius = 10.0f;
+}
+
+void Object3d::spotLightInitialize()
+{
+    spotLigth = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(SpotLigth));
+    
+    // mapして書き込み
+    spotLigth->Map(0, nullptr, reinterpret_cast<void**>(&SpotLigthData));
+    // 今回は白を書き込んでみる
+    SpotLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    SpotLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
+    SpotLigthData->distance = 7.0f;
+    SpotLigthData->direction = Normalize({ -1.0f, -1.0f, 0.0f });
+    SpotLigthData->intensity = 4.0f;
+    SpotLigthData->decay = 2.0f;
+    SpotLigthData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
+    SpotLigthData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 4.0f);
 }

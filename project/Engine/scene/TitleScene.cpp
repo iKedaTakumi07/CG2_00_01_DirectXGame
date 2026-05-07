@@ -32,9 +32,19 @@ TitleScene::~TitleScene() = default;
 void TitleScene::Initialize()
 {
     TextureManager::getInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
+    TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+
+    ModelManager::GetInstance()->LoadModel("axis.obj");
 
     skydox = std::make_unique<Skybox>();
     skydox->Initialize("resources/rostock_laage_airport_4k.dds");
+
+    object3d = std::make_unique<Object3d>();
+    object3d->Initialize();
+
+    model = std::make_unique<Model>();
+    model->Initialize("resources", "axis.obj");
+    object3d->SetModel(model.get());
 }
 
 void TitleScene::Finalize()
@@ -57,11 +67,19 @@ void TitleScene::Update()
     }
 
     skydox->Update();
+
+    object3d->Update();
 }
 
 void TitleScene::Draw()
 {
+
+    //
+    // モデルデータ
+    //
     Object3dCommon::GetInstance()->PrepareObjectDraw();
+
+    object3d->Draw();
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
     skydox->Draw();

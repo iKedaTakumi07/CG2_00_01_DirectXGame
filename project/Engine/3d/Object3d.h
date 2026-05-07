@@ -51,6 +51,9 @@ public:
 private:
     void TransMatrixResourceInitialize();
     void directionalLightInitialize();
+    void cameraDataResourceInitialize();
+    void pointLightInitialize();
+    void spotLightInitialize();
 
     Object3dCommon* object3dCommon = nullptr;
     WinApp* winApp_ = nullptr;
@@ -66,6 +69,13 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightMatrixResource;
     // データを書き込み
     DirectionalLight* directionalLightData = nullptr;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> CameraDataResourceModel;
+    CameraForGPU* CameraForGPUData = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> pointLigth;
+    PointLigth* PointLigthData = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> spotLigth;
+    SpotLigth* SpotLigthData = nullptr;
 
     Transform transform = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameraTransform;
