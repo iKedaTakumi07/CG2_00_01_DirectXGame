@@ -130,6 +130,9 @@ void Framework::Update()
 
     input->Update();
 
+    Vector3 cameraPos = camera->GetTranslate();
+    Vector3 cameraRot = camera->GetRotate();
+
 #ifdef USE_IMGUI
     ImGui::ShowDemoWindow();
 
@@ -138,9 +141,6 @@ void Framework::Update()
     ImGui::DragFloat3("Rotation", &cameraRot.x, 0.01f);
     ImGui::End();
 #endif // USE_IMGUI
-
-    Vector3 cameraPos = camera->GetTranslate();
-    Vector3 cameraRot = camera->GetRotate();
 
     camera->SetTranslate(cameraPos);
     camera->SetRotate(cameraRot);
