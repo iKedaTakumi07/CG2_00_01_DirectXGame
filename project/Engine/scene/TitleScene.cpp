@@ -47,6 +47,7 @@ void TitleScene::Initialize()
 
     model = std::make_unique<Model>();
     model->Initialize("resources", "terrain.obj");
+    model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
 }
 
@@ -61,7 +62,6 @@ void TitleScene::Update()
     Camera* camera = BaseScene::GetCamera();
 
     skydox->SetCamera(camera);
-   
 
     if (input->TriggerKey(DIK_F1)) {
         auto scene = std::make_unique<GamePlayScene>();

@@ -19,6 +19,7 @@ void Model::Draw()
     modelCommon_->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
     modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
     modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(modelData.material.textureFilePath));
+    modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
     modelCommon_->GetDxCommon()->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
 
@@ -48,4 +49,5 @@ void Model::MaterialResourceInitialize()
     materialData->enableLighting = true;
     materialData->shininess = 20.0f;
     materialData->uvTransform = MakeIdentity4x4();
+    materialData->evnironmentCoefficient = 0.5f;
 }
