@@ -30,9 +30,7 @@ public:
 private:
     // 3dモデル
     std::unique_ptr<Model> model;
-    std::unique_ptr<Model> model2;
     std::unique_ptr<Object3d> object3d;
-    std::unique_ptr<Object3d> object3d2;
 
     std::unique_ptr<Skybox> skydox;
 };

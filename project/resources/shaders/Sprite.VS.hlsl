@@ -1,10 +1,10 @@
-#include "object3d.hlsli"
+#include "Sprite.hlsli"
+
 
 struct TransformationMatrix
 {
     float32_t4x4 WVP;
     float32_t4x4 World;
-    float32_t4x4 worldInverseTranspose;
 };
 
 
@@ -21,13 +21,10 @@ struct VertexShaderInput
 VertexShaderOutput main(VertexShaderInput input)
 {
     VertexShaderOutput output;
-    // WVP
     output.position = mul(input.position, gTransformationMatrix.WVP);
     output.texcoord = input.texcoord;
+    output.normal = normalize(mul(input.normal, (float32_t3x3) gTransformationMatrix.World));
     
-    output.normal = normalize(mul(input.normal, (float32_t3x3) gTransformationMatrix.worldInverseTranspose));
-    
-    output.worldPosition = mul(input.position, gTransformationMatrix.World).xyz;
    
     
     return output;

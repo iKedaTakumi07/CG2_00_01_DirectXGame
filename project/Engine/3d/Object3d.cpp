@@ -1,11 +1,15 @@
 #include "Object3d.h"
+#include "../base/TextureManager.h"
 #include "Camera.h"
 #include "Model.h"
 #include "ModelManager.h"
 #include "Object3dCommon.h"
-#include "../base/TextureManager.h"
 #include <cassert>
 #include <fstream>
+#include <numbers>
+#ifdef USE_IMGUI
+#include "../externals/imgui/imgui.h"
+#endif // USE_IMGUI
 
 MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
@@ -117,29 +121,73 @@ void Object3d::Initialize()
 
     TransMatrixResourceInitialize();
     directionalLightInitialize();
+    cameraDataResourceInitialize();
+    pointLightInitialize();
+    spotLightInitialize();
 }
 
 void Object3d::Update()
 {
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 worldViewProjectionMatrix;
-    if (camera) {
-        const Matrix4x4& ViewProjectionMatrix = camera->GetViewProjectionMatrix();
-        worldViewProjectionMatrix = Multiply(worldMatrix, ViewProjectionMatrix);
-    } else {
-        worldViewProjectionMatrix = worldMatrix;
-    }
+    const Matrix4x4& ViewProjectionMatrix = camera->GetViewProjectionMatrix();
+    worldViewProjectionMatrix = Multiply(worldMatrix, ViewProjectionMatrix);
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
+    transformationMatrixData->worldInverseTranspose = Transpose(Inverse(worldMatrix));
 
     directionalLightData->direction = Normalize(directionalLightData->direction);
+}
+
+void Object3d::DrawImGui()
+{
+#ifdef USE_IMGUI
+    ImGui::Begin("Lighting Control");
+
+    ImGui::DragFloat3("Translate##Model", &transform.translate.x, 0.01f);
+    ImGui::SliderAngle("RotateX##Model", &transform.rotate.x);
+    ImGui::SliderAngle("RotateY##Model", &transform.rotate.y);
+    ImGui::SliderAngle("RotateZ##Model", &transform.rotate.z);
+
+    // --- Directional Light ---
+    if (ImGui::CollapsingHeader("Directional Light")) {
+        ImGui::SliderFloat3("direction##ModelLight", &directionalLightData->direction.x, -1.0f, 1.0f);
+        ImGui::ColorEdit4("Color##ModelLight", &(directionalLightData->color).x);
+        ImGui::DragFloat("intensity##ModelLight", &directionalLightData->intensity, 0.01f);
+    }
+
+    // --- Point Light ---
+    if (ImGui::CollapsingHeader("Point Light")) {
+        ImGui::ColorEdit4("color##PointLigth", &(PointLigthData->color).x);
+        ImGui::DragFloat3("Position##PointLigth", &PointLigthData->position.x, 0.01f);
+        ImGui::DragFloat("radius##PointLigth", &PointLigthData->radius, 0.01f);
+        ImGui::DragFloat("intensity##PointLigth", &PointLigthData->intensity, 0.01f);
+        ImGui::DragFloat("decay##PointLigth", &PointLigthData->decay, 0.01f);
+    }
+
+    // --- Spot Light ---
+    if (ImGui::CollapsingHeader("Spot Light")) {
+        ImGui::ColorEdit4("color##SpotLigth", &(SpotLigthData->color).x);
+        ImGui::DragFloat3("position##SpotLigth", &SpotLigthData->position.x, 0.01f);
+        ImGui::DragFloat("intensity##SpotLigth", &SpotLigthData->intensity, 0.01f);
+        ImGui::DragFloat3("direction##SpotLigth", &SpotLigthData->direction.x, 0.01f);
+        ImGui::DragFloat("distance##SpotLigth", &SpotLigthData->distance, 0.01f);
+        ImGui::DragFloat("decay##SpotLigth", &SpotLigthData->decay, 0.01f);
+        ImGui::DragFloat("cosAngle##SpotLigth", &SpotLigthData->cosAngle, 0.01f);
+        ImGui::DragFloat("cosFalloffStart##SpotLigth", &SpotLigthData->cosFalloffStart, 0.01f);
+    }
+
+    ImGui::End();
+#endif // USE_IMGUI
 }
 
 void Object3d::Draw()
 {
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
-
+    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(4, CameraDataResourceModel->GetGPUVirtualAddress());
+    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLigth->GetGPUVirtualAddress());
+    object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLigth->GetGPUVirtualAddress());
     if (model) {
         model->Draw();
     }
@@ -160,6 +208,7 @@ void Object3d::TransMatrixResourceInitialize()
     // 単位行列を書き込む
     transformationMatrixData->WVP = MakeIdentity4x4();
     transformationMatrixData->world = MakeIdentity4x4();
+    transformationMatrixData->worldInverseTranspose = MakeIdentity4x4();
 }
 
 void Object3d::directionalLightInitialize()
@@ -169,6 +218,48 @@ void Object3d::directionalLightInitialize()
     directionalLightMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
     // 書き込み
     directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+    directionalLightData->direction = { 0.0f, 0.0f, -1.0f };
     directionalLightData->intensity = 1.0f;
+}
+
+void Object3d::cameraDataResourceInitialize()
+{
+    // sphere用のマテリアルリソースを作る
+    CameraDataResourceModel = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(CameraForGPU));
+
+    // mapして書き込み
+    CameraDataResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&CameraForGPUData));
+    // 今回は白を書き込んでみる
+    CameraForGPUData->worldPosition = cameraTransform.translate;
+}
+
+void Object3d::pointLightInitialize()
+{
+    pointLigth = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(PointLigth));
+
+    // mapして書き込み
+    pointLigth->Map(0, nullptr, reinterpret_cast<void**>(&PointLigthData));
+    // 今回は白を書き込んでみる
+    PointLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    PointLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
+    PointLigthData->intensity = 1.0f;
+    PointLigthData->decay = 0.1f;
+    PointLigthData->radius = 0.0f;
+}
+
+void Object3d::spotLightInitialize()
+{
+    spotLigth = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(SpotLigth));
+
+    // mapして書き込み
+    spotLigth->Map(0, nullptr, reinterpret_cast<void**>(&SpotLigthData));
+    // 今回は白を書き込んでみる
+    SpotLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    SpotLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
+    SpotLigthData->distance = 0.0f;
+    SpotLigthData->direction = Normalize({ -1.0f, -1.0f, 0.0f });
+    SpotLigthData->intensity = 4.0f;
+    SpotLigthData->decay = 2.0f;
+    SpotLigthData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
+    SpotLigthData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 4.0f);
 }
