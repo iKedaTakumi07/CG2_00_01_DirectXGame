@@ -41,7 +41,7 @@ struct SpotLigth
 ConstantBuffer<Material> gMaterial : register(b0);
 Texture2D<float32_t4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
-TextureCube<float32_t4> gEnvironmentTexture : register(t1);
+//TextureCube<float32_t4> gEnvironmentTexture : register(t1);
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 ConstantBuffer<Camera> gCamera : register(b2);
 ConstantBuffer<PointLight> gPointLight : register(b3);
@@ -57,9 +57,11 @@ struct PixelShaderOutput
 PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
+
+    // UV
     float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
-    
+
     // 早期リターン
     if (textureColor.a == 0.0)
     {
@@ -73,7 +75,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         // half lambert
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        
+    
         // 拡散反射
         float32_t3 DirectionalLight_diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
         
@@ -90,7 +92,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         
         /* pointLight */
         
-        // 入射光 
+         // 入射光 
         float32_t3 pointLightDirection = normalize(gPointLight.position - input.worldPosition);
         // ポイントライトへの距離
         float32_t distance = length(gPointLight.position - input.worldPosition);
@@ -131,8 +133,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         
         // 鏡面反射
         // カメラ方向のベクトル/ハーフベクトル
-        float32_t3 viewDir = normalize(gCamera.worldPosition - input.worldPosition);
-        float32_t3 spotHalfVector = normalize(spotLightDir + viewDir);
+        float32_t3 spotHalfVector = normalize(spotLightDir + toEye);
         float32_t spotNDotH = saturate(dot(normalize(input.normal), spotHalfVector));
         
         // 鏡面反射
@@ -143,7 +144,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         spDiffuse *= spotLightAttenuation;
         spSpecular *= spotLightAttenuation;
         
-         // 拡散反射 + 鏡面反射
+        // 拡散反射 + 鏡面反射
         output.color.rgb = DirectionalLight_diffuse + ptDiffuse + spDiffuse + DirectionalLight_specular + ptSpecular + spSpecular;
         // αはいつも通り
         output.color.a = gMaterial.color.a * textureColor.a;
@@ -151,6 +152,12 @@ PixelShaderOutput main(VertexShaderOutput input)
     else
     {
         output.color = gMaterial.color * textureColor;
+    }
+    
+     // 最終的なαチェック
+    if (output.color.a <= 0.0f)
+    {
+        discard;
     }
 
     return output;

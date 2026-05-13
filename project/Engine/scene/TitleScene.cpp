@@ -33,17 +33,20 @@ void TitleScene::Initialize()
 {
     TextureManager::getInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
+    TextureManager::getInstance()->LoadTexture("resources/grass.png");
 
     ModelManager::GetInstance()->LoadModel("axis.obj");
+    ModelManager::GetInstance()->LoadModel("terrain.obj");
 
     skydox = std::make_unique<Skybox>();
     skydox->Initialize("resources/rostock_laage_airport_4k.dds");
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
+    object3d->SetCamera(BaseScene::GetCamera());
 
     model = std::make_unique<Model>();
-    model->Initialize("resources", "axis.obj");
+    model->Initialize("resources", "terrain.obj");
     object3d->SetModel(model.get());
 }
 
@@ -58,10 +61,12 @@ void TitleScene::Update()
     Camera* camera = BaseScene::GetCamera();
 
     skydox->SetCamera(camera);
+   
 
-    if (input->TriggerKey(DIK_0)) {
+    if (input->TriggerKey(DIK_F1)) {
         auto scene = std::make_unique<GamePlayScene>();
         scene->SetInput(BaseScene::GetInput());
+        scene->SetCamera(BaseScene::GetCamera());
 
         SceneManager::GetInstance()->SetNextScene(std::move(scene));
     }
@@ -69,6 +74,9 @@ void TitleScene::Update()
     skydox->Update();
 
     object3d->Update();
+
+    // IMGUI
+    object3d->DrawImGui();
 }
 
 void TitleScene::Draw()

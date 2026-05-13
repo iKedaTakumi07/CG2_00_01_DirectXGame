@@ -90,9 +90,10 @@ void GamePlayScene::Update()
 {
     Input* input = BaseScene::GetInput();
 
-    if (input->TriggerKey(DIK_0)) {
+    if (input->TriggerKey(DIK_F1)) {
         auto scene = std::make_unique<TitleScene>();
         scene->SetInput(GetInput());
+        scene->SetCamera(BaseScene::GetCamera());
 
         SceneManager::GetInstance()->SetNextScene(std::move(scene));
     }

@@ -32,6 +32,8 @@ public:
 
     void Update();
 
+    void DrawImGui();
+
     // 更新
     void Draw();
 
