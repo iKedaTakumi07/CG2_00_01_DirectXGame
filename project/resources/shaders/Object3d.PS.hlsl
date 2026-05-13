@@ -6,6 +6,7 @@ struct Material
     int32_t enableLighting;
     float32_t4x4 uvTransform;
     float32_t shininess;
+    float32_t evnironmentCoefficient;
 };
 struct DirectionalLight
 {
@@ -38,14 +39,14 @@ struct SpotLigth
 };
 
 
-ConstantBuffer<Material> gMaterial : register(b0);
 Texture2D<float32_t4> gTexture : register(t0);
-SamplerState gSampler : register(s0);
-//TextureCube<float32_t4> gEnvironmentTexture : register(t1);
+TextureCube<float32_t4> gEnvironmentTexture : register(t1);
+ConstantBuffer<Material> gMaterial : register(b0);
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 ConstantBuffer<Camera> gCamera : register(b2);
 ConstantBuffer<PointLight> gPointLight : register(b3);
 ConstantBuffer<SpotLigth> gSpotLigth : register(b4);
+SamplerState gSampler : register(s0);
 
 
 struct PixelShaderOutput
@@ -144,8 +145,14 @@ PixelShaderOutput main(VertexShaderOutput input)
         spDiffuse *= spotLightAttenuation;
         spSpecular *= spotLightAttenuation;
         
+        /* 環境マップ */
+        float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+        float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+        float32_t4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+        environmentColor = environmentColor * gMaterial.evnironmentCoefficient;
+        
         // 拡散反射 + 鏡面反射
-        output.color.rgb = DirectionalLight_diffuse + ptDiffuse + spDiffuse + DirectionalLight_specular + ptSpecular + spSpecular;
+        output.color.rgb = DirectionalLight_diffuse + ptDiffuse + spDiffuse + DirectionalLight_specular + ptSpecular + spSpecular + environmentColor.rgb;
         // αはいつも通り
         output.color.a = gMaterial.color.a * textureColor.a;
     }

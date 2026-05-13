@@ -26,6 +26,9 @@ public:
     // Set
     void SetCamera(Camera* camera) { this->camera = camera; }
 
+    // Get
+    const std::string& GetTextureFilePath() const { return texturefilePath_; }
+
 private:
     void VertexResourceInitialize();
     void MaterialResourceInitialize();
