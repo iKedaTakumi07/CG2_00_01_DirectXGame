@@ -9,7 +9,9 @@ public:
         kNormal, // 通常コピー
         kGrayscale, // グレースケール
         kSepiascale, // セピア調
-        kVignette // ヴィネッティング
+        kVignette, // ヴィネッティング
+        kBoxFillter, // ボックスフィルター(3x3のカーネル)
+        kBoxFillter5x5, // ボックスフィルター(5x5のカーネル)
     };
 
     // コンストラクタに渡すための鍵
@@ -72,6 +74,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGrayscale_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateSepiascale_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateVignette = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillter = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillter5x5 = nullptr;
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 
