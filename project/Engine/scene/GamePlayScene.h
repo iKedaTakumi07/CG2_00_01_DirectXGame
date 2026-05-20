@@ -25,6 +25,8 @@ public:
     void Draw() override;
 
 private:
+    std::unique_ptr<Skybox> skydox;
+
     // 3dモデル
     std::unique_ptr<Model> model;
     std::unique_ptr<Model> model2;

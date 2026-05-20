@@ -10,7 +10,7 @@ void OffscreenSurface::Initialize(DirectXCommon* dxcommon, SrvManager* srvManage
     this->rtvIndex = rtvIndex;
 
     // テクスチャリソース作成
-    Vector4 clearColor = { 1.0f, 0.0f, 0.0f, 1.0f }; // わかりやすいようにいったん赤
+    Vector4 clearColor = { 0.1f, 0.25f, 0.5f, 1.0f };
     resource = dxcommon->CreateRenderTextureResource(WinApp::KClientWidth, WinApp::KClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, clearColor);
 
     // RTVの作成
@@ -64,7 +64,7 @@ void OffscreenSurface::PreDraw()
 
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxCommon_->GetDSVCPUDescriptorHandle();
     commandList->OMSetRenderTargets(1, &rtvHandleCPU, false, &dsvHandle);
-    float clearColor[] = { 1.0f, 0.0f, 0.0f, 1.0f }; // わかりやすいようにいったん赤
+    float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f }; 
 
     // 視座―
     D3D12_VIEWPORT viewport = { 0.0f, 0.0f, (float)WinApp::KClientWidth, (float)WinApp::KClientHeight, 0.0f, 1.0f };
