@@ -5,6 +5,12 @@ class Camera;
 
 class PostProcess {
 public:
+    enum class Mode {
+        kNormal, // 通常コピー
+        kGrayscale, // グレースケール
+        kSepiascale // セピア調
+    };
+
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
@@ -32,6 +38,13 @@ public:
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
     void SetsrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->srvHandle = srvHandle; }
 
+    // モード制御用
+    void SetMode(Mode mode) { this->currentMode_ = mode; }
+    Mode GetMode() const { return currentMode_; }
+
+    // ImGuiのUIを描画する関数
+    void DrawImGui();
+
     // コピー禁止
     PostProcess(const PostProcess&) = delete;
     PostProcess& operator=(const PostProcess&) = delete;
@@ -55,6 +68,11 @@ private:
     DirectXCommon* dxCommon_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGrayscale_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateSepiascale_ = nullptr;
 
-   D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
+
+    // 現在のモード
+    Mode currentMode_ = Mode::kNormal;
 };

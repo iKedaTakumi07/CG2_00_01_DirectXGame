@@ -44,6 +44,7 @@ void Game::Update()
     Framework::Update();
 
     SceneManager::GetInstance()->Update();
+    PostProcess::GetInstance()->DrawImGui();
 }
 
 void Game::Draw()

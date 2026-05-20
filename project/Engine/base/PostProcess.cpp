@@ -1,4 +1,5 @@
 #include "PostProcess.h"
+#include "../../externals/imgui/imgui.h"
 #include "../base/Logger.h"
 #include "OffscreenSurface.h"
 #include <cassert>
@@ -15,10 +16,18 @@ PostProcess* PostProcess::GetInstance()
 void PostProcess::PrepareObjectDraw()
 {
     auto commandList = dxCommon_->GetCommandList();
-    
+
     // RootSignatureを設定。PSOに設定しているけど別途設定が必要
     dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-    dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+
+    if (currentMode_ == Mode::kNormal) {
+        dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+    } else if (currentMode_ == Mode::kGrayscale) {
+        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateGrayscale_.Get());
+    } else if (currentMode_ == Mode::kSepiascale) {
+        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateSepiascale_.Get());
+    }
+
     dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     commandList->SetGraphicsRootDescriptorTable(0, srvHandle);
@@ -32,6 +41,28 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     dxCommon_ = dxcommon;
 
     graphicsPipelineInitialize(dxCommon_);
+}
+
+void PostProcess::DrawImGui()
+{
+    ImGui::Begin("PostProcess Settings");
+
+    int modeIndex = static_cast<int>(currentMode_);
+
+    // ラジオボタンで切り替え
+    if (ImGui::RadioButton("Normal", &modeIndex, 0)) {
+        currentMode_ = Mode::kNormal;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Grayscale", &modeIndex, 1)) {
+        currentMode_ = Mode::kGrayscale;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Sepiascale", &modeIndex, 2)) {
+        currentMode_ = Mode::kSepiascale;
+    }
+
+    ImGui::End();
 }
 
 void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)
@@ -123,11 +154,17 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
     // Shaderをコンパイルする
-    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/CopyImage.VS.hlsl", L"vs_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/Fullscreen.VS.hlsl", L"vs_6_0");
     assert(vertexShaderBlob != nullptr);
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = dxcommon->CompileShader(L"resources/shaders/CopyImage.PS.hlsl", L"ps_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = dxcommon->CompileShader(L"resources/shaders/Fullscreen.PS.hlsl", L"ps_6_0");
     assert(pixeShaderBlob != nullptr);
+
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderGrayscale = dxcommon->CompileShader(L"resources/shaders/Grayscale.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderGrayscale != nullptr);
+
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderSepiascale = dxcommon->CompileShader(L"resources/shaders/Sepiascale.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderSepiascale != nullptr);
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
@@ -159,7 +196,21 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
     // 実際に生成
     HRESULT hr;
+
+    // 通常版
     graphicsPipelineState = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
+    assert(SUCCEEDED(hr));
+
+    // グレースケール
+    graphicsPipelineStateDesc.PS = { pixeShaderGrayscale->GetBufferPointer(), pixeShaderGrayscale->GetBufferSize() };
+    pipelineStateGrayscale_ = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateGrayscale_));
+    assert(SUCCEEDED(hr));
+
+    // セピア調
+    graphicsPipelineStateDesc.PS = { pixeShaderSepiascale->GetBufferPointer(), pixeShaderSepiascale->GetBufferSize() };
+    pipelineStateSepiascale_ = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateSepiascale_));
     assert(SUCCEEDED(hr));
 }
