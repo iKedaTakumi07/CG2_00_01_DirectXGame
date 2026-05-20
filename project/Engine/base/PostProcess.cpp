@@ -26,6 +26,8 @@ void PostProcess::PrepareObjectDraw()
         dxCommon_->GetCommandList()->SetPipelineState(pipelineStateGrayscale_.Get());
     } else if (currentMode_ == Mode::kSepiascale) {
         dxCommon_->GetCommandList()->SetPipelineState(pipelineStateSepiascale_.Get());
+    } else if (currentMode_ == Mode::kVignette) {
+        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateVignette.Get());
     }
 
     dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -60,6 +62,10 @@ void PostProcess::DrawImGui()
     ImGui::SameLine();
     if (ImGui::RadioButton("Sepiascale", &modeIndex, 2)) {
         currentMode_ = Mode::kSepiascale;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Vignette", &modeIndex, 3)) {
+        currentMode_ = Mode::kVignette;
     }
 
     ImGui::End();
@@ -166,6 +172,9 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderSepiascale = dxcommon->CompileShader(L"resources/shaders/Sepiascale.PS.hlsl", L"ps_6_0");
     assert(pixeShaderSepiascale != nullptr);
 
+      Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderVignette = dxcommon->CompileShader(L"resources/shaders/Vignette.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderVignette != nullptr);
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
@@ -212,5 +221,11 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.PS = { pixeShaderSepiascale->GetBufferPointer(), pixeShaderSepiascale->GetBufferSize() };
     pipelineStateSepiascale_ = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateSepiascale_));
+    assert(SUCCEEDED(hr));
+
+     // セピア調
+    graphicsPipelineStateDesc.PS = { pixeShaderVignette->GetBufferPointer(), pixeShaderVignette->GetBufferSize() };
+    pipelineStateVignette = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateVignette));
     assert(SUCCEEDED(hr));
 }

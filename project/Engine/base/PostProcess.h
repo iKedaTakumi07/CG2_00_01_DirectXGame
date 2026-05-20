@@ -8,7 +8,8 @@ public:
     enum class Mode {
         kNormal, // 通常コピー
         kGrayscale, // グレースケール
-        kSepiascale // セピア調
+        kSepiascale, // セピア調
+        kVignette // ヴィネッティング
     };
 
     // コンストラクタに渡すための鍵
@@ -70,6 +71,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGrayscale_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateSepiascale_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateVignette = nullptr;
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 
