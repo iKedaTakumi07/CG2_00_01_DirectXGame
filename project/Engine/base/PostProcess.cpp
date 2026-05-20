@@ -28,6 +28,10 @@ void PostProcess::PrepareObjectDraw()
         dxCommon_->GetCommandList()->SetPipelineState(pipelineStateSepiascale_.Get());
     } else if (currentMode_ == Mode::kVignette) {
         dxCommon_->GetCommandList()->SetPipelineState(pipelineStateVignette.Get());
+    } else if (currentMode_ == Mode::kBoxFillter) {
+        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateBoxFillter.Get());
+    } else if (currentMode_ == Mode::kBoxFillter5x5) {
+        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateBoxFillter5x5.Get());
     }
 
     dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -66,6 +70,15 @@ void PostProcess::DrawImGui()
     ImGui::SameLine();
     if (ImGui::RadioButton("Vignette", &modeIndex, 3)) {
         currentMode_ = Mode::kVignette;
+    }
+
+    // 行ずらし
+    if (ImGui::RadioButton("BoxFillter", &modeIndex, 4)) {
+        currentMode_ = Mode::kBoxFillter;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("BoxFillter5x5", &modeIndex, 5)) {
+        currentMode_ = Mode::kBoxFillter5x5;
     }
 
     ImGui::End();
@@ -172,8 +185,14 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderSepiascale = dxcommon->CompileShader(L"resources/shaders/Sepiascale.PS.hlsl", L"ps_6_0");
     assert(pixeShaderSepiascale != nullptr);
 
-      Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderVignette = dxcommon->CompileShader(L"resources/shaders/Vignette.PS.hlsl", L"ps_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderVignette = dxcommon->CompileShader(L"resources/shaders/Vignette.PS.hlsl", L"ps_6_0");
     assert(pixeShaderVignette != nullptr);
+
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFillter = dxcommon->CompileShader(L"resources/shaders/BoxFillter.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderBoxFillter != nullptr);
+
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFillter5x5 = dxcommon->CompileShader(L"resources/shaders/BoxFillter5x5.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderBoxFillter5x5 != nullptr);
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
@@ -223,9 +242,21 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateSepiascale_));
     assert(SUCCEEDED(hr));
 
-     // セピア調
+    // ヴィネッティング
     graphicsPipelineStateDesc.PS = { pixeShaderVignette->GetBufferPointer(), pixeShaderVignette->GetBufferSize() };
     pipelineStateVignette = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateVignette));
+    assert(SUCCEEDED(hr));
+
+    // ボックスフィルター
+    graphicsPipelineStateDesc.PS = { pixeShaderBoxFillter->GetBufferPointer(), pixeShaderBoxFillter->GetBufferSize() };
+    pipelineStateBoxFillter = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFillter));
+    assert(SUCCEEDED(hr));
+
+    // ボックスフィルター(5x5のカーネル)
+    graphicsPipelineStateDesc.PS = { pixeShaderBoxFillter5x5->GetBufferPointer(), pixeShaderBoxFillter5x5->GetBufferSize() };
+    pipelineStateBoxFillter5x5 = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFillter5x5));
     assert(SUCCEEDED(hr));
 }
