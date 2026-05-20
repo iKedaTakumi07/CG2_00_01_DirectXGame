@@ -179,7 +179,7 @@ void Object3d::DrawImGui()
 
     if (ImGui::CollapsingHeader("materialData")) {
         Material* materialData = model->GetmaterialData();
-        ImGui::DragFloat("cosAngle##SpotLigth", &materialData->evnironmentCoefficient, 0.01f);
+        ImGui::DragFloat("evnironmentCoefficient##materialData", &materialData->evnironmentCoefficient, 0.01f);
         model->SetMaterialDataEvnironmentCoefficient(materialData->evnironmentCoefficient);
     }
     ImGui::End();

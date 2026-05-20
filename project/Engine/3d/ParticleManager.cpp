@@ -7,19 +7,27 @@
 #include <cassert>
 #include <numbers>
 
-Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
+Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate)
 {
+    // [後日]emitter側に細かい指定を保存させて、任意で入力できるようにする。。
+
     std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
     std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
     std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+    std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
+    std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
+
     Particle particle;
-    particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-    particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-    Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-    particle.transform.translate = { translate.x + randomTranslate.x, translate.y + randomTranslate.y, translate.z + randomTranslate.z };
-    particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-    particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-    particle.lifeTime = distTime(randomEngine);
+    particle.transform.scale = { 0.05f, distScale(randomEngine), 1.0f };
+    particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine) };
+    // Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+    particle.transform.translate = { translate.translate.x, translate.translate.y, translate.translate.z };
+    // particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+    particle.velocity = { 0.0f, 0.0f, 0.0f };
+    //particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+    particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    // particle.lifeTime = distTime(randomEngine);
+    particle.lifeTime = 1.0f;
     particle.currentTime = 0;
     return particle;
 }
@@ -380,7 +388,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     particleGroups.emplace(name, std::move(group));
 }
 
-void ParticleManager::Emit(const std::string name, const Vector3& position, uint32_t count)
+void ParticleManager::Emit(const std::string name, const Transform& transform, uint32_t count)
 {
     auto it = particleGroups.find(name);
     assert(it != particleGroups.end());
@@ -388,7 +396,7 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
     ParticleGroup& group = it->second;
 
     for (uint32_t i = 0; i < count; ++i) {
-        Particle particle = MakeNewParticle(randomEngine, position);
+        Particle particle = MakeNewParticle(randomEngine, transform);
 
         group.particles.push_back(particle);
     }

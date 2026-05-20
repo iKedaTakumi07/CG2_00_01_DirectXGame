@@ -15,6 +15,9 @@
 #include "../3d/ParticleEmitter.h"
 #include "../3d/ParticleManager.h"
 
+#include "../3d/Skybox/SkyBoxCommon.h"
+#include "../3d/Skybox/Skybox.h"
+
 #include "../io/Input.h"
 
 #include "math.h"
@@ -31,6 +34,9 @@ void GamePlayScene::Initialize()
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
     TextureManager::getInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
+
+    skydox = std::make_unique<Skybox>();
+    skydox->Initialize("resources/rostock_laage_airport_4k.dds");
 
     for (uint32_t i = 0; i < 1; ++i) {
         auto sprite = std::make_unique<Sprite>();
@@ -50,16 +56,20 @@ void GamePlayScene::Initialize()
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
+    object3d->SetCamera(BaseScene::GetCamera());
 
     model = std::make_unique<Model>();
     model->Initialize("resources", "plane.obj");
+    model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
 
     object3d2 = std::make_unique<Object3d>();
     object3d2->Initialize();
+    object3d2->SetCamera(BaseScene::GetCamera());
 
     model2 = std::make_unique<Model>();
     model2->Initialize("resources", "axis.obj");
+    model2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d2->SetModel(model2.get());
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png");
@@ -89,6 +99,7 @@ void GamePlayScene::Initialize()
 void GamePlayScene::Update()
 {
     Input* input = BaseScene::GetInput();
+    Camera* camera = BaseScene::GetCamera();
 
     if (input->TriggerKey(DIK_F1)) {
         auto scene = std::make_unique<TitleScene>();
@@ -101,6 +112,9 @@ void GamePlayScene::Update()
     for (auto& sprite : sprites) {
         sprite->Update();
     }
+
+    skydox->SetCamera(camera);
+    skydox->Update();
 
     object3d->Update();
 
@@ -123,6 +137,9 @@ void GamePlayScene::Draw()
     //
     object3d->Draw();
     object3d2->Draw();
+
+    SkyBoxCommon::GetInstance()->PrepareObjectDraw();
+    // skydox->Draw();
 
     //
     // 2d/スプライト
