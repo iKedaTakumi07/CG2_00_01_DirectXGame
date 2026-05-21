@@ -4,6 +4,7 @@
 #include "../base/SrvManager.h"
 #include "../base/TextureManager.h"
 #include "Camera.h"
+#include "IParticleMesh.h"
 #include <cassert>
 #include <numbers>
 
@@ -24,7 +25,7 @@ Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate)
     particle.transform.translate = { translate.translate.x, translate.translate.y, translate.translate.z };
     // particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
     particle.velocity = { 0.0f, 0.0f, 0.0f };
-    //particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
+    // particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
     particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
     // particle.lifeTime = distTime(randomEngine);
     particle.lifeTime = 1.0f;
@@ -61,7 +62,7 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
     graphicsPipelineInitialize(dxCommon);
 
     // 頂点データの初期化
-    VertexResourceInitialize();
+ 
 }
 
 void ParticleManager::Update()
@@ -142,7 +143,7 @@ void ParticleManager::Draw()
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // VBV設定（板ポリ）
-    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+  
 
     // 全パーティクルグループ
     for (auto& [name, group] : particleGroups) {
@@ -151,6 +152,8 @@ void ParticleManager::Draw()
         if (group.instanceCount == 0) {
             continue;
         }
+
+        commandList->IASetVertexBuffers(0, 1, &group.mesh->GetVertexBufferView());
 
         commandList->SetGraphicsRootConstantBufferView(0, group.materialResource->GetGPUVirtualAddress());
 
@@ -161,7 +164,7 @@ void ParticleManager::Draw()
         srvManager->SetGraphicsRootDescriptorTable(2, group.textureSrvIndex);
 
         // DrawCall（1グループ = 1回）
-        commandList->DrawInstanced(6, group.instanceCount, 0, 0);
+        commandList->DrawInstanced(group.mesh->GetVertexCount(), group.instanceCount, 0, 0);
     }
 }
 
@@ -206,6 +209,7 @@ void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    // staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ring用
     staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
@@ -321,26 +325,8 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     assert(SUCCEEDED(hr));
 }
 
-void ParticleManager::VertexResourceInitialize()
-{
-    vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
-    // 頂点バッファビューを作成
-    vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress(); // リソースの先頭のアドレスから使用
-    vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * 6); // 使用するリソースのサイズ
-    vertexBufferView.StrideInBytes = sizeof(VertexData); // 1頂点当たりのサイズ
 
-    HRESULT hr = vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-    assert(SUCCEEDED(hr));
-
-    vertexData[0] = { { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-    vertexData[1] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-    vertexData[2] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
-    vertexData[3] = { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
-    vertexData[4] = { { -1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-    vertexData[5] = { { -1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
-}
-
-void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
+void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath, ParticleMeshType meshType)
 {
     // 登録済みチェック
     auto it = particleGroups.find(name);
@@ -350,6 +336,13 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
     //  空のグループを作成＆登録
     ParticleGroup group {};
+
+    // 形状タイプに応じて個別クラスを生成
+    if (meshType == ParticleMeshType::Plane) {
+        group.mesh = std::make_unique<PlaneMesh>(dxCommon->GetDevice());
+    } else if (meshType == ParticleMeshType::Ring) {
+        group.mesh = std::make_unique<RingMesh>(dxCommon->GetDevice());
+    }
 
     // マテリアルにファイルパス設定
     group.material.textureFilePath = textureFilePath;
