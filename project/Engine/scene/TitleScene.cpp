@@ -52,8 +52,9 @@ void TitleScene::Initialize()
     model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
 
-    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png");
-    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png");
+    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::Plane);
+    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::Plane);
+    ParticleManager::getInstance()->CreateParticleGroup("gradationLine", "resources/gradationLine.png", ParticleMeshType::Ring);
 
     // 板ポリ
     Transform emitter {};
@@ -61,6 +62,8 @@ void TitleScene::Initialize()
     emitter.rotate = { 0.0f, 0.0f, 1.0f };
     emitter.scale = { 0.05f, 1.0f, 1.0f };
     particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 8);
+
+    particleEmitter2 = std::make_unique<ParticleEmitter>("gradationLine", emitter, 1.0f, 3);
 }
 
 void TitleScene::Finalize()
@@ -88,6 +91,7 @@ void TitleScene::Update()
     object3d->Update();
 
     particleEmitter->Update();
+    particleEmitter2->Update();
 
     // IMGUI
     object3d->DrawImGui();
@@ -104,7 +108,7 @@ void TitleScene::Draw()
     object3d->Draw();
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
-    skydox->Draw(); 
+    skydox->Draw();
 
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
 

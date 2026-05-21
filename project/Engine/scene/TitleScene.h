@@ -35,4 +35,5 @@ private:
     std::unique_ptr<Skybox> skydox;
 
     std::unique_ptr<ParticleEmitter> particleEmitter;
+    std::unique_ptr<ParticleEmitter> particleEmitter2;
 };

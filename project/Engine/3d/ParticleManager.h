@@ -8,10 +8,18 @@
 #include <unordered_map>
 #include <wrl.h>
 
+#include "IParticleMesh.h"
+
 class DirectXCommon;
 class SrvManager;
 class Camera;
 class WinApp;
+
+// パーティクルのタイプ
+enum class ParticleMeshType {
+    Plane,
+    Ring
+};
 
 class ParticleManager {
 public:
@@ -40,6 +48,8 @@ public:
         uint32_t instancingSrvIndex = 0;
         // マテリアルリソース
         Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+        // グループごとのメッシュ
+        std::unique_ptr<IParticleMesh> mesh;
     };
 
     static ParticleManager* getInstance();
@@ -53,7 +63,7 @@ public:
 
     void Draw();
 
-    void CreateParticleGroup(const std::string name, const std::string textureFilePath);
+    void CreateParticleGroup(const std::string name, const std::string textureFilePath, ParticleMeshType meshType);
 
     void Emit(const std::string name, const Transform& transform, uint32_t count);
 
@@ -66,7 +76,6 @@ public:
 private:
     friend struct std::default_delete<ParticleManager>;
     ~ParticleManager() = default;
-
 
 private:
     SrvManager* srvManager = nullptr;

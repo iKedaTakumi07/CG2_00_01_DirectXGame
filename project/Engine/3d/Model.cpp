@@ -49,5 +49,5 @@ void Model::MaterialResourceInitialize()
     materialData->enableLighting = true;
     materialData->shininess = 20.0f;
     materialData->uvTransform = MakeIdentity4x4();
-    materialData->evnironmentCoefficient = 0.5f;
+    materialData->evnironmentCoefficient = 0.0f;
 }
