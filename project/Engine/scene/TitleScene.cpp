@@ -62,8 +62,31 @@ void TitleScene::Initialize()
     emitter.rotate = { 0.0f, 0.0f, 1.0f };
     emitter.scale = { 0.05f, 1.0f, 1.0f };
     particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 8);
+    EmitterParam fireParam;
+    fireParam.maxRotate = { 0.0f, 0.0f, std::numbers::pi_v<float> };
+    fireParam.minRotate = { 0.0f, 0.0f, -std::numbers::pi_v<float> };
+    fireParam.maxScale = { 0.05f, 1.5f, 1.0f };
+    fireParam.minScale = { 0.05f, 0.4f, 1.0f };
+    fireParam.minVelocity = { 0.0f, 0.0f, 0.0f };
+    fireParam.maxVelocity = { 0.0f, 0.0f, 0.0f };
+    fireParam.minColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    fireParam.maxColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    fireParam.minLifeTime = 1.0f;
+    fireParam.maxLifeTime = 1.0f;
+    particleEmitter->SetParam(fireParam);
 
     particleEmitter2 = std::make_unique<ParticleEmitter>("gradationLine", emitter, 1.0f, 3);
+    fireParam.maxRotate = { std::numbers::pi_v<float>, std::numbers::pi_v<float>, 0.0f };
+    fireParam.minRotate = { -std::numbers::pi_v<float>, -std::numbers::pi_v<float>, 0.0f };
+    fireParam.maxScale = { 1.0f, 1.0f, 1.0f };
+    fireParam.minScale = { 1.0f, 0.4f, 1.0f };
+    fireParam.minVelocity = { 0.0f, 0.0f, 0.0f };
+    fireParam.maxVelocity = { 0.0f, 0.0f, 0.0f };
+    fireParam.minColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    fireParam.maxColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    fireParam.minLifeTime = 1.0f;
+    fireParam.maxLifeTime = 1.0f;
+    particleEmitter2->SetParam(fireParam);
 }
 
 void TitleScene::Finalize()

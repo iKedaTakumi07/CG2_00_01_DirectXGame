@@ -31,5 +31,5 @@ void ParticleEmitter::Update()
 
 void ParticleEmitter::Emit()
 {
-    ParticleManager::getInstance()->Emit(groupName_, transform_, emitCount_);
+    ParticleManager::getInstance()->Emit(groupName_, transform_, emitCount_, param_);
 }

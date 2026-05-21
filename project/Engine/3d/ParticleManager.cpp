@@ -8,28 +8,53 @@
 #include <cassert>
 #include <numbers>
 
-Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate)
+Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate, const EmitterParam& param)
 {
     // [後日]emitter側に細かい指定を保存させて、任意で入力できるようにする。。
 
-    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-    std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-    std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-    std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
-    std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
+    auto randomFloat = [&](float min, float max) {
+        std::uniform_real_distribution<float> dist(min, max);
+        return dist(randomEngine);
+    };
 
     Particle particle;
-    particle.transform.scale = { 0.05f, distScale(randomEngine), 1.0f };
-    particle.transform.rotate = { 0.0f, 0.0f, distRotate(randomEngine) };
-    // Vector3 randomTranslate { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-    particle.transform.translate = { translate.translate.x, translate.translate.y, translate.translate.z };
-    // particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-    particle.velocity = { 0.0f, 0.0f, 0.0f };
-    // particle.color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f };
-    particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    // particle.lifeTime = distTime(randomEngine);
-    particle.lifeTime = 1.0f;
-    particle.currentTime = 0;
+
+    // サイズ
+    particle.transform.scale = {
+        randomFloat(param.minScale.x, param.maxScale.x),
+        randomFloat(param.minScale.y, param.maxScale.y),
+        randomFloat(param.minScale.z, param.maxScale.z)
+    };
+
+    // 回転
+    particle.transform.rotate = {
+        randomFloat(param.minRotate.x, param.maxRotate.x),
+        randomFloat(param.minRotate.y, param.maxRotate.y),
+        randomFloat(param.minRotate.z, param.maxRotate.z)
+    };
+
+    // 座標(必要になればランダム化)
+    particle.transform.translate = translate.translate;
+
+    // 速度
+    particle.velocity = {
+        randomFloat(param.minVelocity.x, param.maxVelocity.x),
+        randomFloat(param.minVelocity.y, param.maxVelocity.y),
+        randomFloat(param.minVelocity.z, param.maxVelocity.z)
+    };
+
+    // 色の設定
+    particle.color = {
+        randomFloat(param.minColor.x, param.maxColor.x),
+        randomFloat(param.minColor.y, param.maxColor.y),
+        randomFloat(param.minColor.z, param.maxColor.z),
+        randomFloat(param.minColor.w, param.maxColor.w)
+    };
+
+    // 寿命
+    particle.lifeTime = randomFloat(param.minLifeTime, param.maxLifeTime);
+    particle.currentTime = 0.0f;
+
     return particle;
 }
 
@@ -62,7 +87,6 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
     graphicsPipelineInitialize(dxCommon);
 
     // 頂点データの初期化
- 
 }
 
 void ParticleManager::Update()
@@ -143,7 +167,6 @@ void ParticleManager::Draw()
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // VBV設定（板ポリ）
-  
 
     // 全パーティクルグループ
     for (auto& [name, group] : particleGroups) {
@@ -207,14 +230,15 @@ void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    // staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ring用
-    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    // staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP; // Plaen用
+    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
     staticSamplers[0].ShaderRegister = 0;
     staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
     descriptionRootSignature.pStaticSamplers = staticSamplers;
     descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
@@ -325,7 +349,6 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     assert(SUCCEEDED(hr));
 }
 
-
 void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath, ParticleMeshType meshType)
 {
     // 登録済みチェック
@@ -381,7 +404,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     particleGroups.emplace(name, std::move(group));
 }
 
-void ParticleManager::Emit(const std::string name, const Transform& transform, uint32_t count)
+void ParticleManager::Emit(const std::string name, const Transform& transform, uint32_t count, const EmitterParam& param)
 {
     auto it = particleGroups.find(name);
     assert(it != particleGroups.end());
@@ -389,8 +412,7 @@ void ParticleManager::Emit(const std::string name, const Transform& transform, u
     ParticleGroup& group = it->second;
 
     for (uint32_t i = 0; i < count; ++i) {
-        Particle particle = MakeNewParticle(randomEngine, transform);
-
+        Particle particle = MakeNewParticle(randomEngine, transform, param);
         group.particles.push_back(particle);
     }
 }
