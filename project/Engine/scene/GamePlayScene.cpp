@@ -80,7 +80,7 @@ void GamePlayScene::Initialize()
     emitter.translate = { 0.0f, 0.0f, 0.0f };
     emitter.rotate = { 0.0f, 0.0f, 0.0f };
     emitter.scale = { 1.0f, 1.0f, 1.0f };
-    particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 3);
+    //particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 3);
 
     Transform emitterPlane {};
     emitterPlane.translate = { 4.0f, 4.0f, 0.0f };
@@ -123,7 +123,7 @@ void GamePlayScene::Update()
 
     object3d2->SetRotate(rotate2);
 
-    particleEmitter->Update();
+    //particleEmitter->Update();
     particleEmitterPlane->Update();
 }
 

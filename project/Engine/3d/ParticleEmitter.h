@@ -1,5 +1,6 @@
 #pragma once
 #include "../base/Math.h"
+#include "ParticleManager.h"
 #include <string>
 
 class ParticleEmitter {
@@ -18,10 +19,8 @@ public:
     void Emit();
 
     // Setter
-    void SetTransform(const Transform& transform)
-    {
-        transform_ = transform;
-    }
+    void SetTransform(const Transform& transform) { transform_ = transform; }
+    void SetParam(const EmitterParam& param) { param_ = param; }
 
 private:
     std::string groupName_; // ParticleGroup 名
@@ -31,4 +30,6 @@ private:
     uint32_t emitCount_ = 0; // 1回の発生数
 
     float elapsedTime_ = 0.0f; // 経過時間
+
+    EmitterParam param_;
 };

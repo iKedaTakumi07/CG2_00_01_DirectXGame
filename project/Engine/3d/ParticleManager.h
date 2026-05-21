@@ -9,6 +9,7 @@
 #include <wrl.h>
 
 #include "IParticleMesh.h"
+#include <numbers>
 
 class DirectXCommon;
 class SrvManager;
@@ -19,6 +20,28 @@ class WinApp;
 enum class ParticleMeshType {
     Plane,
     Ring
+};
+
+struct EmitterParam {
+    // スケールの最小・最大
+    Vector3 minScale = { 1.0f, 1.0f, 1.0f };
+    Vector3 maxScale = { 1.0f, 1.0f, 1.0f };
+
+    // 回転の最小・最大 (ラジアン)
+    Vector3 minRotate = { 0.0f, 0.0f, -std::numbers::pi_v<float> };
+    Vector3 maxRotate = { 0.0f, 0.0f, std::numbers::pi_v<float> };
+
+    // 速度の最小・最大
+    Vector3 minVelocity = { -1.0f, -1.0f, -1.0f };
+    Vector3 maxVelocity = { 1.0f, 1.0f, 1.0f };
+
+    // 色の最小・最大
+    Vector4 minColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    Vector4 maxColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    // 寿命の最小・最大
+    float minLifeTime = 1.0f;
+    float maxLifeTime = 2.0f;
 };
 
 class ParticleManager {
@@ -65,7 +88,7 @@ public:
 
     void CreateParticleGroup(const std::string name, const std::string textureFilePath, ParticleMeshType meshType);
 
-    void Emit(const std::string name, const Transform& transform, uint32_t count);
+    void Emit(const std::string name, const Transform& transform, uint32_t count, const EmitterParam& param);
 
     // set
     void SetDefaultCamera(Camera* camera) { this->Camera_ = camera; }
