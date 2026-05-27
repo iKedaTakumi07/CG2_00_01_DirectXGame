@@ -51,7 +51,7 @@ void PostProcess::DrawHorizontalBlur()
     commandList->SetGraphicsRootSignature(rootSignature.Get());
 
     if (currentMode_ == Mode::kBoxFilterSeparable3x3) {
-        commandList->SetPipelineState(pipelineStateBoxFillterX.Get());
+        commandList->SetPipelineState(pipelineStateBoxFilterX.Get());
     } else if (currentMode_ == Mode::kBoxFilterSeparable5x5) {
         commandList->SetPipelineState(pipelineStateBoxFilterX5x5.Get());
     }
@@ -67,7 +67,7 @@ void PostProcess::DrawVerticalBlur()
     commandList->SetGraphicsRootSignature(rootSignature.Get());
 
     if (currentMode_ == Mode::kBoxFilterSeparable3x3) {
-        commandList->SetPipelineState(pipelineStateBoxFillterY.Get());
+        commandList->SetPipelineState(pipelineStateBoxFilterY.Get());
     } else if (currentMode_ == Mode::kBoxFilterSeparable5x5) {
         commandList->SetPipelineState(pipelineStateBoxFilterY5x5.Get());
     }
@@ -216,15 +216,15 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderVignette = dxcommon->CompileShader(L"resources/shaders/Vignette.PS.hlsl", L"ps_6_0");
     assert(pixeShaderVignette != nullptr);
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFillterX = dxcommon->CompileShader(L"resources/shaders/BoxFillterX.PS.hlsl", L"ps_6_0");
-    assert(pixeShaderBoxFillterX != nullptr);
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFillterY = dxcommon->CompileShader(L"resources/shaders/BoxFillterX.PS.hlsl", L"ps_6_0");
-    assert(pixeShaderBoxFillterY != nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFilterX = dxcommon->CompileShader(L"resources/shaders/BoxFilterX.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderBoxFilterX != nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFilterY = dxcommon->CompileShader(L"resources/shaders/BoxFilterY.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderBoxFilterY != nullptr);
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFillterX5x5 = dxcommon->CompileShader(L"resources/shaders/BoxFillterX5x5.PS.hlsl", L"ps_6_0");
-    assert(pixeShaderBoxFillterX5x5 != nullptr);
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFillterY5x5 = dxcommon->CompileShader(L"resources/shaders/BoxFillterY5x5.PS.hlsl", L"ps_6_0");
-    assert(pixeShaderBoxFillterY5x5 != nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFilterX5x5 = dxcommon->CompileShader(L"resources/shaders/BoxFilterX5x5.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderBoxFilterX5x5 != nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFilterY5x5 = dxcommon->CompileShader(L"resources/shaders/BoxFilterY5x5.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderBoxFilterY5x5 != nullptr);
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
@@ -281,23 +281,23 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     assert(SUCCEEDED(hr));
 
     // ボックスフィルター
-    graphicsPipelineStateDesc.PS = { pixeShaderBoxFillterX->GetBufferPointer(), pixeShaderBoxFillterX->GetBufferSize() };
-    pipelineStateBoxFillterX = nullptr;
-    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFillterX));
+    graphicsPipelineStateDesc.PS = { pixeShaderBoxFilterX->GetBufferPointer(), pixeShaderBoxFilterX->GetBufferSize() };
+    pipelineStateBoxFilterX = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFilterX));
     assert(SUCCEEDED(hr));
 
-    graphicsPipelineStateDesc.PS = { pixeShaderBoxFillterY->GetBufferPointer(), pixeShaderBoxFillterY->GetBufferSize() };
-    pipelineStateBoxFillterY = nullptr;
-    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFillterY));
+    graphicsPipelineStateDesc.PS = { pixeShaderBoxFilterY->GetBufferPointer(), pixeShaderBoxFilterY->GetBufferSize() };
+    pipelineStateBoxFilterY = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFilterY));
     assert(SUCCEEDED(hr));
 
     // ボックスフィルター(分離可能5x5)
-    graphicsPipelineStateDesc.PS = { pixeShaderBoxFillterX5x5->GetBufferPointer(), pixeShaderBoxFillterX5x5->GetBufferSize() };
+    graphicsPipelineStateDesc.PS = { pixeShaderBoxFilterX5x5->GetBufferPointer(), pixeShaderBoxFilterX5x5->GetBufferSize() };
     pipelineStateBoxFilterX5x5 = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFilterX5x5));
     assert(SUCCEEDED(hr));
 
-    graphicsPipelineStateDesc.PS = { pixeShaderBoxFillterY5x5->GetBufferPointer(), pixeShaderBoxFillterY5x5->GetBufferSize() };
+    graphicsPipelineStateDesc.PS = { pixeShaderBoxFilterY5x5->GetBufferPointer(), pixeShaderBoxFilterY5x5->GetBufferSize() };
     pipelineStateBoxFilterY5x5 = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFilterY5x5));
     assert(SUCCEEDED(hr));
