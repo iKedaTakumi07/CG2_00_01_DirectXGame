@@ -28,8 +28,8 @@ struct EmitterParam {
     Vector3 maxScale = { 1.0f, 1.0f, 1.0f };
 
     // 回転の最小・最大 (ラジアン)
-    Vector3 minRotate = { 0.0f, 0.0f, -std::numbers::pi_v<float> };
-    Vector3 maxRotate = { 0.0f, 0.0f, std::numbers::pi_v<float> };
+    Vector3 minRotate = { 0.0f, 0.0f, 0.0f };
+    Vector3 maxRotate = { 0.0f, 0.0f, 0.0f };
 
     // 速度の最小・最大
     Vector3 minVelocity = { -1.0f, -1.0f, -1.0f };

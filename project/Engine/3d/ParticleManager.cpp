@@ -228,16 +228,28 @@ void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[3].Descriptor.ShaderRegister = 1;
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+    // [後日]U,V,M,個別で設定できるようにしたい。(可能なら)
+
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = {};
+    // [0] WRAP用 (主にPlane用) -> register(s0)
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    // staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP; // Plaen用
-    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
-    staticSamplers[0].ShaderRegister = 0;
+    staticSamplers[0].ShaderRegister = 0; // ⭐️ s0
     staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // [1] CLAMP用 (主にRing用) -> register(s1)
+    staticSamplers[1].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    staticSamplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[1].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    staticSamplers[1].MaxLOD = D3D12_FLOAT32_MAX;
+    staticSamplers[1].ShaderRegister = 1; // ⭐️ s1
+    staticSamplers[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     descriptionRootSignature.pStaticSamplers = staticSamplers;
     descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
@@ -389,9 +401,9 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     srvManager->CreateSRVforStructuredBuffer(group.instancingSrvIndex, group.instancingResource.Get(), kMaxInstanceCount, sizeof(ParticleForGPU));
 
     // マテリアル用のリソースを作る
-    group.materialResource = dxCommon->CreateBufferResource(sizeof(Material));
+    group.materialResource = dxCommon->CreateBufferResource(sizeof(ParticleMaterial));
     // マテリアルにデータを書き込む
-    Material* materialData = nullptr;
+    ParticleMaterial* materialData = nullptr;
     // 書き込むためのアドレスを取得
     group.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
@@ -399,6 +411,14 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     materialData->enableLighting = false;
     materialData->uvTransform = MakeIdentity4x4();
+    // 形状タイプに応じてフラグ変更
+    if (meshType == ParticleMeshType::Plane) {
+        materialData->useClampSampler = 0;
+    } else if (meshType == ParticleMeshType::Ring) {
+        materialData->useClampSampler = 1;
+    }
+
+    group.materialResource->Unmap(0, nullptr);
 
     // 登録
     particleGroups.emplace(name, std::move(group));
