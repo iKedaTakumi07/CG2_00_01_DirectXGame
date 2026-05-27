@@ -53,6 +53,13 @@ struct Material {
     float shininess;
     float evnironmentCoefficient;
 };
+struct ParticleMaterial {
+    Matrix4x4 uvTransform;
+    Vector4 color;
+    int32_t enableLighting;
+    int32_t useClampSampler; // ⭐️ 追加 (0: WRAP, 1: CLAMP)
+    float padding[2]; 
+};
 struct TransformationMatrix {
     Matrix4x4 WVP;
     Matrix4x4 world;
