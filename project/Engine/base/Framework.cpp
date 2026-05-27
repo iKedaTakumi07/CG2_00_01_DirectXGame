@@ -72,6 +72,10 @@ void Framework::Initialize()
     offscreenSurface = std::make_unique<OffscreenSurface>();
     offscreenSurface->Initialize(dxCommon.get(), srvManager.get(), index);
 
+    uint32_t indexB = dxCommon->AllocateRTVIndex(); // 新しいRTVインデックスを取得
+    offscreenSurfaceB = std::make_unique<OffscreenSurface>();
+    offscreenSurfaceB->Initialize(dxCommon.get(), srvManager.get(), indexB);
+
     PostProcess::GetInstance()->Initialize(dxCommon.get());
     PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
 

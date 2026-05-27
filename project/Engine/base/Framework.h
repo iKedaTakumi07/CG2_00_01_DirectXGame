@@ -41,7 +41,8 @@ public:
     SrvManager* GetSrvManager() { return srvManager.get(); }
     Input* GetInput() { return input.get(); }
     ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
-    OffscreenSurface* GetOffScreenSurface() { return offscreenSurface.get(); }
+    OffscreenSurface* GetOffScreenSurface() { return offscreenSurface.get(); } // そのほか
+    OffscreenSurface* GetOffScreenSurfaceB() { return offscreenSurfaceB.get(); } // 分離フィルターの中間バッフア
     Camera* GetCamera() { return camera.get(); }
 
 private:
@@ -60,8 +61,9 @@ private:
     std::unique_ptr<Camera> camera = nullptr;
     // ベースシーン
     std::unique_ptr<BaseScene> baseScene = nullptr;
-    // offscreen
+    // offscreen()
     std::unique_ptr<OffscreenSurface> offscreenSurface = nullptr;
+    std::unique_ptr<OffscreenSurface> offscreenSurfaceB = nullptr; // 分離フィルターの中間バッフア
     // postProcess
     std::unique_ptr<PostProcess> postProcess = nullptr;
 };

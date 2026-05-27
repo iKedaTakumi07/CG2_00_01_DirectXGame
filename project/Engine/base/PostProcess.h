@@ -10,8 +10,8 @@ public:
         kGrayscale, // グレースケール
         kSepiascale, // セピア調
         kVignette, // ヴィネッティング
-        kBoxFillter, // ボックスフィルター(3x3のカーネル)
-        kBoxFillter5x5, // ボックスフィルター(5x5のカーネル)
+        kBoxFilterSeparable3x3, // ボックスフィルター(3x3の分離可能フィルタ)
+        kBoxFilterSeparable5x5, // ボックスフィルター(5x5の分離可能フィルタ)
     };
 
     // コンストラクタに渡すための鍵
@@ -29,6 +29,8 @@ public:
 
     // 共通描画設定
     void PrepareObjectDraw();
+    void DrawHorizontalBlur(); // 横ぼかし用
+    void DrawVerticalBlur(); // 縦ぼかし用
 
     // 初期化
     void Initialize(DirectXCommon* dxcommon);
@@ -40,10 +42,10 @@ public:
     // set
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
     void SetsrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->srvHandle = srvHandle; }
+    Mode GetMode() const { return currentMode_; }
 
     // モード制御用
     void SetMode(Mode mode) { this->currentMode_ = mode; }
-    Mode GetMode() const { return currentMode_; }
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -74,8 +76,14 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGrayscale_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateSepiascale_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateVignette = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillter = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillter5x5 = nullptr;
+
+    /* BoxFillter3x3 */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillterX = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillterY = nullptr;
+
+    /* BoxFillter5x5 */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX5x5 = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterY5x5 = nullptr;
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 

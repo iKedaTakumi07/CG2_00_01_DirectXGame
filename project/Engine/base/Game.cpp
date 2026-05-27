@@ -61,10 +61,27 @@ void Game::Draw()
 
     Framework::GetOffScreenSurface()->PostDraw();
 
-    // スワップチェーンの描画
-    Framework::GetDirectXCommon()->PreDraw();
+    // フィルタを使っているかどうか
+    PostProcess::Mode currentMode = PostProcess::GetInstance()->GetMode();
+    if (currentMode == PostProcess::Mode::kBoxFilterSeparable3x3 || currentMode == PostProcess::Mode::kBoxFilterSeparable5x5) {
+        // 横ブラー
+        Framework::GetOffScreenSurfaceB()->PreDraw(); // Bを描画先に設定
+        PostProcess::GetInstance()->SetsrvHandle(Framework::GetOffScreenSurface()->GetSRVHandle()); // Aの画像をセット
+        PostProcess::GetInstance()->DrawHorizontalBlur(); // 横ブラー実行
+        Framework::GetOffScreenSurfaceB()->PostDraw();
 
-    PostProcess::GetInstance()->PrepareObjectDraw();
+        // 縦ブラー
+        Framework::GetDirectXCommon()->PreDraw(); // 画面を描画先に設定
+        PostProcess::GetInstance()->SetsrvHandle(Framework::GetOffScreenSurfaceB()->GetSRVHandle()); // Bの画像をセット
+        PostProcess::GetInstance()->DrawVerticalBlur(); // 縦ブラー実行
+
+    } else {
+        // 今まで通り
+        // スワップチェーンの描画
+        Framework::GetDirectXCommon()->PreDraw();
+        PostProcess::GetInstance()->SetsrvHandle(Framework::GetOffScreenSurface()->GetSRVHandle());
+        PostProcess::GetInstance()->PrepareObjectDraw();
+    }
 
     // 実際のcommandListのImGuiの描画コマンドを詰む
     Framework::GetImGuiManager()->Draw();
