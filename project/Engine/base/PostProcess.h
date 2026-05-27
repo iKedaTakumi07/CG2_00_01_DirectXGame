@@ -78,8 +78,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateVignette = nullptr;
 
     /* BoxFillter3x3 */
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillterX = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFillterY = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterY = nullptr;
 
     /* BoxFillter5x5 */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX5x5 = nullptr;
