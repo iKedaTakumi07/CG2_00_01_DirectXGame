@@ -80,6 +80,16 @@ void PostProcess::DrawVerticalBlur(bool is5x5)
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
+void PostProcess::DrawGaussianFilterHorizontalBlur(bool is5x5)
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateGaussianFilterX.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
 void PostProcess::DrawImGui()
 {
 #ifdef USE_IMGUI
@@ -95,6 +105,9 @@ void PostProcess::DrawImGui()
     ImGui::Checkbox("BoxFillter 3x3", &enableBoxFilter3x3_);
     ImGui::SameLine();
     ImGui::Checkbox("BoxFillter 5x5", &enableBoxFilter5x5_);
+
+    ImGui::Checkbox("GaussianFilter 3x3", &enableGaussianFilter3x3_);
+
     ImGui::End();
 #endif // USE_IMGUI
 }
@@ -213,6 +226,11 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBoxFilterY5x5 = dxcommon->CompileShader(L"resources/shaders/BoxFilterY5x5.PS.hlsl", L"ps_6_0");
     assert(pixeShaderBoxFilterY5x5 != nullptr);
 
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderGaussianFilterX = dxcommon->CompileShader(L"resources/shaders/GaussianFilterX.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderGaussianFilterX != nullptr);
+    // Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderGaussianFilterY = dxcommon->CompileShader(L"resources/shaders/GaussianFilterY.PS.hlsl", L"ps_6_0");
+    // assert(pixeShaderGaussianFilterY != nullptr);
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
@@ -267,7 +285,7 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateVignette));
     assert(SUCCEEDED(hr));
 
-    // ボックスフィルター
+    // ボックスフィルター(分離可能3x3)
     graphicsPipelineStateDesc.PS = { pixeShaderBoxFilterX->GetBufferPointer(), pixeShaderBoxFilterX->GetBufferSize() };
     pipelineStateBoxFilterX = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFilterX));
@@ -288,4 +306,15 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     pipelineStateBoxFilterY5x5 = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFilterY5x5));
     assert(SUCCEEDED(hr));
+
+    // ガウシアンフィルタ
+    graphicsPipelineStateDesc.PS = { pixeShaderGaussianFilterX->GetBufferPointer(), pixeShaderGaussianFilterX->GetBufferSize() };
+    pipelineStateGaussianFilterX = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateGaussianFilterX));
+    assert(SUCCEEDED(hr));
+
+    // graphicsPipelineStateDesc.PS = { pixeShaderBoxFilterY->GetBufferPointer(), pixeShaderBoxFilterY->GetBufferSize() };
+    // pipelineStateBoxFilterY = nullptr;
+    // hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateBoxFilterY));
+    // assert(SUCCEEDED(hr));
 }
