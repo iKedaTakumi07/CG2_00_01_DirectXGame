@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 
-#include "Framework.h"
-#include "../scene/SceneManager.h"
 #include "../audio/Sound.h"
+#include "../scene/SceneManager.h"
+#include "Framework.h"
 
 class Sprite;
 class Object3d;
@@ -30,9 +30,4 @@ public:
 private:
     ///
     /// その他
-    ///
-
-    // BaseScene* baseScene = nullptr;
- 
-    // GamePlayScene* scene_ = nullptr;
 };

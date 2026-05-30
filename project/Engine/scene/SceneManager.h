@@ -1,4 +1,5 @@
 #pragma once
+#include "AbstractSceneFactory.h"
 #include <memory>
 
 class BaseScene;
@@ -27,17 +28,26 @@ public:
     // 描画
     void Draw();
 
+public:
+    /// <summary>
+    /// 次シーン予約
+    /// </summary>
+    /// <param name="sceneName"></param>
+    void ChangeScene(const std::string& sceneName);
+
     // 次のシーン予約
     void SetNextScene(std::unique_ptr<BaseScene> nextScene) { nextScene_ = std::move(nextScene); }
+    void SetSceneFactory(std::unique_ptr<AbstractSceneFactory> SceneFactory) { sceneFactory_ = std::move(SceneFactory); }
 
     SceneManager(const SceneManager&) = delete;
     SceneManager& operator=(const SceneManager&) = delete;
 
 private:
-     friend struct std::default_delete<SceneManager>;
+    friend struct std::default_delete<SceneManager>;
     ~SceneManager() = default;
 
 private:
     std::unique_ptr<BaseScene> nextScene_ = nullptr;
     std::unique_ptr<BaseScene> scene_ = nullptr;
+    std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
 };

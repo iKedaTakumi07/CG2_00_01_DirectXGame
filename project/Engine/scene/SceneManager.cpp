@@ -1,5 +1,6 @@
 #include "SceneManager.h"
 #include "BaseScene.h"
+#include <assert.h>
 
 SceneManager* SceneManager::GetInstance()
 {
@@ -36,4 +37,13 @@ void SceneManager::Update()
 void SceneManager::Draw()
 {
     scene_->Draw();
+}
+
+void SceneManager::ChangeScene(const std::string& sceneName)
+{
+    assert(sceneFactory_);
+    assert(nextScene_ == nullptr);
+
+    // 次シーンを生成。
+    nextScene_ = sceneFactory_->CreateScene(sceneName);
 }

@@ -107,11 +107,7 @@ void TitleScene::Update()
     skydox->SetCamera(camera);
 
     if (input->TriggerKey(DIK_F1)) {
-        auto scene = std::make_unique<GamePlayScene>();
-        scene->SetInput(BaseScene::GetInput());
-        scene->SetCamera(BaseScene::GetCamera());
-
-        SceneManager::GetInstance()->SetNextScene(std::move(scene));
+        SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
     }
 
     skydox->Update();

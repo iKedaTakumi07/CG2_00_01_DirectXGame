@@ -7,7 +7,8 @@
 #include "../3d/Object3dCommon.h"
 #include "../3d/Skybox/SkyBoxCommon.h"
 #include "../io/Input.h"
-#include "../scene/BaseScene.h"
+#include "../scene/SceneFactory.h"
+#include "../scene/SceneManager.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "WinApp.h"
@@ -101,7 +102,8 @@ void Framework::Initialize()
     ParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     ParticleManager::getInstance()->SetDefaultCamera(camera.get());
 
-    baseScene = std::make_unique<BaseScene>();
+    sceneFactory_ = std::make_unique<SceneFactory>(input.get(), camera.get());
+    SceneManager::GetInstance()->SetSceneFactory(std::move(sceneFactory_));
 
     Audio::GetInstance()->Initialize();
 }
