@@ -28,9 +28,13 @@ public:
     void DrawVignette();
     void DrawHorizontalBlur(bool is5x5); // 引数で3x3か5x5かを判定
     void DrawVerticalBlur(bool is5x5);
-    void DrawGaussianFilterHorizontalBlur(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
-    void DrawGaussianFilterVerticalBlur(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
+    void DrawGaussianFilterHorizontal(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
+    void DrawGaussianFilterVertical(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
 
+    // ImGuiのUIを描画する関数
+    void DrawImGui();
+
+public:
     // get
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
     Camera* GetDefaultCamera() const { return defaultCamera_; }
@@ -47,11 +51,26 @@ public:
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
     void SetsrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->srvHandle = srvHandle; }
 
-    // モード制御用
+    void SetEnableGrayscale(bool enable) { enableGrayscale_ = enable; }
+    void SetEnableSepiascale(bool enable) { enableSepiascale_ = enable; }
+    void SetEnableVignette(bool enable) { enableVignette_ = enable; }
+    void SetEnableBoxFilter3x3(bool enable) { enableBoxFilter3x3_ = enable; }
+    void SetEnableBoxFilter5x5(bool enable) { enableBoxFilter5x5_ = enable; }
+    void SetEnableGaussianFilter3x3(bool enable) { enableGaussianFilter3x3_ = enable; }
+    void SetEnableGaussianFilter5x5(bool enable) { enableGaussianFilter5x5_ = enable; }
 
-    // ImGuiのUIを描画する関数
-    void DrawImGui();
+    void ClearAllEffects()
+    {
+        enableGrayscale_ = false;
+        enableSepiascale_ = false;
+        enableVignette_ = false;
+        enableBoxFilter3x3_ = false;
+        enableBoxFilter5x5_ = false;
+        enableGaussianFilter3x3_ = false;
+        enableGaussianFilter5x5_ = false;
+    }
 
+public:
     // コピー禁止
     PostProcess(const PostProcess&) = delete;
     PostProcess& operator=(const PostProcess&) = delete;

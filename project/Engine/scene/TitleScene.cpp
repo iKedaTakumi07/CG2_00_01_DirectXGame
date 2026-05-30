@@ -2,6 +2,8 @@
 #include "GamePlayScene.h"
 #include "SceneManager.h"
 
+#include "../base/PostProcess.h"
+
 #include <random>
 
 #include "../3d/Camera.h"
@@ -55,6 +57,9 @@ void TitleScene::Initialize()
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::Plane);
     ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::Plane);
     ParticleManager::getInstance()->CreateParticleGroup("gradationLine", "resources/gradationLine.png", ParticleMeshType::Ring);
+
+    // ポストエフェクトのON/OFFならこれ。
+    PostProcess::GetInstance()->SetEnableGaussianFilter5x5(true);
 
     // 板ポリ
     Transform emitter {};
