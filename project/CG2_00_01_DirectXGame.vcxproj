@@ -160,6 +160,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Engine\scene\AbstractSceneFactory.cpp" />
     <ClCompile Include="Engine\base\PostProcess.cpp" />
     <ClCompile Include="Engine\audio\Audio.cpp" />
     <ClCompile Include="Engine\scene\BaseScene.cpp" />
@@ -233,6 +234,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Engine\base\OffscreenSurface.cpp" />
+    <ClCompile Include="Engine\scene\SceneFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\GaussianFilterY5x5.PS.hlsl">
@@ -399,6 +401,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Engine\scene\AbstractSceneFactory.h" />
     <ClInclude Include="Engine\base\PostProcess.h" />
     <ClInclude Include="Engine\audio\Audio.h" />
     <ClInclude Include="Engine\scene\BaseScene.h" />
@@ -448,6 +451,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClInclude>
     <ClInclude Include="Engine\base\OffscreenSurface.h" />
     <ClInclude Include="Engine\3d\IParticleMesh.h" />
+    <ClInclude Include="Engine\scene\SceneFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

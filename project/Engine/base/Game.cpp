@@ -23,19 +23,15 @@
 #include "../3d/Object3d.h"
 
 #include "../scene/BaseScene.h"
-#include "../scene/GamePlayScene.h"
+#include "../scene/SceneFactory.h"
 #include "../scene/SceneManager.h"
-#include "../scene/TitleScene.h"
 
 void Game::Initialize()
 {
     // 基底クラスの初期化処理
     Framework::Initialize();
 
-    auto title = std::make_unique<TitleScene>();
-    title->SetInput(Framework::GetInput());
-    title->SetCamera(Framework::GetCamera());
-    SceneManager::GetInstance()->SetNextScene(std::move(title));
+    SceneManager::GetInstance()->ChangeScene("TITLE");
 }
 
 void Game::Update()

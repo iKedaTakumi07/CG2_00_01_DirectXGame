@@ -1,16 +1,21 @@
 #pragma once
 #include "BaseScene.h"
+#include <list>
 #include <memory>
 #include <vector>
 
-#include "../audio/Sound.h"
 #include "../2d/Sprite.h"
 #include "../3d/ParticleEmitter.h"
+#include "../audio/Sound.h"
 class Model;
 class Object3d;
 class Skybox;
 
 class GamePlayScene : public BaseScene {
+public:
+    GamePlayScene();
+    ~GamePlayScene();
+
 public:
     // 初期化
     void Initialize() override;
@@ -32,7 +37,7 @@ private:
     std::unique_ptr<Model> model2;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Object3d> object3d2;
-   
+
     // スプライト
     std::list<std::unique_ptr<Sprite>> sprites;
 

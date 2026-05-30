@@ -3,12 +3,13 @@
 
 #include "../3d/Camera.h"
 #include "../io/Input.h"
+#include "../scene/AbstractSceneFactory.h"
 #include "../scene/BaseScene.h"
 #include "DirectXCommon.h"
 #include "ImGuiManager.h"
 #include "OffscreenSurface.h"
-#include "SrvManager.h"
 #include "PostProcess.h"
+#include "SrvManager.h"
 class WinApp;
 class SpriteCommon;
 class Object3dCommon;
@@ -61,6 +62,8 @@ private:
     std::unique_ptr<Camera> camera = nullptr;
     // ベースシーン
     std::unique_ptr<BaseScene> baseScene = nullptr;
+    // シーンファクトリー
+    std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
     // offscreen()
     std::unique_ptr<OffscreenSurface> offscreenSurface = nullptr;
     std::unique_ptr<OffscreenSurface> offscreenSurfaceB = nullptr; // 分離フィルターの中間バッフア
