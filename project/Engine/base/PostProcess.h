@@ -28,6 +28,8 @@ public:
     void DrawVignette();
     void DrawHorizontalBlur(bool is5x5); // 引数で3x3か5x5かを判定
     void DrawVerticalBlur(bool is5x5);
+    void DrawGaussianFilterHorizontalBlur(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
+    void DrawGaussianFilterVerticalBlur(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
 
     // get
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
@@ -38,6 +40,8 @@ public:
     bool IsVignette() const { return enableVignette_; }
     bool IsBoxFilter3x3() const { return enableBoxFilter3x3_; }
     bool IsBoxFilter5x5() const { return enableBoxFilter5x5_; }
+    bool IsGaussianFilter3x3() const { return enableGaussianFilter3x3_; }
+    bool IsGaussianFilter5x5() const { return enableGaussianFilter5x5_; }
 
     // set
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
@@ -83,6 +87,14 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX5x5 = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterY5x5 = nullptr;
 
+    /* GaussianFilter3x3 */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterX = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterY = nullptr;
+
+    /* GaussianFilter5x5 */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterX5x5 = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterY5x5 = nullptr;
+
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 
     // 現在のモード
@@ -91,4 +103,6 @@ private:
     bool enableVignette_ = false;
     bool enableBoxFilter3x3_ = false;
     bool enableBoxFilter5x5_ = false;
+    bool enableGaussianFilter3x3_ = false;
+    bool enableGaussianFilter5x5_ = false;
 };

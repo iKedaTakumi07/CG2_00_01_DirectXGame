@@ -118,6 +118,34 @@ void Game::Draw()
         std::swap(currentSource, currentDest);
     }
 
+    if (pp->IsGaussianFilter3x3()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawGaussianFilterHorizontalBlur(false); // 引数 false で 3x3
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawGaussianFilterVerticalBlur(false);
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    if (pp->IsGaussianFilter5x5()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawGaussianFilterHorizontalBlur(true); // 引数 true で 5x5
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawGaussianFilterVerticalBlur(true);
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
     Framework::GetDirectXCommon()->PreDraw();
 
     // スワップチェーンにコピー!w
