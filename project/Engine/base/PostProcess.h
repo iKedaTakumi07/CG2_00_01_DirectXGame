@@ -5,15 +5,6 @@ class Camera;
 
 class PostProcess {
 public:
-    enum class Mode {
-        kNormal, // 通常コピー
-        kGrayscale, // グレースケール
-        kSepiascale, // セピア調
-        kVignette, // ヴィネッティング
-        kBoxFilterSeparable3x3, // ボックスフィルター(3x3の分離可能フィルタ)
-        kBoxFilterSeparable5x5, // ボックスフィルター(5x5の分離可能フィルタ)
-    };
-
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
@@ -27,25 +18,32 @@ public:
     // Singleton 取得
     static PostProcess* GetInstance();
 
-    // 共通描画設定
-    void PrepareObjectDraw();
-    void DrawHorizontalBlur(); // 横ぼかし用
-    void DrawVerticalBlur(); // 縦ぼかし用
-
     // 初期化
     void Initialize(DirectXCommon* dxcommon);
+
+    // 共通描画設定
+    void DrawNormal();
+    void DrawGrayscale();
+    void DrawSepiascale();
+    void DrawVignette();
+    void DrawHorizontalBlur(bool is5x5); // 引数で3x3か5x5かを判定
+    void DrawVerticalBlur(bool is5x5);
 
     // get
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
     Camera* GetDefaultCamera() const { return defaultCamera_; }
 
+    bool IsGrayscale() const { return enableGrayscale_; }
+    bool IsSepiascale() const { return enableSepiascale_; }
+    bool IsVignette() const { return enableVignette_; }
+    bool IsBoxFilter3x3() const { return enableBoxFilter3x3_; }
+    bool IsBoxFilter5x5() const { return enableBoxFilter5x5_; }
+
     // set
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
     void SetsrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->srvHandle = srvHandle; }
-    Mode GetMode() const { return currentMode_; }
 
     // モード制御用
-    void SetMode(Mode mode) { this->currentMode_ = mode; }
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -58,7 +56,7 @@ private:
     friend struct std::default_delete<PostProcess>;
 
     // コンストラクタ・デストラクタは private
-    // CopyRenderTexture() = default;
+    // PostProcess() = default;
     ~PostProcess() = default;
 
 private:
@@ -88,5 +86,9 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 
     // 現在のモード
-    Mode currentMode_ = Mode::kNormal;
+    bool enableGrayscale_ = false;
+    bool enableSepiascale_ = false;
+    bool enableVignette_ = false;
+    bool enableBoxFilter3x3_ = false;
+    bool enableBoxFilter5x5_ = false;
 };
