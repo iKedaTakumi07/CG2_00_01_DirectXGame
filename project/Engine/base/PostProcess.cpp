@@ -13,31 +13,6 @@ PostProcess* PostProcess::GetInstance()
     return instance.get();
 }
 
-void PostProcess::PrepareObjectDraw()
-{
-    auto commandList = dxCommon_->GetCommandList();
-
-    // RootSignatureを設定。PSOに設定しているけど別途設定が必要
-    dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-
-    if (currentMode_ == Mode::kNormal) {
-        dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-    } else if (currentMode_ == Mode::kGrayscale) {
-        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateGrayscale_.Get());
-    } else if (currentMode_ == Mode::kSepiascale) {
-        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateSepiascale_.Get());
-    } else if (currentMode_ == Mode::kVignette) {
-        dxCommon_->GetCommandList()->SetPipelineState(pipelineStateVignette.Get());
-    }
-
-    dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-    commandList->SetGraphicsRootDescriptorTable(0, srvHandle);
-
-    // 3頂点（巨大三角形）を描画
-    commandList->DrawInstanced(3, 1, 0, 0);
-}
-
 void PostProcess::Initialize(DirectXCommon* dxcommon)
 {
     dxCommon_ = dxcommon;
@@ -45,71 +20,83 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     graphicsPipelineInitialize(dxCommon_);
 }
 
-void PostProcess::DrawHorizontalBlur()
+void PostProcess::DrawNormal()
 {
-    auto commandList = dxCommon_->GetCommandList();
-    commandList->SetGraphicsRootSignature(rootSignature.Get());
-
-    if (currentMode_ == Mode::kBoxFilterSeparable3x3) {
-        commandList->SetPipelineState(pipelineStateBoxFilterX.Get());
-    } else if (currentMode_ == Mode::kBoxFilterSeparable5x5) {
-        commandList->SetPipelineState(pipelineStateBoxFilterX5x5.Get());
-    }
-
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->SetGraphicsRootDescriptorTable(0, srvHandle);
-    commandList->DrawInstanced(3, 1, 0, 0);
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(graphicsPipelineState.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
 }
 
-void PostProcess::DrawVerticalBlur()
+void PostProcess::DrawGrayscale()
 {
-    auto commandList = dxCommon_->GetCommandList();
-    commandList->SetGraphicsRootSignature(rootSignature.Get());
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateGrayscale_.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
 
-    if (currentMode_ == Mode::kBoxFilterSeparable3x3) {
-        commandList->SetPipelineState(pipelineStateBoxFilterY.Get());
-    } else if (currentMode_ == Mode::kBoxFilterSeparable5x5) {
-        commandList->SetPipelineState(pipelineStateBoxFilterY5x5.Get());
-    }
+void PostProcess::DrawSepiascale()
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateSepiascale_.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
 
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->SetGraphicsRootDescriptorTable(0, srvHandle);
-    commandList->DrawInstanced(3, 1, 0, 0);
+void PostProcess::DrawVignette()
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateVignette.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
+void PostProcess::DrawHorizontalBlur(bool is5x5)
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(is5x5 ? pipelineStateBoxFilterX5x5.Get() : pipelineStateBoxFilterX.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
+void PostProcess::DrawVerticalBlur(bool is5x5)
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(is5x5 ? pipelineStateBoxFilterY5x5.Get() : pipelineStateBoxFilterY.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
 }
 
 void PostProcess::DrawImGui()
 {
+#ifdef USE_IMGUI
     ImGui::Begin("PostProcess Settings");
 
-    int modeIndex = static_cast<int>(currentMode_);
+    // ラジオボタンをチェックボックスに変更
+    ImGui::Checkbox("Grayscale", &enableGrayscale_);
+    ImGui::SameLine();
+    ImGui::Checkbox("Sepiascale", &enableSepiascale_);
+    ImGui::SameLine();
+    ImGui::Checkbox("Vignette", &enableVignette_);
 
-    // ラジオボタンで切り替え
-    if (ImGui::RadioButton("Normal", &modeIndex, 0)) {
-        currentMode_ = Mode::kNormal;
-    }
+    ImGui::Checkbox("BoxFillter 3x3", &enableBoxFilter3x3_);
     ImGui::SameLine();
-    if (ImGui::RadioButton("Grayscale", &modeIndex, 1)) {
-        currentMode_ = Mode::kGrayscale;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Sepiascale", &modeIndex, 2)) {
-        currentMode_ = Mode::kSepiascale;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Vignette", &modeIndex, 3)) {
-        currentMode_ = Mode::kVignette;
-    }
-
-    // 行ずらし
-    if (ImGui::RadioButton("BoxFillter", &modeIndex, 4)) {
-        currentMode_ = Mode::kBoxFilterSeparable3x3;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("BoxFillter5x5", &modeIndex, 5)) {
-        currentMode_ = Mode::kBoxFilterSeparable5x5;
-    }
-
+    ImGui::Checkbox("BoxFillter 5x5", &enableBoxFilter5x5_);
     ImGui::End();
+#endif // USE_IMGUI
 }
 
 void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)

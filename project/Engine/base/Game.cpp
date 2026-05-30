@@ -49,43 +49,83 @@ void Game::Update()
 
 void Game::Draw()
 {
-    // draw
-
-    // srv表示
-    Framework::GetSrvManager()->PreDraw();
-
-    // オフスクリーン描画
+    Framework::GetSrvManager()->PreDraw(); // srv表示
     Framework::GetOffScreenSurface()->PreDraw();
-
-    SceneManager::GetInstance()->Draw();
-
+    SceneManager::GetInstance()->Draw(); // メインの描画
     Framework::GetOffScreenSurface()->PostDraw();
 
-    // フィルタを使っているかどうか
-    PostProcess::Mode currentMode = PostProcess::GetInstance()->GetMode();
-    if (currentMode == PostProcess::Mode::kBoxFilterSeparable3x3 || currentMode == PostProcess::Mode::kBoxFilterSeparable5x5) {
-        // 横ブラー
-        Framework::GetOffScreenSurfaceB()->PreDraw(); // Bを描画先に設定
-        PostProcess::GetInstance()->SetsrvHandle(Framework::GetOffScreenSurface()->GetSRVHandle()); // Aの画像をセット
-        PostProcess::GetInstance()->DrawHorizontalBlur(); // 横ブラー実行
-        Framework::GetOffScreenSurfaceB()->PostDraw();
+    // =============================================
+    // ポストエフェクトのバケツリレー(Ping-Pong Buffer)
+    // =============================================
+    OffscreenSurface* currentSource = Framework::GetOffScreenSurface();
+    OffscreenSurface* currentDest = Framework::GetOffScreenSurfaceB();
+    auto pp = PostProcess::GetInstance();
 
-        // 縦ブラー
-        Framework::GetDirectXCommon()->PreDraw(); // 画面を描画先に設定
-        PostProcess::GetInstance()->SetsrvHandle(Framework::GetOffScreenSurfaceB()->GetSRVHandle()); // Bの画像をセット
-        PostProcess::GetInstance()->DrawVerticalBlur(); // 縦ブラー実行
-
-    } else {
-        // 今まで通り
-        // スワップチェーンの描画
-        Framework::GetDirectXCommon()->PreDraw();
-        PostProcess::GetInstance()->SetsrvHandle(Framework::GetOffScreenSurface()->GetSRVHandle());
-        PostProcess::GetInstance()->PrepareObjectDraw();
+    // グレースケール
+    if (pp->IsGrayscale()) {
+        currentDest->PreDraw(); // Bを描画先に設定
+        pp->SetsrvHandle(currentSource->GetSRVHandle()); // Aの画像をセット
+        pp->DrawGrayscale(); // フィルタ実行
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest); // 読込先と書込先を反転
     }
+
+    // セピア調
+    if (pp->IsSepiascale()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawSepiascale();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    // ヴィネット
+    if (pp->IsVignette()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawVignette();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    // ボックスフィルター 3x3
+    if (pp->IsBoxFilter3x3()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawHorizontalBlur(false); // 引数 false で 3x3
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawVerticalBlur(false);
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    // ボックスフィルター 5x5
+    if (pp->IsBoxFilter5x5()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawHorizontalBlur(true); // 引数 true で 5x5
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawVerticalBlur(true);
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    Framework::GetDirectXCommon()->PreDraw();
+
+    // スワップチェーンにコピー!w
+    pp->SetsrvHandle(currentSource->GetSRVHandle());
+    pp->DrawNormal();
 
     // 実際のcommandListのImGuiの描画コマンドを詰む
     Framework::GetImGuiManager()->Draw();
-
     Framework::GetDirectXCommon()->PostDraw();
 }
 
