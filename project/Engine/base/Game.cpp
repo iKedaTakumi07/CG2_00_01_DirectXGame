@@ -121,13 +121,13 @@ void Game::Draw()
     if (pp->IsGaussianFilter3x3()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterHorizontalBlur(false); // 引数 false で 3x3
+        pp->DrawGaussianFilterHorizontal(false); // 引数 false で 3x3
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterVerticalBlur(false);
+        pp->DrawGaussianFilterVertical(false);
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
@@ -135,13 +135,13 @@ void Game::Draw()
     if (pp->IsGaussianFilter5x5()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterHorizontalBlur(true); // 引数 true で 5x5
+        pp->DrawGaussianFilterHorizontal(true); // 引数 true で 5x5
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterVerticalBlur(true);
+        pp->DrawGaussianFilterVertical(true);
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }

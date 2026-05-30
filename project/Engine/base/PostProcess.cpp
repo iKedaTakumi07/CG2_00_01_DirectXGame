@@ -80,7 +80,7 @@ void PostProcess::DrawVerticalBlur(bool is5x5)
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
-void PostProcess::DrawGaussianFilterHorizontalBlur(bool is5x5)
+void PostProcess::DrawGaussianFilterHorizontal(bool is5x5)
 {
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
@@ -90,7 +90,7 @@ void PostProcess::DrawGaussianFilterHorizontalBlur(bool is5x5)
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
-void PostProcess::DrawGaussianFilterVerticalBlur(bool is5x5)
+void PostProcess::DrawGaussianFilterVertical(bool is5x5)
 {
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
