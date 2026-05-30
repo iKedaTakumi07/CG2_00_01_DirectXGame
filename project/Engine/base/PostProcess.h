@@ -41,6 +41,7 @@ public:
     bool IsBoxFilter3x3() const { return enableBoxFilter3x3_; }
     bool IsBoxFilter5x5() const { return enableBoxFilter5x5_; }
     bool IsGaussianFilter3x3() const { return enableGaussianFilter3x3_; }
+    bool IsGaussianFilter5x5() const { return enableGaussianFilter5x5_; }
 
     // set
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
@@ -90,6 +91,10 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterX = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterY = nullptr;
 
+    /* GaussianFilter5x5 */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterX5x5 = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterY5x5 = nullptr;
+
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 
     // 現在のモード
@@ -99,4 +104,5 @@ private:
     bool enableBoxFilter3x3_ = false;
     bool enableBoxFilter5x5_ = false;
     bool enableGaussianFilter3x3_ = false;
+    bool enableGaussianFilter5x5_ = false;
 };

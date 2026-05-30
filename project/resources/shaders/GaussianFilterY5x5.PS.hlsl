@@ -29,7 +29,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     output.color.rgb = float32_t3(0.0f, 0.0f, 0.0f);
     output.color.a = 1.0f;
     
-    for (int32_t y = -1; y <= 1; ++y)
+    for (int32_t y = -2; y <= 2; ++y)
     {
         // 1次元の重みを計算 (Sigma = 2.0f)
         float32_t w = Gauss((float32_t) y, 2.0f);

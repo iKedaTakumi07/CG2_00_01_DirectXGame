@@ -10,9 +10,9 @@ struct PixelShaderOutput
 
 static const float32_t PI = 3.14159265f;
 
-float Gauss(float y, float sigma)
+float Gauss(float x, float sigma)
 {
-    float exponent = -(y * y) * rcp(2.0f * sigma * sigma);
+    float exponent = -(x * x) * rcp(2.0f * sigma * sigma);
     float denominator = 2.0f * PI * sigma * sigma;
     return exp(exponent) * rcp(denominator);
 }
@@ -21,7 +21,7 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     uint32_t width, height;
     gTexture.GetDimensions(width, height);
-    float32_t2 usStepSize = float32_t2(0.0f, rcp(height));
+    float32_t2 usStepSize = float32_t2(rcp(width), 0.0f);
     
     float32_t weight = 0.0f;
     
@@ -29,14 +29,14 @@ PixelShaderOutput main(VertexShaderOutput input)
     output.color.rgb = float32_t3(0.0f, 0.0f, 0.0f);
     output.color.a = 1.0f;
     
-    for (int32_t y = -1; y <= 1; ++y)
+    for (int32_t x = -2; x <= 2; ++x)
     {
         // 1次元の重みを計算 (Sigma = 2.0f)
-        float32_t w = Gauss((float32_t) y, 2.0f);
+        float32_t w = Gauss((float32_t) x, 2.0f);
         weight += w;
         
         // 横方向のみオフセットを適用
-        float32_t2 texcoord = input.texcoord + float32_t2(0.0f, y * usStepSize.y);
+        float32_t2 texcoord = input.texcoord + float32_t2(x * usStepSize.x, 0.0f);
         
         output.color.rgb += gTexture.Sample(gSampler, texcoord).rgb * w;
     }

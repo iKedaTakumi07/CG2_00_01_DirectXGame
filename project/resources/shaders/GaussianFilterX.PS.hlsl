@@ -10,26 +10,18 @@ struct PixelShaderOutput
 
 static const float32_t PI = 3.14159265f;
 
-float Gauss(float x, float y, float sigma)
+float Gauss(float x, float sigma)
 {
-    float exponent = -(x * x + y * y) * rcp(2.0f * sigma * sigma);
+    float exponent = -(x * x) * rcp(2.0f * sigma * sigma);
     float denominator = 2.0f * PI * sigma * sigma;
     return exp(exponent) * rcp(denominator);
 }
 
-static const float32_t2 kIndex3x3[3][3] =
-{
-    { { -1.0f, -1.0f }, { 0.0f, -1.0f }, { 1.0f, -1.0f } },
-    { { -1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f }, },
-    { { -1.0f, 1.0f }, { 0.0f, 1.0f }, { 1.0f, 1.0f }, },
-};
-
 PixelShaderOutput main(VertexShaderOutput input)
 {
-    float32_t kernel3x3[3][3];
     uint32_t width, height;
     gTexture.GetDimensions(width, height);
-    float32_t2 usStepSize = float32_t2(rcp(width), rcp(height));
+    float32_t2 usStepSize = float32_t2(rcp(width), 0.0f);
     
     float32_t weight = 0.0f;
     
@@ -37,20 +29,16 @@ PixelShaderOutput main(VertexShaderOutput input)
     output.color.rgb = float32_t3(0.0f, 0.0f, 0.0f);
     output.color.a = 1.0f;
     
-    for (int32_t x = 0; x < 3; ++x)
+    for (int32_t x = -1; x <= 1; ++x)
     {
-        for (int32_t y = 0; y < 3; ++y)
-        {
-            kernel3x3[x][y] = Gauss(kIndex3x3[x][y].x, kIndex3x3[x][y].y, 2.0f);
-            weight += kernel3x3[x][y];
-            
-            // texcoordを算出
-            float32_t2 texcoord = input.texcoord + kIndex3x3[x][y] * usStepSize;
-            // 1/9掛けて足す
-            float32_t3 fetchColor = gTexture.Sample(gSampler, texcoord).rgb;
-            output.color.rgb += fetchColor * kernel3x3[x][y];
-        }
-
+        // 1次元の重みを計算 (Sigma = 2.0f)
+        float32_t w = Gauss((float32_t)x, 2.0f);
+        weight += w;
+        
+        // 横方向のみオフセットを適用
+        float32_t2 texcoord = input.texcoord + float32_t2(x * usStepSize.x, 0.0f);
+        
+        output.color.rgb += gTexture.Sample(gSampler, texcoord).rgb * w;
     }
     
     output.color.rgb *= rcp(weight);
