@@ -5,6 +5,12 @@ class Camera;
 
 class PostProcess {
 public:
+    struct VignetteData {
+        float scale;
+        float exponent;
+        float padding[2]; // 4バイト×2 = 8バイトの余白を作り、全体で16バイトにする
+    };
+
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
@@ -42,6 +48,7 @@ public:
     bool IsGrayscale() const { return enableGrayscale_; }
     bool IsSepiascale() const { return enableSepiascale_; }
     bool IsVignette() const { return enableVignette_; }
+    VignetteData GetVignetteParam() const { return vignetteParam_; }
     bool IsBoxFilter3x3() const { return enableBoxFilter3x3_; }
     bool IsBoxFilter5x5() const { return enableBoxFilter5x5_; }
     bool IsGaussianFilter3x3() const { return enableGaussianFilter3x3_; }
@@ -54,6 +61,11 @@ public:
     void SetEnableGrayscale(bool enable) { enableGrayscale_ = enable; }
     void SetEnableSepiascale(bool enable) { enableSepiascale_ = enable; }
     void SetEnableVignette(bool enable) { enableVignette_ = enable; }
+    void SetVignetteParam(float scale, float exponent)
+    {
+        vignetteParam_.scale = scale;
+        vignetteParam_.exponent = exponent;
+    }
     void SetEnableBoxFilter3x3(bool enable) { enableBoxFilter3x3_ = enable; }
     void SetEnableBoxFilter5x5(bool enable) { enableBoxFilter5x5_ = enable; }
     void SetEnableGaussianFilter3x3(bool enable) { enableGaussianFilter3x3_ = enable; }
@@ -96,7 +108,12 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGrayscale_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateSepiascale_ = nullptr;
+
+    /* vignette */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateVignette = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vignetteBuffer_ = nullptr;
+    VignetteData* vignetteMappedData_ = nullptr;
+    VignetteData vignetteParam_ = { 16.0f, 0.8f, { 0.0f, 0.0f } }; // 初期値
 
     /* BoxFillter3x3 */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX = nullptr;

@@ -18,6 +18,24 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     dxCommon_ = dxcommon;
 
     graphicsPipelineInitialize(dxCommon_);
+
+    D3D12_HEAP_PROPERTIES heapProps {};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    D3D12_RESOURCE_DESC resDesc {};
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Width = (sizeof(VignetteData)); // 256バイトアライメント
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.SampleDesc.Count = 1;
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    HRESULT hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vignetteBuffer_));
+    assert(SUCCEEDED(hr));
+
+    // マップしてC++から書き込める状態にしておく
+    vignetteBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&vignetteMappedData_));
 }
 
 void PostProcess::DrawNormal()
@@ -52,11 +70,15 @@ void PostProcess::DrawSepiascale()
 
 void PostProcess::DrawVignette()
 {
+    if (vignetteMappedData_) {
+        *vignetteMappedData_ = vignetteParam_;
+    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateVignette.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootConstantBufferView(1, vignetteBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
@@ -109,8 +131,14 @@ void PostProcess::DrawImGui()
     ImGui::Checkbox("Grayscale", &enableGrayscale_);
     ImGui::SameLine();
     ImGui::Checkbox("Sepiascale", &enableSepiascale_);
-    ImGui::SameLine();
+
     ImGui::Checkbox("Vignette", &enableVignette_);
+    if (enableVignette_) {
+        ImGui::Indent(); // ちょっと右にずらす
+        ImGui::SliderFloat("Vignette Scale", &vignetteParam_.scale, 0.0f, 32.0f, "%.2f");
+        ImGui::SliderFloat("Vignette Exponent", &vignetteParam_.exponent, 0.0f, 5.0f, "%.2f");
+        ImGui::Unindent();
+    }
 
     ImGui::Checkbox("BoxFillter 3x3", &enableBoxFilter3x3_);
     ImGui::SameLine();
@@ -137,11 +165,16 @@ void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     //// RootParameter作成
-    D3D12_ROOT_PARAMETER rootParameters[1] = {};
+    D3D12_ROOT_PARAMETER rootParameters[2] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRange;
     rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // CBVとして設定
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダーから見える
+    rootParameters[1].Descriptor.ShaderRegister = 0;
+
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
