@@ -5,6 +5,16 @@ class Camera;
 
 class PostProcess {
 public:
+    struct VignetteData {
+        float scale;
+        float exponent;
+        float padding[2]; // 4バイト×2 = 8バイトの余白を作り、全体で16バイトにする
+    };
+    struct gIntensity {
+        float intensity;
+        float padding[3];
+    };
+
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
@@ -42,6 +52,7 @@ public:
     bool IsGrayscale() const { return enableGrayscale_; }
     bool IsSepiascale() const { return enableSepiascale_; }
     bool IsVignette() const { return enableVignette_; }
+    VignetteData GetVignetteParam() const { return vignetteParam_; }
     bool IsBoxFilter3x3() const { return enableBoxFilter3x3_; }
     bool IsBoxFilter5x5() const { return enableBoxFilter5x5_; }
     bool IsGaussianFilter3x3() const { return enableGaussianFilter3x3_; }
@@ -52,8 +63,15 @@ public:
     void SetsrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->srvHandle = srvHandle; }
 
     void SetEnableGrayscale(bool enable) { enableGrayscale_ = enable; }
+    void SetGrayscaleIntensity(float intensity) { GrayScaleParam_.intensity = intensity; }
     void SetEnableSepiascale(bool enable) { enableSepiascale_ = enable; }
+    void SetSepiascaleIntensity(float intensity) { SepiascaleParam_.intensity = intensity; }
     void SetEnableVignette(bool enable) { enableVignette_ = enable; }
+    void SetVignetteParam(float scale, float exponent)
+    {
+        vignetteParam_.scale = scale;
+        vignetteParam_.exponent = exponent;
+    }
     void SetEnableBoxFilter3x3(bool enable) { enableBoxFilter3x3_ = enable; }
     void SetEnableBoxFilter5x5(bool enable) { enableBoxFilter5x5_ = enable; }
     void SetEnableGaussianFilter3x3(bool enable) { enableGaussianFilter3x3_ = enable; }
@@ -94,9 +112,24 @@ private:
     DirectXCommon* dxCommon_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+
+    /* Grayscale */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGrayscale_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> GrayscaleBuffer_ = nullptr;
+    gIntensity* GrayscaleData_ = nullptr;
+    gIntensity GrayScaleParam_ = { 1.0f, { 0.0f, 0.0f, 0.0f } };
+
+    /* Sepiascale */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateSepiascale_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> SepiascaleBuffer_ = nullptr;
+    gIntensity* SepiascaleData_ = nullptr;
+    gIntensity SepiascaleParam_ = { 1.0f, { 0.0f, 0.0f, 0.0f } };
+
+    /* vignette */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateVignette = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vignetteBuffer_ = nullptr;
+    VignetteData* vignetteMappedData_ = nullptr;
+    VignetteData vignetteParam_ = { 16.0f, 0.8f, { 0.0f, 0.0f } }; // 初期値
 
     /* BoxFillter3x3 */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX = nullptr;

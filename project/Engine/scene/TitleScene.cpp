@@ -1,5 +1,4 @@
 #include "TitleScene.h"
-#include "GamePlayScene.h"
 #include "SceneManager.h"
 
 #include "../base/PostProcess.h"
@@ -101,8 +100,8 @@ void TitleScene::Finalize()
 void TitleScene::Update()
 {
 
-    Input* input = BaseScene::GetInput();
-    Camera* camera = BaseScene::GetCamera();
+    Input* input = GetInput();
+    Camera* camera = GetCamera();
 
     skydox->SetCamera(camera);
 
