@@ -24,7 +24,7 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
 
     D3D12_RESOURCE_DESC resDesc {};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resDesc.Width = (sizeof(VignetteData)); // 256バイトアライメント
+    resDesc.Width = (sizeof(VignetteData));
     resDesc.Height = 1;
     resDesc.DepthOrArraySize = 1;
     resDesc.MipLevels = 1;
@@ -34,7 +34,15 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     HRESULT hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vignetteBuffer_));
     assert(SUCCEEDED(hr));
 
+    resDesc.Width = (sizeof(gIntensity));
+    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&GrayscaleBuffer_));
+    assert(SUCCEEDED(hr));
+    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&SepiascaleBuffer_));
+    assert(SUCCEEDED(hr));
+
     // マップしてC++から書き込める状態にしておく
+    GrayscaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&GrayscaleData_));
+    SepiascaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&SepiascaleData_));
     vignetteBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&vignetteMappedData_));
 }
 
@@ -50,21 +58,29 @@ void PostProcess::DrawNormal()
 
 void PostProcess::DrawGrayscale()
 {
+    if (GrayscaleData_) {
+        *GrayscaleData_ = GrayScaleParam_;
+    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateGrayscale_.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootConstantBufferView(1, GrayscaleBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
 void PostProcess::DrawSepiascale()
 {
+    if (SepiascaleData_) {
+        *SepiascaleData_ = SepiascaleParam_;
+    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateSepiascale_.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootConstantBufferView(1, SepiascaleBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
@@ -129,8 +145,17 @@ void PostProcess::DrawImGui()
 
     // ラジオボタンをチェックボックスに変更
     ImGui::Checkbox("Grayscale", &enableGrayscale_);
-    ImGui::SameLine();
+    if (enableGrayscale_) {
+        ImGui::Indent(); // ちょっと右にずらす
+        ImGui::SliderFloat("intensity##GrayScale", &GrayScaleParam_.intensity, 0.0f, 1.0f, "%.2f");
+        ImGui::Unindent();
+    }
     ImGui::Checkbox("Sepiascale", &enableSepiascale_);
+    if (enableSepiascale_) {
+        ImGui::Indent(); // ちょっと右にずらす
+        ImGui::SliderFloat("intensity##Sepiascale", &SepiascaleParam_.intensity, 0.0f, 1.0f, "%.2f");
+        ImGui::Unindent();
+    }
 
     ImGui::Checkbox("Vignette", &enableVignette_);
     if (enableVignette_) {
@@ -177,9 +202,9 @@ void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     staticSamplers[0].ShaderRegister = 0; // s0
     staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 

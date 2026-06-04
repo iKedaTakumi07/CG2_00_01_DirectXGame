@@ -1,6 +1,5 @@
 #include "GamePlayScene.h"
 #include "SceneManager.h"
-#include "TitleScene.h"
 
 #include "../base/WinApp.h"
 
@@ -104,8 +103,8 @@ void GamePlayScene::Initialize()
 
 void GamePlayScene::Update()
 {
-    Input* input = BaseScene::GetInput();
-    Camera* camera = BaseScene::GetCamera();
+    Input* input = GetInput();
+    Camera* camera = GetCamera();
 
     if (input->TriggerKey(DIK_F1)) {
         SceneManager::GetInstance()->ChangeScene("TITLE");
