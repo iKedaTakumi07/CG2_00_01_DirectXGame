@@ -1,5 +1,15 @@
 #include "Math.h"
 
+Vector4 Lerp(const Vector4& start, const Vector4& end, float t)
+{
+    return {
+        start.x + t * (end.x - start.x),
+        start.y + t * (end.y - start.y),
+        start.z + t * (end.z - start.z),
+        start.w + t * (end.w - start.w)
+    };
+}
+
 Matrix4x4 MakeIdentity4x4()
 {
     Matrix4x4 num;

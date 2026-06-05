@@ -58,7 +58,7 @@ struct ParticleMaterial {
     Vector4 color;
     int32_t enableLighting;
     int32_t useClampSampler; // ⭐️ 追加 (0: WRAP, 1: CLAMP)
-    float padding[2]; 
+    float padding[2];
 };
 struct TransformationMatrix {
     Matrix4x4 WVP;
@@ -94,9 +94,12 @@ struct AccelerationField {
 struct Particle {
     Transform transform;
     Vector3 velocity;
+    Vector4 startColor;
+    Vector4 endColor;
     Vector4 color;
     float lifeTime;
     float currentTime;
+    bool isInfinite;
 };
 enum BlendMode {
     kBlendModeNone, // ブレンドなし
@@ -126,6 +129,8 @@ struct SpotLigth {
     float cosFalloffStart; // スポットライトの内側の角度（減衰開始の余弦）
     float padding[2];
 };
+
+Vector4 Lerp(const Vector4& start, const Vector4& end, float t);
 
 Matrix4x4 MakeIdentity4x4();
 

@@ -36,13 +36,25 @@ struct EmitterParam {
     Vector3 minVelocity = { -1.0f, -1.0f, -1.0f };
     Vector3 maxVelocity = { 1.0f, 1.0f, 1.0f };
 
-    // 色の最小・最大
-    Vector4 minColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-    Vector4 maxColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    // 色の最小・最大(グラデーション)
+    Vector4 minStartColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    Vector4 maxStartColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    Vector4 minEndColor = { 1.0f, 1.0f, 1.0f, 1.0f }; 
+    Vector4 maxEndColor = { 1.0f, 1.0f, 1.0f, 1.0f }; 
 
     // 寿命の最小・最大
     float minLifeTime = 1.0f;
     float maxLifeTime = 2.0f;
+
+    bool isInfinite = false;
+    
+    // 固定値で運用可能にするため
+    void SetScale(const Vector3& scale) { minScale = maxScale = scale; }
+    void SetRotate(const Vector3& rotate) { minRotate = maxRotate = rotate; }
+    void SetVelocity(const Vector3& velocity) { minVelocity = maxVelocity = velocity; }
+    void SetStartColor(const Vector4& color) { minStartColor = maxStartColor = color; }
+    void SetEndColor(const Vector4& color) { minEndColor = maxEndColor = color; }
+    void SetLifeTime(float lifeTime) { minLifeTime = maxLifeTime = lifeTime; }
 };
 
 class ParticleManager {
@@ -74,6 +86,10 @@ public:
         Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
         // グループごとのメッシュ
         std::unique_ptr<IParticleMesh> mesh;
+
+        Vector2 uvScrollSpeed = { 0.0f, 0.0f }; // 1秒間にどれだけ進むか (xが横方向)
+        Vector2 uvOffset = { 0.0f, 0.0f }; // 現在の累積スクロール量
+        ParticleMeshType meshType; // 判別用に保存しておくと便利
     };
 
     static ParticleManager* getInstance();
@@ -93,6 +109,7 @@ public:
 
     // set
     void SetDefaultCamera(Camera* camera) { this->Camera_ = camera; }
+    void SetGroupScrollSpeed(const std::string& name, const Vector2& speed);
 
     ParticleManager(ParticleManager&) = delete;
     ParticleManager& operator=(ParticleManager&) = delete;
