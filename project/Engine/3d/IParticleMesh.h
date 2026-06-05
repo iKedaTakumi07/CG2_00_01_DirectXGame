@@ -35,3 +35,19 @@ private:
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_ {};
     uint32_t vertexCount_ = 0;
 };
+
+// Cylinder
+class CylinderMesh : public IParticleMesh {
+public:
+    CylinderMesh(ID3D12Device* device, uint32_t divide = 32, float kTopRadius = 1.0f, float kBottomRadius = 1.0f, float kHeight = 3.0f);
+    const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const override { return vertexBufferView_; }
+    uint32_t GetVertexCount() const override { return vertexCount_; }
+
+private:
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_ {};
+    uint32_t vertexCount_ = 0;
+
+    float vTop = 1.0f;
+    float vBottom = 0.0f;
+};

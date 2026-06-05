@@ -43,17 +43,25 @@ Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate,
         randomFloat(param.minVelocity.z, param.maxVelocity.z)
     };
 
-    // 色の設定
-    particle.color = {
-        randomFloat(param.minColor.x, param.maxColor.x),
-        randomFloat(param.minColor.y, param.maxColor.y),
-        randomFloat(param.minColor.z, param.maxColor.z),
-        randomFloat(param.minColor.w, param.maxColor.w)
+    // 色の設定(グラデーション)
+    particle.startColor = {
+        randomFloat(param.minStartColor.x, param.maxStartColor.x),
+        randomFloat(param.minStartColor.y, param.maxStartColor.y),
+        randomFloat(param.minStartColor.z, param.maxStartColor.z),
+        randomFloat(param.minStartColor.w, param.maxStartColor.w)
     };
+    particle.endColor = {
+        randomFloat(param.minEndColor.x, param.maxEndColor.x),
+        randomFloat(param.minEndColor.y, param.maxEndColor.y),
+        randomFloat(param.minEndColor.z, param.maxEndColor.z),
+        randomFloat(param.minEndColor.w, param.maxEndColor.w)
+    };
+    particle.color = particle.startColor;
 
     // 寿命
     particle.lifeTime = randomFloat(param.minLifeTime, param.maxLifeTime);
     particle.currentTime = 0.0f;
+    particle.isInfinite = param.isInfinite;
 
     return particle;
 }
@@ -91,7 +99,6 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
 
 void ParticleManager::Update()
 {
-
     const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
     Matrix4x4 viewMatrix = Inverse(Camera_->GetWorldMatrix());
 
@@ -101,8 +108,29 @@ void ParticleManager::Update()
     billboardMatrix.m[3][1] = 0.0f;
     billboardMatrix.m[3][2] = 0.0f;
 
-    // ===== 全パーティクルグループ =====
+    // 全パーティクルグループ
     for (auto& [name, group] : particleGroups) {
+
+        // スクロールの計算
+        group.uvOffset.x += group.uvScrollSpeed.x * kDeltaTime;
+        group.uvOffset.y += group.uvScrollSpeed.y * kDeltaTime;
+
+        // UV行列を送り込む
+        ParticleMaterial* materialData = nullptr;
+        group.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+
+        materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+        materialData->enableLighting = false;
+        materialData->uvTransform = MakeTranslateMatrix({ group.uvOffset.x, group.uvOffset.y, 0.0f });
+
+        // サンプラー再設定
+        if (group.meshType == ParticleMeshType::kPlane) {
+            materialData->useClampSampler = 0;
+        } else {
+            materialData->useClampSampler = 1;
+        }
+
+        group.materialResource->Unmap(0, nullptr);
 
         // インスタンス数リセット
         group.instanceCount = 0;
@@ -111,38 +139,52 @@ void ParticleManager::Update()
         ParticleForGPU* instancingData = nullptr;
         group.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
 
-        // ===== グループ内全パーティクル =====
+        // グループ内全パーティクル
         for (auto it = group.particles.begin();
             it != group.particles.end();) {
 
             Particle& particle = *it;
 
-            // ===== 寿命判定 =====
-            if (particle.currentTime >= particle.lifeTime) {
+            // 寿命判定
+            if (!particle.isInfinite && particle.currentTime >= particle.lifeTime) {
                 it = group.particles.erase(it);
                 continue;
             }
 
-            // ===== 移動 =====
+            // 移動
             particle.transform.translate += particle.velocity * kDeltaTime;
 
-            // ===== 経過時間加算 =====
+            // グラデーション(有限寿命の場合)
+            Vector4 finalColor = particle.startColor;
+
+            if (!particle.isInfinite) {
+                // 経過時間を算出
+                float t = particle.currentTime / particle.lifeTime;
+                if (t > 1.0f)
+                    t = 1.0f;
+
+                // スタート色からエンド色へ補間
+                finalColor = Lerp(particle.startColor, particle.endColor, t);
+            } else {
+                // 後に経過時間で変化できるようにする
+                finalColor = particle.startColor;
+            }
+
+            // 経過時間加算
             particle.currentTime += kDeltaTime;
 
-            // ===== ワールド行列 =====
+            // ワールド行列
             Matrix4x4 worldMatrix = MakeAffineMatrix(particle.transform.scale, particle.transform.rotate, particle.transform.translate);
             if (useBillboard) {
                 worldMatrix = Multiply(worldMatrix, billboardMatrix);
             }
             Matrix4x4 projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(winApp_->KClientWidth) / float(winApp_->KClientHeight), 0.1f, 100.0f);
             Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-            float alpha = 1.0f - (particle.currentTime / particle.lifeTime);
 
-            // ===== インスタンシングデータ書き込み =====
+            // インスタンシングデータ書き込み
             instancingData[group.instanceCount].world = worldMatrix;
             instancingData[group.instanceCount].WVP = worldViewProjectionMatrix;
-            instancingData[group.instanceCount].color = particle.color;
-            instancingData[group.instanceCount].color.w = alpha;
+            instancingData[group.instanceCount].color = finalColor;
 
             group.instanceCount++;
             ++it;
@@ -372,11 +414,14 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     //  空のグループを作成＆登録
     ParticleGroup group {};
 
+    group.meshType = meshType;
     // 形状タイプに応じて個別クラスを生成
-    if (meshType == ParticleMeshType::Plane) {
+    if (meshType == ParticleMeshType::kPlane) {
         group.mesh = std::make_unique<PlaneMesh>(dxCommon->GetDevice());
-    } else if (meshType == ParticleMeshType::Ring) {
+    } else if (meshType == ParticleMeshType::kRing) {
         group.mesh = std::make_unique<RingMesh>(dxCommon->GetDevice());
+    } else if (meshType == ParticleMeshType::kCylinder) {
+        group.mesh = std::make_unique<CylinderMesh>(dxCommon->GetDevice());
     }
 
     // マテリアルにファイルパス設定
@@ -412,9 +457,11 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     materialData->enableLighting = false;
     materialData->uvTransform = MakeIdentity4x4();
     // 形状タイプに応じてフラグ変更
-    if (meshType == ParticleMeshType::Plane) {
+    if (meshType == ParticleMeshType::kPlane) {
         materialData->useClampSampler = 0;
-    } else if (meshType == ParticleMeshType::Ring) {
+    } else if (meshType == ParticleMeshType::kRing) {
+        materialData->useClampSampler = 1;
+    } else if (meshType == ParticleMeshType::kCylinder) {
         materialData->useClampSampler = 1;
     }
 
@@ -434,5 +481,13 @@ void ParticleManager::Emit(const std::string name, const Transform& transform, u
     for (uint32_t i = 0; i < count; ++i) {
         Particle particle = MakeNewParticle(randomEngine, transform, param);
         group.particles.push_back(particle);
+    }
+}
+
+void ParticleManager::SetGroupScrollSpeed(const std::string& name, const Vector2& speed)
+{
+    auto it = particleGroups.find(name);
+    if (it != particleGroups.end()) {
+        it->second.uvScrollSpeed = speed;
     }
 }

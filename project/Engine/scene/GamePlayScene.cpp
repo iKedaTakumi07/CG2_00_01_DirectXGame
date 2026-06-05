@@ -77,21 +77,21 @@ void GamePlayScene::Initialize()
     model2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d2->SetModel(model2.get());
 
-    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png", ParticleMeshType::Plane);
-    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::Plane);
+    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png", ParticleMeshType::kPlane);
+    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
 
     // 板ポリ
     Transform emitter {};
     emitter.translate = { 0.0f, 0.0f, 0.0f };
     emitter.rotate = { 0.0f, 0.0f, 0.0f };
     emitter.scale = { 1.0f, 1.0f, 1.0f };
-    // particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 3);
+    // particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 3,true);
 
     Transform emitterPlane {};
     emitterPlane.translate = { 4.0f, 4.0f, 0.0f };
     emitterPlane.rotate = { 0.0f, 0.0f, 0.0f };
     emitterPlane.scale = { 1.0f, 1.0f, 1.0f };
-    particleEmitterPlane = std::make_unique<ParticleEmitter>("Plane", emitterPlane, 1.0f, 5);
+    particleEmitterPlane = std::make_unique<ParticleEmitter>("Plane", emitterPlane, 1.0f, 5,true);
 
     fanfare.SoundLoadFile("resources/fanfare.wav");
     clearSe.SoundLoadFile("resources/stage.mp3");
