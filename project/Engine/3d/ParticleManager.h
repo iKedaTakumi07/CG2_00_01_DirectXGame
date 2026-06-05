@@ -18,8 +18,9 @@ class WinApp;
 
 // パーティクルのタイプ
 enum class ParticleMeshType {
-    Plane,
-    Ring
+    kPlane,
+    kRing,
+    kCylinder,
 };
 
 struct EmitterParam {

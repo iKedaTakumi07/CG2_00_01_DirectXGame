@@ -36,4 +36,5 @@ private:
 
     std::unique_ptr<ParticleEmitter> particleEmitter;
     std::unique_ptr<ParticleEmitter> particleEmitter2;
+    std::unique_ptr<ParticleEmitter> particleEmitter3;
 };

@@ -373,10 +373,12 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     ParticleGroup group {};
 
     // 形状タイプに応じて個別クラスを生成
-    if (meshType == ParticleMeshType::Plane) {
+    if (meshType == ParticleMeshType::kPlane) {
         group.mesh = std::make_unique<PlaneMesh>(dxCommon->GetDevice());
-    } else if (meshType == ParticleMeshType::Ring) {
+    } else if (meshType == ParticleMeshType::kRing) {
         group.mesh = std::make_unique<RingMesh>(dxCommon->GetDevice());
+    } else if (meshType == ParticleMeshType::kCylinder) {
+        group.mesh = std::make_unique<CylinderMesh>(dxCommon->GetDevice());
     }
 
     // マテリアルにファイルパス設定
@@ -412,9 +414,11 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     materialData->enableLighting = false;
     materialData->uvTransform = MakeIdentity4x4();
     // 形状タイプに応じてフラグ変更
-    if (meshType == ParticleMeshType::Plane) {
+    if (meshType == ParticleMeshType::kPlane) {
         materialData->useClampSampler = 0;
-    } else if (meshType == ParticleMeshType::Ring) {
+    } else if (meshType == ParticleMeshType::kRing) {
+        materialData->useClampSampler = 1;
+    } else if (meshType == ParticleMeshType::kCylinder) {
         materialData->useClampSampler = 1;
     }
 

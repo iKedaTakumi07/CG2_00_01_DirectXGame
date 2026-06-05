@@ -99,3 +99,42 @@ RingMesh::RingMesh(ID3D12Device* device, uint32_t divide, float outerRadius, flo
 
     vertexResource_->Unmap(0, nullptr);
 }
+
+CylinderMesh::CylinderMesh(ID3D12Device* device, uint32_t divide, float kTopRadius, float kBottomRadius, float kHeight)
+{
+    // 1分割につき2つの三角形（6頂点）が必要
+    vertexCount_ = divide * 6;
+    size_t size = sizeof(VertexData) * vertexCount_;
+    vertexResource_ = CreateBuffer(device, size);
+
+    vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
+    vertexBufferView_.SizeInBytes = static_cast<UINT>(size);
+    vertexBufferView_.StrideInBytes = sizeof(VertexData);
+
+    VertexData* vertexData = nullptr;
+    vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+
+    float radianPreDivide = 2.0f * std::numbers::pi_v<float> / float(divide);
+
+    for (uint32_t index = 0; index < divide; ++index) {
+        float sin = std::sin(index * radianPreDivide);
+        float cos = std::cos(index * radianPreDivide);
+        float sinNext = std::sin((index + 1) * radianPreDivide);
+        float cosNext = std::cos((index + 1) * radianPreDivide);
+        float u = float(index) / float(divide);
+        float uNext = float(index + 1) / float(divide);
+
+        // pos,tex,normal
+        uint32_t offset = index * 6;
+        // 三角形1
+        vertexData[offset + 0] = { { -sin * kTopRadius, kHeight, cos * kTopRadius, 1.0f }, { u, vTop }, { -sin, 0.0f, cos } };
+        vertexData[offset + 1] = { { -sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, vTop }, { -sinNext, 0.0f, cosNext } };
+        vertexData[offset + 2] = { { -sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, vBottom }, { -sin, 0.0f, cos } };
+        // 三角形2
+        vertexData[offset + 3] = { { -sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f }, { u, vBottom }, { -sin, 0.0f, cos } };
+        vertexData[offset + 4] = { { -sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f }, { uNext, vTop }, { -sinNext, 0.0f, cosNext } };
+        vertexData[offset + 5] = { { -sinNext * kBottomRadius, 0.0f, cosNext * kBottomRadius, 1.0f }, { uNext, vBottom }, { -sinNext, 0.0f, cosNext } };
+    }
+
+    vertexResource_->Unmap(0, nullptr);
+}

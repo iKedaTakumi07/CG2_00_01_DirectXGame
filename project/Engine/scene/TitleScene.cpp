@@ -53,11 +53,13 @@ void TitleScene::Initialize()
     model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
 
-    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::Plane);
-    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::Plane);
-    ParticleManager::getInstance()->CreateParticleGroup("gradationLine", "resources/gradationLine.png", ParticleMeshType::Ring);
+    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
+    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
+    ParticleManager::getInstance()->CreateParticleGroup("gradationLine", "resources/gradationLine.png", ParticleMeshType::kRing);
+    ParticleManager::getInstance()->CreateParticleGroup("Cylinder", "resources/gradationLine.png", ParticleMeshType::kCylinder);
 
     // ポストエフェクトのON/OFFならこれ。
+    // [次回アップデート]BoxFilter,gaussianFilterのhlslを1つにするためKernelSizeで設定し定数バッファで渡してポストエフェクトを入れる、のを導入予定。
     PostProcess::GetInstance()->SetEnableGaussianFilter5x5(true);
 
     // 板ポリ
@@ -91,6 +93,21 @@ void TitleScene::Initialize()
     fireParam.minLifeTime = 1.0f;
     fireParam.maxLifeTime = 1.0f;
     particleEmitter2->SetParam(fireParam);
+
+    // [アップデート予定]パーティクルPS閾値をCBuffer経由で設定できるようにする
+    emitter.translate = { 0.0f, 0.0f, 0.0f };
+    particleEmitter3 = std::make_unique<ParticleEmitter>("Cylinder", emitter, 10.0f, 1);
+    fireParam.maxRotate = { 0.0f, 0.0f, 0.0f };
+    fireParam.minRotate = { 0.0f, 0.0f, 0.0f };
+    fireParam.maxScale = { 1.0f, 1.0f, 1.0f };
+    fireParam.minScale = { 1.0f, 1.0f, 1.0f };
+    fireParam.minVelocity = { 0.0f, 0.0f, 0.0f };
+    fireParam.maxVelocity = { 0.0f, 0.0f, 0.0f };
+    fireParam.minColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    fireParam.maxColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    fireParam.minLifeTime = 10.0f;
+    fireParam.maxLifeTime = 10.0f;
+    particleEmitter3->SetParam(fireParam);
 }
 
 void TitleScene::Finalize()
@@ -115,6 +132,7 @@ void TitleScene::Update()
 
     particleEmitter->Update();
     particleEmitter2->Update();
+    particleEmitter3->Update();
 
     // IMGUI
     object3d->DrawImGui();
