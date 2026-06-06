@@ -2,6 +2,11 @@
 
 Texture2D<float32_t4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
+cbuffer FilterParameter : register(b0)
+{
+    int32_t gKernelSize;
+    float32_t gSigma; // ぼかしの強さ
+};
 
 struct PixelShaderOutput
 {
@@ -29,10 +34,13 @@ PixelShaderOutput main(VertexShaderOutput input)
     output.color.rgb = float32_t3(0.0f, 0.0f, 0.0f);
     output.color.a = 1.0f;
     
-    for (int32_t x = -1; x <= 1; ++x)
+    // カーネルサイズ
+    int32_t halfKernel = gKernelSize / 2;
+    
+    for (int32_t x = -halfKernel; x <= halfKernel; ++x)
     {
         // 1次元の重みを計算 (Sigma = 2.0f)
-        float32_t w = Gauss((float32_t)x, 2.0f);
+        float32_t w = Gauss((float32_t) x, gSigma);
         weight += w;
         
         // 横方向のみオフセットを適用

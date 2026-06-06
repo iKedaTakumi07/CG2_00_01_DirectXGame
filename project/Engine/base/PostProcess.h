@@ -15,6 +15,12 @@ public:
         float padding[3];
     };
 
+    struct FilterData {
+        int32_t kernelSize; // 3, 5, 7 など
+        float sigma; // ガウシアンフィルター用の標準偏差（Boxでは未使用）
+        float padding[2]; // 16バイトアライメント調整用
+    };
+
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
@@ -36,10 +42,10 @@ public:
     void DrawGrayscale();
     void DrawSepiascale();
     void DrawVignette();
-    void DrawHorizontalBlur(bool is5x5); // 引数で3x3か5x5かを判定
-    void DrawVerticalBlur(bool is5x5);
-    void DrawGaussianFilterHorizontal(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
-    void DrawGaussianFilterVertical(bool is5x5); // 今後7x7などを作成予定なのでフラグでないものに変更。
+    void DrawBoxFilterHorizontal();
+    void DrawBoxFilterVertical();
+    void DrawGaussianFilterHorizontal();
+    void DrawGaussianFilterVertical();
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -53,10 +59,8 @@ public:
     bool IsSepiascale() const { return enableSepiascale_; }
     bool IsVignette() const { return enableVignette_; }
     VignetteData GetVignetteParam() const { return vignetteParam_; }
-    bool IsBoxFilter3x3() const { return enableBoxFilter3x3_; }
-    bool IsBoxFilter5x5() const { return enableBoxFilter5x5_; }
-    bool IsGaussianFilter3x3() const { return enableGaussianFilter3x3_; }
-    bool IsGaussianFilter5x5() const { return enableGaussianFilter5x5_; }
+    bool IsBoxFilter() const { return enableBoxFilter; }
+    bool IsGaussianFilter() const { return enableGaussianFilter; }
 
     // set
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
@@ -64,28 +68,31 @@ public:
 
     void SetEnableGrayscale(bool enable) { enableGrayscale_ = enable; }
     void SetGrayscaleIntensity(float intensity) { GrayScaleParam_.intensity = intensity; }
+
     void SetEnableSepiascale(bool enable) { enableSepiascale_ = enable; }
     void SetSepiascaleIntensity(float intensity) { SepiascaleParam_.intensity = intensity; }
+
     void SetEnableVignette(bool enable) { enableVignette_ = enable; }
     void SetVignetteParam(float scale, float exponent)
     {
         vignetteParam_.scale = scale;
         vignetteParam_.exponent = exponent;
     }
-    void SetEnableBoxFilter3x3(bool enable) { enableBoxFilter3x3_ = enable; }
-    void SetEnableBoxFilter5x5(bool enable) { enableBoxFilter5x5_ = enable; }
-    void SetEnableGaussianFilter3x3(bool enable) { enableGaussianFilter3x3_ = enable; }
-    void SetEnableGaussianFilter5x5(bool enable) { enableGaussianFilter5x5_ = enable; }
+
+    void SetEnableBoxFilter(bool enable) { enableBoxFilter = enable; }
+    void SetKernelSizeBoxFilter(int KernelSize) { boxKernelSize_ = KernelSize; }
+
+    void SetEnableGaussianFilter(bool enable) { enableGaussianFilter = enable; }
+    void SetKernelSizeGaussianFilter(int KernelSize) { gaussianKernelSize_ = KernelSize; }
+    void SetSigmaGaussianFilter(float Sigma) { gaussianSigma_ = Sigma; }
 
     void ClearAllEffects()
     {
         enableGrayscale_ = false;
         enableSepiascale_ = false;
         enableVignette_ = false;
-        enableBoxFilter3x3_ = false;
-        enableBoxFilter5x5_ = false;
-        enableGaussianFilter3x3_ = false;
-        enableGaussianFilter5x5_ = false;
+        enableBoxFilter = false;
+        enableGaussianFilter = false;
     }
 
 public:
@@ -131,21 +138,22 @@ private:
     VignetteData* vignetteMappedData_ = nullptr;
     VignetteData vignetteParam_ = { 16.0f, 0.8f, { 0.0f, 0.0f } }; // 初期値
 
-    /* BoxFillter3x3 */
+    /* BoxFillter */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterY = nullptr;
 
-    /* BoxFillter5x5 */
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX5x5 = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterY5x5 = nullptr;
-
-    /* GaussianFilter3x3 */
+    /* GaussianFilter */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterX = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterY = nullptr;
 
-    /* GaussianFilter5x5 */
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterX5x5 = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterY5x5 = nullptr;
+    // Filter用
+    Microsoft::WRL::ComPtr<ID3D12Resource> filterBuffer_ = nullptr;
+    FilterData* filterMappedData_ = nullptr;
+    FilterData filterParam_ = { 3, 2.0f, { 0.0f, 0.0f } };
+
+    int boxKernelSize_ = 3;
+    int gaussianKernelSize_ = 3;
+    float gaussianSigma_ = 2.0f;
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 
@@ -153,8 +161,6 @@ private:
     bool enableGrayscale_ = false;
     bool enableSepiascale_ = false;
     bool enableVignette_ = false;
-    bool enableBoxFilter3x3_ = false;
-    bool enableBoxFilter5x5_ = false;
-    bool enableGaussianFilter3x3_ = false;
-    bool enableGaussianFilter5x5_ = false;
+    bool enableBoxFilter = false;
+    bool enableGaussianFilter = false;
 };
