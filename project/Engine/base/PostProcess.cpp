@@ -1,5 +1,6 @@
 #include "PostProcess.h"
 #include "../../externals/imgui/imgui.h"
+#include "../3d/Camera.h"
 #include "../base/Logger.h"
 #include "OffscreenSurface.h"
 #include <cassert>
@@ -44,11 +45,16 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&filterBuffer_));
     assert(SUCCEEDED(hr));
 
+    resDesc.Width = sizeof(OutlineData);
+    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&outlineBuffer_));
+    assert(SUCCEEDED(hr));
+
     // マップしてC++から書き込める状態にしておく
     GrayscaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&GrayscaleData_));
     SepiascaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&SepiascaleData_));
     vignetteBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&vignetteMappedData_));
     filterBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&filterMappedData_));
+    outlineBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&outlineMappedData_));
 }
 
 void PostProcess::DrawNormal()
@@ -175,13 +181,35 @@ void PostProcess::DrawGaussianFilterVertical()
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
-void PostProcess::DrawOutLine()
+void PostProcess::DrawLuminanceOutLine()
 {
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
-    cmd->SetPipelineState(pipelineStateOutLine.Get());
+    cmd->SetPipelineState(pipelineStateLuminanceOutLine.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
+void PostProcess::DrawDepthOutLine()
+{
+    assert(defaultCamera_ != nullptr && "PostProcessにカメラがセットされていません！");
+
+    if (outlineMappedData_) {
+        // カメラから最新のプロジェクション逆行列を取得して転送
+        outlineMappedData_->projectionInverse = defaultCamera_->GetProjectionInverse();
+    }
+
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateDepthOutLine.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // 各パラメータをスロットに合わせてバインド
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle); // [0] カラー (t0)
+    cmd->SetGraphicsRootConstantBufferView(1, outlineBuffer_->GetGPUVirtualAddress()); // [1] 逆行列 (b0)
+    cmd->SetGraphicsRootDescriptorTable(2, depthSrvHandle); // [2] 深度 (t1) 
+
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
@@ -231,7 +259,8 @@ void PostProcess::DrawImGui()
         ImGui::Unindent();
     }
 
-    ImGui::Checkbox("Outline", &enableOutLine_);
+    ImGui::Checkbox("LuminanceOutline", &enableLuminanceOutLine_);
+    ImGui::Checkbox("DepthOutline", &enableDepthOutLine_);
 
     ImGui::End();
 #endif // USE_IMGUI
@@ -249,8 +278,14 @@ void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+    D3D12_DESCRIPTOR_RANGE descriptorRangeDepth[1] = {};
+    descriptorRangeDepth[0].BaseShaderRegister = 1; // t1
+    descriptorRangeDepth[0].NumDescriptors = 1;
+    descriptorRangeDepth[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descriptorRangeDepth[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
     //// RootParameter作成
-    D3D12_ROOT_PARAMETER rootParameters[2] = {};
+    D3D12_ROOT_PARAMETER rootParameters[3] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRange;
@@ -260,13 +295,26 @@ void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダーから見える
     rootParameters[1].Descriptor.ShaderRegister = 0;
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+    // 深度テクスチャ
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeDepth;
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeDepth);
+
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = {};
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     staticSamplers[0].ShaderRegister = 0; // s0
     staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    staticSamplers[1].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT; // ポイントフィルタ
+    staticSamplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    staticSamplers[1].ShaderRegister = 1;
+    staticSamplers[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     descriptionRootSignature.pStaticSamplers = staticSamplers;
     descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
@@ -358,6 +406,8 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderLuminanceBasedOutline = dxcommon->CompileShader(L"resources/shaders/LuminanceBasedOutline.PS.hlsl", L"ps_6_0");
     assert(pixeShaderLuminanceBasedOutline != nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderDepthBasedOutline = dxcommon->CompileShader(L"resources/shaders/DepthBasedOutline.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderDepthBasedOutline != nullptr);
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
@@ -435,9 +485,15 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateGaussianFilterY));
     assert(SUCCEEDED(hr));
 
-    // アウトライン
+    // アウトライン(輝度)
     graphicsPipelineStateDesc.PS = { pixeShaderLuminanceBasedOutline->GetBufferPointer(), pixeShaderLuminanceBasedOutline->GetBufferSize() };
-    pipelineStateOutLine = nullptr;
-    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateOutLine));
+    pipelineStateLuminanceOutLine = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateLuminanceOutLine));
+    assert(SUCCEEDED(hr));
+
+    // アウトライン(Depth)
+    graphicsPipelineStateDesc.PS = { pixeShaderDepthBasedOutline->GetBufferPointer(), pixeShaderDepthBasedOutline->GetBufferSize() };
+    pipelineStateDepthOutLine = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateDepthOutLine));
     assert(SUCCEEDED(hr));
 }

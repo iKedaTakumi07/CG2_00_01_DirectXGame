@@ -22,6 +22,7 @@ public:
     const Matrix4x4& GetViewMatrix() const { return viewMatrix; }
     const Matrix4x4& GetProjectionMatrix() const { return projectionMatrix; }
     const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
+    const Matrix4x4& GetProjectionInverse() const { return projectionInverseMatrix; }
     Vector3 GetRotate() const { return transform.rotate; }
     Vector3 GetTranslate() const { return transform.translate; }
 
@@ -37,4 +38,5 @@ private:
     float farClip_;
 
     Matrix4x4 viewProjectionMatrix;
+    Matrix4x4 projectionInverseMatrix;
 };

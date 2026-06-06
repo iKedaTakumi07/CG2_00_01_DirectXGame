@@ -21,6 +21,11 @@ public:
         float padding[2]; // 16バイトアライメント調整用
     };
 
+    // アウトライン用
+    struct OutlineData {
+        Matrix4x4 projectionInverse;
+    };
+
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
@@ -46,7 +51,8 @@ public:
     void DrawBoxFilterVertical();
     void DrawGaussianFilterHorizontal();
     void DrawGaussianFilterVertical();
-    void DrawOutLine();
+    void DrawLuminanceOutLine();
+    void DrawDepthOutLine();
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -62,9 +68,12 @@ public:
     VignetteData GetVignetteParam() const { return vignetteParam_; }
     bool IsBoxFilter() const { return enableBoxFilter_; }
     bool IsGaussianFilter() const { return enableGaussianFilter_; }
-    bool IsOutLine() const { return enableOutLine_; }
+    bool IsLuminanceOutLine() const { return enableLuminanceOutLine_; }
+    bool IstDepthOutLine() const { return enableDepthOutLine_; }
 
     // set
+    void SetDepthSrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE handle) { this->depthSrvHandle = handle; }
+
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
     void SetsrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->srvHandle = srvHandle; }
 
@@ -88,7 +97,8 @@ public:
     void SetKernelSizeGaussianFilter(int KernelSize) { gaussianKernelSize_ = KernelSize; }
     void SetSigmaGaussianFilter(float Sigma) { gaussianSigma_ = Sigma; }
 
-    void SetEnableOutLine(bool enable) { enableOutLine_ = enable; }
+    void SetEnableLuminanceOutLine(bool enable) { enableLuminanceOutLine_ = enable; }
+    void SetDepthOutLine(bool enable) { enableDepthOutLine_ = enable; }
 
     void ClearAllEffects()
     {
@@ -97,7 +107,8 @@ public:
         enableVignette_ = false;
         enableBoxFilter_ = false;
         enableGaussianFilter_ = false;
-        enableOutLine_ = false;
+        enableLuminanceOutLine_ = false;
+        enableDepthOutLine_ = false;
     }
 
 public:
@@ -160,10 +171,16 @@ private:
     int gaussianKernelSize_ = 3;
     float gaussianSigma_ = 2.0f;
 
-    /* OutLine */
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateOutLine = nullptr;
+    /* OutLine(輝度) */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateLuminanceOutLine = nullptr;
+
+    /* OutLine(Depth) */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateDepthOutLine = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> outlineBuffer_ = nullptr;
+    OutlineData* outlineMappedData_ = nullptr;
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE depthSrvHandle;
 
     // 現在のモード
     bool enableGrayscale_ = false;
@@ -171,5 +188,6 @@ private:
     bool enableVignette_ = false;
     bool enableBoxFilter_ = false;
     bool enableGaussianFilter_ = false;
-    bool enableOutLine_ = false;
+    bool enableLuminanceOutLine_ = false;
+    bool enableDepthOutLine_ = false;
 };
