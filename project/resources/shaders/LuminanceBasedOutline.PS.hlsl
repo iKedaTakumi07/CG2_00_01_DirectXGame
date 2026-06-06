@@ -1,6 +1,10 @@
 #include "Fullscreen.hlsli"
 
 Texture2D<float32_t4> gTexture : register(t0);
+cbuffer weightMultiplier : register(b0)
+{
+    float32_t weightMultiplier;
+};
 SamplerState gSampler : register(s0);
 
 struct PixelShaderOutput
@@ -63,7 +67,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     float32_t weight = length(differnce);
     // cbufferで調整可能に
-    weight = saturate(weight * 6.0f);
+    weight = saturate(weight * weightMultiplier);
     
     output.color.rgb = (1.0f - weight) * gTexture.Sample(gSampler, input.texcoord).rgb;
     output.color.a = 1.0f;
