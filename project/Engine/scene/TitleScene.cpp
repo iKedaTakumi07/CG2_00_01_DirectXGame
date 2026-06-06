@@ -59,8 +59,8 @@ void TitleScene::Initialize()
     ParticleManager::getInstance()->CreateParticleGroup("Cylinder", "resources/gradationLine.png", ParticleMeshType::kCylinder);
 
     // ポストエフェクトのON/OFFならこれ。
-    // [次回アップデート]BoxFilter,gaussianFilterのhlslを1つにするためKernelSizeで設定し定数バッファで渡してポストエフェクトを入れる、のを導入予定。
-    PostProcess::GetInstance()->SetEnableGaussianFilter5x5(true);
+    PostProcess::GetInstance()->SetEnableBoxFilter(true);
+    PostProcess::GetInstance()->SetKernelSizeBoxFilter(7);
 
     // 板ポリ
     Transform emitter {};

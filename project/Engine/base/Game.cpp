@@ -84,60 +84,32 @@ void Game::Draw()
         std::swap(currentSource, currentDest);
     }
 
-    // ボックスフィルター 3x3
-    if (pp->IsBoxFilter3x3()) {
+    // ボックスフィルター 
+    if (pp->IsBoxFilter()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawHorizontalBlur(false); // 引数 false で 3x3
+        pp->DrawBoxFilterHorizontal(); 
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawVerticalBlur(false);
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    // ボックスフィルター 5x5
-    if (pp->IsBoxFilter5x5()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawHorizontalBlur(true); // 引数 true で 5x5
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawVerticalBlur(true);
+        pp->DrawBoxFilterVertical();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
 
-    if (pp->IsGaussianFilter3x3()) {
+    // ガウシアンフィルター
+    if (pp->IsGaussianFilter()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterHorizontal(false); // 引数 false で 3x3
+        pp->DrawGaussianFilterHorizontal(); 
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterVertical(false);
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    if (pp->IsGaussianFilter5x5()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterHorizontal(true); // 引数 true で 5x5
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterVertical(true);
+        pp->DrawGaussianFilterVertical();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }

@@ -212,13 +212,9 @@
     <FxCompile Include="resources\shaders\Sepiascale.PS.hlsl" />
     <FxCompile Include="resources\shaders\Vignette.PS.hlsl" />
     <FxCompile Include="resources\shaders\BoxFilterY.PS.hlsl" />
-    <FxCompile Include="resources\shaders\BoxFilterX5x5.PS.hlsl" />
-    <FxCompile Include="resources\shaders\BoxFilterY5x5.PS.hlsl" />
     <FxCompile Include="resources\shaders\BoxFilterX.PS.hlsl" />
     <FxCompile Include="resources\shaders\GaussianFilterX.PS.hlsl" />
     <FxCompile Include="resources\shaders\GaussianFilterY.PS.hlsl" />
-    <FxCompile Include="resources\shaders\GaussianFilterX5x5.PS.hlsl" />
-    <FxCompile Include="resources\shaders\GaussianFilterY5x5.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\io\Input.h">
