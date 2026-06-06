@@ -46,6 +46,7 @@ public:
     void DrawBoxFilterVertical();
     void DrawGaussianFilterHorizontal();
     void DrawGaussianFilterVertical();
+    void DrawOutLine();
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -59,8 +60,9 @@ public:
     bool IsSepiascale() const { return enableSepiascale_; }
     bool IsVignette() const { return enableVignette_; }
     VignetteData GetVignetteParam() const { return vignetteParam_; }
-    bool IsBoxFilter() const { return enableBoxFilter; }
-    bool IsGaussianFilter() const { return enableGaussianFilter; }
+    bool IsBoxFilter() const { return enableBoxFilter_; }
+    bool IsGaussianFilter() const { return enableGaussianFilter_; }
+    bool IsOutLine() const { return enableOutLine_; }
 
     // set
     void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
@@ -79,20 +81,23 @@ public:
         vignetteParam_.exponent = exponent;
     }
 
-    void SetEnableBoxFilter(bool enable) { enableBoxFilter = enable; }
+    void SetEnableBoxFilter(bool enable) { enableBoxFilter_ = enable; }
     void SetKernelSizeBoxFilter(int KernelSize) { boxKernelSize_ = KernelSize; }
 
-    void SetEnableGaussianFilter(bool enable) { enableGaussianFilter = enable; }
+    void SetEnableGaussianFilter(bool enable) { enableGaussianFilter_ = enable; }
     void SetKernelSizeGaussianFilter(int KernelSize) { gaussianKernelSize_ = KernelSize; }
     void SetSigmaGaussianFilter(float Sigma) { gaussianSigma_ = Sigma; }
+
+    void SetEnableOutLine(bool enable) { enableOutLine_ = enable; }
 
     void ClearAllEffects()
     {
         enableGrayscale_ = false;
         enableSepiascale_ = false;
         enableVignette_ = false;
-        enableBoxFilter = false;
-        enableGaussianFilter = false;
+        enableBoxFilter_ = false;
+        enableGaussianFilter_ = false;
+        enableOutLine_ = false;
     }
 
 public:
@@ -155,12 +160,16 @@ private:
     int gaussianKernelSize_ = 3;
     float gaussianSigma_ = 2.0f;
 
+    /* OutLine */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateOutLine = nullptr;
+
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 
     // 現在のモード
     bool enableGrayscale_ = false;
     bool enableSepiascale_ = false;
     bool enableVignette_ = false;
-    bool enableBoxFilter = false;
-    bool enableGaussianFilter = false;
+    bool enableBoxFilter_ = false;
+    bool enableGaussianFilter_ = false;
+    bool enableOutLine_ = false;
 };

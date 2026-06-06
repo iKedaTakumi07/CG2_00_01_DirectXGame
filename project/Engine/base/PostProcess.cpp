@@ -175,6 +175,16 @@ void PostProcess::DrawGaussianFilterVertical()
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
+void PostProcess::DrawOutLine()
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateOutLine.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
 void PostProcess::DrawImGui()
 {
 #ifdef USE_IMGUI
@@ -202,8 +212,8 @@ void PostProcess::DrawImGui()
         ImGui::Unindent();
     }
 
-    ImGui::Checkbox("BoxFillter", &enableBoxFilter);
-    if (enableBoxFilter) {
+    ImGui::Checkbox("BoxFillter", &enableBoxFilter_);
+    if (enableBoxFilter_) {
         ImGui::Indent();
         ImGui::SliderInt("Kernel Size##Box", &boxKernelSize_, 1, 15);
         if (boxKernelSize_ % 2 == 0)
@@ -211,8 +221,8 @@ void PostProcess::DrawImGui()
         ImGui::Unindent();
     }
 
-    ImGui::Checkbox("GaussianFilter", &enableGaussianFilter);
-    if (enableGaussianFilter) {
+    ImGui::Checkbox("GaussianFilter", &enableGaussianFilter_);
+    if (enableGaussianFilter_) {
         ImGui::Indent();
         ImGui::SliderInt("Kernel Size##Gauss", &gaussianKernelSize_, 1, 15);
         if (gaussianKernelSize_ % 2 == 0)
@@ -220,6 +230,8 @@ void PostProcess::DrawImGui()
         ImGui::SliderFloat("Sigma", &gaussianSigma_, 0.1f, 10.0f, "%.2f");
         ImGui::Unindent();
     }
+
+    ImGui::Checkbox("Outline", &enableOutLine_);
 
     ImGui::End();
 #endif // USE_IMGUI
@@ -344,6 +356,9 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderGaussianFilterY = dxcommon->CompileShader(L"resources/shaders/GaussianFilterY.PS.hlsl", L"ps_6_0");
     assert(pixeShaderGaussianFilterY != nullptr);
 
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderLuminanceBasedOutline = dxcommon->CompileShader(L"resources/shaders/LuminanceBasedOutline.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderLuminanceBasedOutline != nullptr);
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
@@ -418,5 +433,11 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.PS = { pixeShaderGaussianFilterY->GetBufferPointer(), pixeShaderGaussianFilterY->GetBufferSize() };
     pipelineStateGaussianFilterY = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateGaussianFilterY));
+    assert(SUCCEEDED(hr));
+
+    // アウトライン
+    graphicsPipelineStateDesc.PS = { pixeShaderLuminanceBasedOutline->GetBufferPointer(), pixeShaderLuminanceBasedOutline->GetBufferSize() };
+    pipelineStateOutLine = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateOutLine));
     assert(SUCCEEDED(hr));
 }

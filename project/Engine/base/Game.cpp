@@ -84,11 +84,11 @@ void Game::Draw()
         std::swap(currentSource, currentDest);
     }
 
-    // ボックスフィルター 
+    // ボックスフィルター
     if (pp->IsBoxFilter()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawBoxFilterHorizontal(); 
+        pp->DrawBoxFilterHorizontal();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
@@ -103,13 +103,22 @@ void Game::Draw()
     if (pp->IsGaussianFilter()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterHorizontal(); 
+        pp->DrawGaussianFilterHorizontal();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
         pp->DrawGaussianFilterVertical();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    // アウトラインフィルタ
+    if (pp->IsOutLine()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawOutLine();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }

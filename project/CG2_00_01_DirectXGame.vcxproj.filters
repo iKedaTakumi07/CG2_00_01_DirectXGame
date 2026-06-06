@@ -215,6 +215,7 @@
     <FxCompile Include="resources\shaders\BoxFilterX.PS.hlsl" />
     <FxCompile Include="resources\shaders\GaussianFilterX.PS.hlsl" />
     <FxCompile Include="resources\shaders\GaussianFilterY.PS.hlsl" />
+    <FxCompile Include="resources\shaders\LuminanceBasedOutline.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\io\Input.h">
