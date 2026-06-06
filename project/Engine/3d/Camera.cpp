@@ -10,6 +10,7 @@ Camera::Camera()
     , worldMatrix(MakeAffineMatrix(transform.scale, transform.rotate, transform.translate))
     , viewMatrix(Inverse(worldMatrix))
     , projectionMatrix(MakePrespectiveFovMatrix(horizontalFov_, aspectRatio_, nearClip_, farClip_))
+    , projectionInverseMatrix(Inverse(projectionMatrix))
     , viewProjectionMatrix(Multiply(viewMatrix, projectionMatrix))
 {
 }
@@ -20,6 +21,7 @@ void Camera::Update()
     viewMatrix = Inverse(worldMatrix);
 
     projectionMatrix = MakePrespectiveFovMatrix(horizontalFov_, aspectRatio_, nearClip_, farClip_);
+    projectionInverseMatrix = Inverse(projectionMatrix);
 
     viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 }

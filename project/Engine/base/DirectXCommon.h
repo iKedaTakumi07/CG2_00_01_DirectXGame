@@ -52,6 +52,7 @@ public:
     };
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
     HANDLE GetfenceEvent() { return fenceEvent; }
+    ID3D12Resource* GetDepthStencilResource() { return depthStencilResource.Get(); }
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
     // オフスクリーンレンダリング用テクスチャの生成（汎用化）

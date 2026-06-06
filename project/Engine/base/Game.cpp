@@ -46,9 +46,11 @@ void Game::Update()
 void Game::Draw()
 {
     Framework::GetSrvManager()->PreDraw(); // srv表示
-    Framework::GetOffScreenSurface()->PreDraw();
+    Framework::GetOffScreenSurface()->PreDraw(true);
     SceneManager::GetInstance()->Draw(); // メインの描画
     Framework::GetOffScreenSurface()->PostDraw();
+
+    Framework::GetOffScreenSurface()->TransitionDepthToShaderResource();
 
     // =============================================
     // ポストエフェクトのバケツリレー(Ping-Pong Buffer)
@@ -84,11 +86,11 @@ void Game::Draw()
         std::swap(currentSource, currentDest);
     }
 
-    // ボックスフィルター 
+    // ボックスフィルター
     if (pp->IsBoxFilter()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawBoxFilterHorizontal(); 
+        pp->DrawBoxFilterHorizontal();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
@@ -103,7 +105,7 @@ void Game::Draw()
     if (pp->IsGaussianFilter()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterHorizontal(); 
+        pp->DrawGaussianFilterHorizontal();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
 
@@ -113,6 +115,27 @@ void Game::Draw()
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
+
+    // アウトラインフィルタ(輝度)
+    if (pp->IsLuminanceOutLine()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawLuminanceOutLine();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    // アウトラインフィルタ(depth)
+    if (pp->IstDepthOutLine()) {
+        currentDest->PreDraw();
+        pp->SetDepthSrvHandle(currentSource->GetDepthSRVHandle());
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawDepthOutLine();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    Framework::GetOffScreenSurface()->TransitionDepthToWritable();
 
     Framework::GetDirectXCommon()->PreDraw();
 

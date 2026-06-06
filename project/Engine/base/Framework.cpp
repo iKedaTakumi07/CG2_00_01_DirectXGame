@@ -77,9 +77,6 @@ void Framework::Initialize()
     offscreenSurfaceB = std::make_unique<OffscreenSurface>();
     offscreenSurfaceB->Initialize(dxCommon.get(), srvManager.get(), indexB);
 
-    PostProcess::GetInstance()->Initialize(dxCommon.get());
-    PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
-
     imguiManager = std::make_unique<ImGuiManager>();
     imguiManager->Initialize(dxCommon.get(), srvManager.get());
 
@@ -94,6 +91,11 @@ void Framework::Initialize()
     camera = std::make_unique<Camera>();
     camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
+
+    PostProcess::GetInstance()->Initialize(dxCommon.get());
+    PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
+    PostProcess::GetInstance()->SetDepthSrvHandle(offscreenSurface->GetDepthSRVHandle());
+    PostProcess::GetInstance()->SetDefaultCamera(camera.get());
 
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
 
