@@ -45,7 +45,11 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&filterBuffer_));
     assert(SUCCEEDED(hr));
 
-    resDesc.Width = sizeof(OutlineData);
+    resDesc.Width = sizeof(LuminanceOutlineData);
+    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&LuminanceBuffer_));
+    assert(SUCCEEDED(hr));
+
+    resDesc.Width = sizeof(DepthOutlineData);
     hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&outlineBuffer_));
     assert(SUCCEEDED(hr));
 
@@ -55,6 +59,7 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     vignetteBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&vignetteMappedData_));
     filterBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&filterMappedData_));
     outlineBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&outlineMappedData_));
+    LuminanceBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&LuminanceData_));
 }
 
 void PostProcess::DrawNormal()
@@ -183,11 +188,15 @@ void PostProcess::DrawGaussianFilterVertical()
 
 void PostProcess::DrawLuminanceOutLine()
 {
+    if (LuminanceData_) {
+        *LuminanceData_ = LuminanceParam;
+    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateLuminanceOutLine.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootConstantBufferView(1, LuminanceBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
@@ -198,6 +207,7 @@ void PostProcess::DrawDepthOutLine()
     if (outlineMappedData_) {
         // カメラから最新のプロジェクション逆行列を取得して転送
         outlineMappedData_->projectionInverse = defaultCamera_->GetProjectionInverse();
+        outlineMappedData_->weightMultiplier = weightMultiplierParam;
     }
 
     auto cmd = dxCommon_->GetCommandList();
@@ -208,7 +218,7 @@ void PostProcess::DrawDepthOutLine()
     // 各パラメータをスロットに合わせてバインド
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle); // [0] カラー (t0)
     cmd->SetGraphicsRootConstantBufferView(1, outlineBuffer_->GetGPUVirtualAddress()); // [1] 逆行列 (b0)
-    cmd->SetGraphicsRootDescriptorTable(2, depthSrvHandle); // [2] 深度 (t1) 
+    cmd->SetGraphicsRootDescriptorTable(2, depthSrvHandle); // [2] 深度 (t1)
 
     cmd->DrawInstanced(3, 1, 0, 0);
 }
@@ -260,7 +270,18 @@ void PostProcess::DrawImGui()
     }
 
     ImGui::Checkbox("LuminanceOutline", &enableLuminanceOutLine_);
+    if (enableLuminanceOutLine_) {
+        ImGui::Indent();
+        ImGui::SliderFloat("weightMultiplier##LuminanceOutline", &LuminanceParam.weightMultiplier, 0.0f, 10.0f, "%.2f");
+        ImGui::Unindent();
+    }
+
     ImGui::Checkbox("DepthOutline", &enableDepthOutLine_);
+    if (enableDepthOutLine_) {
+        ImGui::Indent();
+        ImGui::SliderFloat("weightMultiplier##DepthOutline", &weightMultiplierParam, 0.0f, 5.0f, "%.2f");
+        ImGui::Unindent();
+    }
 
     ImGui::End();
 #endif // USE_IMGUI

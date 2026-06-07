@@ -8,6 +8,7 @@ struct PixelShaderOutput
 struct OutlineData
 {
     float32_t4x4 projectionInverse;
+    float32_t weightMultiplier;
 };
 
 ConstantBuffer<OutlineData> gOutlineData : register(b0);
@@ -75,7 +76,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     float32_t weight = length(differnce);
     // cbufferで調整可能に
-    weight = saturate(weight * 1.0f);
+    weight = saturate(weight * gOutlineData.weightMultiplier);
     
     output.color.rgb = (1.0f - weight) * gTexture.Sample(gSampler, input.texcoord).rgb;
     output.color.a = 1.0f;

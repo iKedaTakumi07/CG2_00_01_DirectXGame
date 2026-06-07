@@ -22,8 +22,14 @@ public:
     };
 
     // アウトライン用
-    struct OutlineData {
+    struct LuminanceOutlineData {
+        float weightMultiplier;
+        float padding[3];
+    };
+    struct DepthOutlineData {
         Matrix4x4 projectionInverse;
+        float weightMultiplier;
+        float padding[3];
     };
 
     // コンストラクタに渡すための鍵
@@ -91,14 +97,27 @@ public:
     }
 
     void SetEnableBoxFilter(bool enable) { enableBoxFilter_ = enable; }
-    void SetKernelSizeBoxFilter(int KernelSize) { boxKernelSize_ = KernelSize; }
+    void SetKernelSizeBoxFilter(int KernelSize)
+    {
+        boxKernelSize_ = KernelSize;
+        if (boxKernelSize_ % 2 == 0)
+            boxKernelSize_++;
+    }
 
     void SetEnableGaussianFilter(bool enable) { enableGaussianFilter_ = enable; }
-    void SetKernelSizeGaussianFilter(int KernelSize) { gaussianKernelSize_ = KernelSize; }
+    void SetKernelSizeGaussianFilter(int KernelSize)
+    {
+        gaussianKernelSize_ = KernelSize;
+        if (gaussianKernelSize_ % 2 == 0)
+            gaussianKernelSize_++;
+    };
     void SetSigmaGaussianFilter(float Sigma) { gaussianSigma_ = Sigma; }
 
     void SetEnableLuminanceOutLine(bool enable) { enableLuminanceOutLine_ = enable; }
+    void SetLuminanceOutlineWeight(float weight) { LuminanceParam.weightMultiplier = weight; }
+
     void SetDepthOutLine(bool enable) { enableDepthOutLine_ = enable; }
+    void SetDepthOutlineWeight(float weight) { weightMultiplierParam = weight; }
 
     void ClearAllEffects()
     {
@@ -173,11 +192,15 @@ private:
 
     /* OutLine(輝度) */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateLuminanceOutLine = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> LuminanceBuffer_ = nullptr;
+    LuminanceOutlineData* LuminanceData_ = nullptr;
+    LuminanceOutlineData LuminanceParam = { 6.0f, { 0.0f, 0.0f, 0.0f } };
 
     /* OutLine(Depth) */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateDepthOutLine = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> outlineBuffer_ = nullptr;
-    OutlineData* outlineMappedData_ = nullptr;
+    DepthOutlineData* outlineMappedData_ = nullptr;
+    float weightMultiplierParam = 1.0f;
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
     D3D12_GPU_DESCRIPTOR_HANDLE depthSrvHandle;
