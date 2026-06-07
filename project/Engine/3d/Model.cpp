@@ -19,7 +19,12 @@ void Model::Draw()
     modelCommon_->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
     modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
     modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(modelData.material.textureFilePath));
-    modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
+    if (!texturefilePath_.empty()) {
+        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
+    } else {
+        // Skyboxがない場合は、既にロードされている適当なテクスチャをダミーとしてバインドしてエラーを防ぐ
+        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/uvChecker.png"));
+    }
     modelCommon_->GetDxCommon()->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
 

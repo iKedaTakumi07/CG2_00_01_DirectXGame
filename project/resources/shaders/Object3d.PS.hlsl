@@ -71,85 +71,106 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     if (gMaterial.enableLighting != 0)
     {
-        /* DirectionalLight */
-        
-        // half lambert
-        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
-        float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-    
-        // 拡散反射
-        float32_t3 DirectionalLight_diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
-        
         // PixelShaderでCameraへの方向を算出
         float32_t3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
         
-        // blinn-phong
-        float32_t3 halfVector = normalize(-gDirectionalLight.direction + toEye);
-        float NDotH = dot(normalize(input.normal), halfVector);
-        float specularPow = pow(saturate(NDotH), gMaterial.shininess);
-
-        // 鏡面反射
-        float32_t3 DirectionalLight_specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
+        /* DirectionalLight */
+        float32_t3 DirectionalLight_diffuse = float32_t3(0.0f, 0.0f, 0.0f);
+        float32_t3 DirectionalLight_specular = float32_t3(0.0f, 0.0f, 0.0f);
         
+        
+        if (gDirectionalLight.intensity > 0.0f)
+        {
+            // half lambert
+            float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+            float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+    
+            // 拡散反射
+            DirectionalLight_diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+           
+            // blinn-phong
+            float32_t3 halfVector = normalize(-gDirectionalLight.direction + toEye);
+            float NDotH = dot(normalize(input.normal), halfVector);
+            float specularPow = pow(saturate(NDotH), gMaterial.shininess);
+
+            // 鏡面反射
+            DirectionalLight_specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
+        }
+  
         /* pointLight */
+        float32_t3 ptDiffuse = float32_t3(0.0f, 0.0f, 0.0f);
+        float32_t3 ptSpecular = float32_t3(0.0f, 0.0f, 0.0f);
         
-         // 入射光 
-        float32_t3 pointLightDirection = normalize(gPointLight.position - input.worldPosition);
-        // ポイントライトへの距離
-        float32_t distance = length(gPointLight.position - input.worldPosition);
-        // 逆二乗則による減衰係数
-        float32_t factor = pow(saturate(-distance / gPointLight.radius + 1.0), gPointLight.decay);
+        if (gPointLight.intensity > 0.0f && gPointLight.radius > 0.0f)
+        {
+            // 入射光 
+            float32_t3 pointLightDirection = normalize(gPointLight.position - input.worldPosition);
+            // ポイントライトへの距離
+            float32_t distance = length(gPointLight.position - input.worldPosition);
+            // 逆二乗則による減衰係数
+            float32_t factor = pow(saturate(-distance / gPointLight.radius + 1.0), gPointLight.decay);
         
-        float NdotL_pt = saturate(dot(input.normal, pointLightDirection));
-        float32_t3 ptDiffuse = gMaterial.color.rgb * textureColor.rgb * gPointLight.color.rgb * gPointLight.intensity * factor * NdotL_pt;
+            float NdotL_pt = saturate(dot(input.normal, pointLightDirection));
+            ptDiffuse = gMaterial.color.rgb * textureColor.rgb * gPointLight.color.rgb * gPointLight.intensity * factor * NdotL_pt;
 
-        // --- 鏡面反射 (Blinn-Phong) ---
-        float32_t3 halfVector_pt = normalize(pointLightDirection + toEye);
-        float NDotH_pt = saturate(dot(input.normal, halfVector_pt));
-        float specularPow_pt = pow(NDotH_pt, gMaterial.shininess);
-        float32_t3 ptSpecular = gPointLight.color.rgb * gPointLight.intensity * factor * specularPow_pt;
+            // --- 鏡面反射 (Blinn-Phong) ---
+            float32_t3 halfVector_pt = normalize(pointLightDirection + toEye);
+            float NDotH_pt = saturate(dot(input.normal, halfVector_pt));
+            float specularPow_pt = pow(NDotH_pt, gMaterial.shininess);
+            ptSpecular = gPointLight.color.rgb * gPointLight.intensity * factor * specularPow_pt;
+        }
+      
         
         /* spotLigth */
+        float32_t3 spDiffuse = float32_t3(0.0f, 0.0f, 0.0f);
+        float32_t3 spSpecular = float32_t3(0.0f, 0.0f, 0.0f);
         
-        // 光源ベクトル
-        float32_t3 spotLightDir = normalize(gSpotLigth.position - input.worldPosition);
-        float32_t spotLightDistance = length(gSpotLigth.position - input.worldPosition);
+        if (gSpotLigth.intensity > 0.0f && gSpotLigth.distance > 0.0f)
+        {
+            // 光源ベクトル
+            float32_t3 spotLightDir = normalize(gSpotLigth.position - input.worldPosition);
+            float32_t spotLightDistance = length(gSpotLigth.position - input.worldPosition);
+          
+            // 距離減衰
+            float32_t distanceAttenuation = pow(saturate(-spotLightDistance / gSpotLigth.distance + 1.0f), gSpotLigth.decay);
         
-        // 距離減衰
-        float32_t distanceAttenuation = pow(saturate(-spotLightDistance / gSpotLigth.distance + 1.0f), gSpotLigth.decay);
+            // 角度減衰
+            float32_t3 spotLigthDirectionOnSurface = normalize(input.worldPosition - gSpotLigth.position);
+            float32_t currentCosAngle = dot(spotLigthDirectionOnSurface, gSpotLigth.direction);
         
-        // 角度減衰
-        float32_t3 spotLigthDirectionOnSurface = normalize(input.worldPosition - gSpotLigth.position);
-        float32_t currentCosAngle = dot(spotLigthDirectionOnSurface, gSpotLigth.direction);
+            // 内側から外側に向って減衰するようにする
+            float32_t falloffFactor = saturate((currentCosAngle - gSpotLigth.cosAngle) / (gSpotLigth.cosFalloffStart - gSpotLigth.cosAngle));
         
-        // 内側から外側に向って減衰するようにする
-        float32_t falloffFactor = saturate((currentCosAngle - gSpotLigth.cosAngle) / (gSpotLigth.cosFalloffStart - gSpotLigth.cosAngle));
+            // 全体の減衰率を求める
+            float32_t spotLightAttenuation = distanceAttenuation * falloffFactor;
         
-        // 全体の減衰率を求める
-        float32_t spotLightAttenuation = distanceAttenuation * falloffFactor;
+            // 拡散反射
+            float32_t spotNDotL = saturate(dot(normalize(input.normal), spotLightDir));
+            spDiffuse = gMaterial.color.rgb * textureColor.rgb * gSpotLigth.color.rgb * spotNDotL * gSpotLigth.intensity;
         
-        // 拡散反射
-        float32_t spotNDotL = saturate(dot(normalize(input.normal), spotLightDir));
-        float32_t3 spDiffuse = gMaterial.color.rgb * textureColor.rgb * gSpotLigth.color.rgb * spotNDotL * gSpotLigth.intensity;
+            // 鏡面反射
+            // カメラ方向のベクトル/ハーフベクトル
+            float32_t3 spotHalfVector = normalize(spotLightDir + toEye);
+            float32_t spotNDotH = saturate(dot(normalize(input.normal), spotHalfVector));
         
-        // 鏡面反射
-        // カメラ方向のベクトル/ハーフベクトル
-        float32_t3 spotHalfVector = normalize(spotLightDir + toEye);
-        float32_t spotNDotH = saturate(dot(normalize(input.normal), spotHalfVector));
-        
-        // 鏡面反射
-        float32_t spotSpecularPow = pow(spotNDotH, gMaterial.shininess);
-        float32_t3 spSpecular = gSpotLigth.color.rgb * gSpotLigth.intensity * spotSpecularPow;
-        
-        // 減衰の適応
-        spDiffuse *= spotLightAttenuation;
-        spSpecular *= spotLightAttenuation;
-        
+            // 鏡面反射
+            float32_t spotSpecularPow = pow(spotNDotH, gMaterial.shininess);
+            spSpecular = gSpotLigth.color.rgb * gSpotLigth.intensity * spotSpecularPow;
+            
+            // 減衰の適応
+            spDiffuse *= spotLightAttenuation;
+            spSpecular *= spotLightAttenuation;
+        }
+       
         /* 環境マップ */
-        float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
-        float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
-        float32_t4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
-        environmentColor = environmentColor * gMaterial.evnironmentCoefficient;
+        float32_t3 environmentColor = float32_t3(0.0f, 0.0f, 0.0f);
+        if (gMaterial.evnironmentCoefficient > 0.0f)
+        {
+            float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+            float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+            float32_t4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+            environmentColor = environmentColor * gMaterial.evnironmentCoefficient;
+        }
         
         // 拡散反射 + 鏡面反射
         output.color.rgb = DirectionalLight_diffuse + ptDiffuse + spDiffuse + DirectionalLight_specular + ptSpecular + spSpecular + environmentColor.rgb;

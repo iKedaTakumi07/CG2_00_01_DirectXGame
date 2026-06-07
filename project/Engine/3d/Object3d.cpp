@@ -247,8 +247,8 @@ void Object3d::pointLightInitialize()
     // 今回は白を書き込んでみる
     PointLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     PointLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
-    PointLigthData->intensity = 1.0f;
-    PointLigthData->decay = 0.1f;
+    PointLigthData->intensity = 0.0f;
+    PointLigthData->decay = 1.0f;
     PointLigthData->radius = 0.0f;
 }
 
@@ -261,9 +261,9 @@ void Object3d::spotLightInitialize()
     // 今回は白を書き込んでみる
     SpotLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     SpotLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
-    SpotLigthData->distance = 0.0f;
+    SpotLigthData->distance = 1.0f;
     SpotLigthData->direction = Normalize({ -1.0f, -1.0f, 0.0f });
-    SpotLigthData->intensity = 4.0f;
+    SpotLigthData->intensity = 0.0f;
     SpotLigthData->decay = 2.0f;
     SpotLigthData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
     SpotLigthData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 4.0f);
