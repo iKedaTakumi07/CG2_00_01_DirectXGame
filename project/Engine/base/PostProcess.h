@@ -102,6 +102,8 @@ public:
         boxKernelSize_ = KernelSize;
         if (boxKernelSize_ % 2 == 0)
             boxKernelSize_++;
+        if (boxKernelSize_ >= 31) // オーバーフロー&&過度なエフェクト対策
+            boxKernelSize_ = 31;
     }
 
     void SetEnableGaussianFilter(bool enable) { enableGaussianFilter_ = enable; }
@@ -110,6 +112,8 @@ public:
         gaussianKernelSize_ = KernelSize;
         if (gaussianKernelSize_ % 2 == 0)
             gaussianKernelSize_++;
+        if (gaussianKernelSize_ >= 31) // オーバーフロー&&過度なエフェクト対策
+            gaussianKernelSize_ = 31;
     };
     void SetSigmaGaussianFilter(float Sigma) { gaussianSigma_ = Sigma; }
 

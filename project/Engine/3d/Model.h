@@ -20,6 +20,7 @@ public:
 
 private:
     void VertexResourceInitialize();
+    void IndexResourceInitialize();
     void MaterialResourceInitialize();
 
     ModelCommon* modelCommon_ = nullptr;
@@ -28,6 +29,11 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView {};
     VertexData* vertexData = nullptr;
+
+    // インデックス
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView {};
+    uint32_t* indexData = nullptr;
 
     // Model用のマテリアルリソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;

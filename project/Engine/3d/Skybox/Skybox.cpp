@@ -17,8 +17,6 @@ void Skybox::Initialize(std::string texturefilePath)
 
 void Skybox::Update()
 {
-    
-
     Matrix4x4 worldMatrix = MakeIdentity4x4();
 
     // 2. View行列（カメラの回転だけを反映し、平行移動を無効化する）

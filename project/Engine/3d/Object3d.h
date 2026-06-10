@@ -24,7 +24,7 @@ public:
     }
 
 public:
-    static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+    //static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
     // 初期化
