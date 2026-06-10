@@ -37,13 +37,14 @@ void TitleScene::Initialize()
     TextureManager::getInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/grass.png");
+    TextureManager::getInstance()->LoadTexture("resources/AnimatedCube_BaseColor.png");
+    TextureManager::getInstance()->LoadTexture("resources/AnimatedCube_MetallicRoughness.png");
 
     ModelManager::GetInstance()->LoadModel("axis.obj");
     ModelManager::GetInstance()->LoadModel("terrain.obj");
 
-    // [次回アップデート]skyboxを導入していない状態でもmodelを描画可能にする。
-    //skydox = std::make_unique<Skybox>();
-    //skydox->Initialize("resources/rostock_laage_airport_4k.dds");
+    // skydox = std::make_unique<Skybox>();
+    // skydox->Initialize("resources/rostock_laage_airport_4k.dds");
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
@@ -51,8 +52,17 @@ void TitleScene::Initialize()
 
     model = std::make_unique<Model>();
     model->Initialize("resources", "terrain.obj");
-    //model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
+    // model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
+
+    object3d_2 = std::make_unique<Object3d>();
+    object3d_2->Initialize();
+    object3d_2->SetCamera(BaseScene::GetCamera());
+
+    model_2 = std::make_unique<Model>();
+    model_2->Initialize("resources", "terrain.obj");
+    // model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
+    object3d_2->SetModel(model_2.get());
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
     ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
@@ -115,13 +125,13 @@ void TitleScene::Update()
     Input* input = GetInput();
     Camera* camera = GetCamera();
 
-    //skydox->SetCamera(camera);
+    // skydox->SetCamera(camera);
 
     if (input->TriggerKey(DIK_F1)) {
         SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
     }
 
-    //skydox->Update();
+    // skydox->Update();
 
     object3d->Update();
 
@@ -144,7 +154,7 @@ void TitleScene::Draw()
     object3d->Draw();
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
-    //skydox->Draw();
+    // skydox->Draw();
 
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
 

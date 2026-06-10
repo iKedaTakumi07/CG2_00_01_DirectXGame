@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 
 struct Vector2 {
     float x;
@@ -74,10 +75,41 @@ struct MaterialData {
     std::string textureFilePath;
     uint32_t textureIndex = 0;
 };
+struct Node {
+    Matrix4x4 localMatrix;
+    std::string name;
+    std::vector<Node> childrem;
+};
+
+template <typename tValue>
+struct keyframe {
+    float time;
+    tValue value;
+};
+using keyframeVector3 = keyframe<Vector3>;
+using keyframeQuaternion = keyframe<Vector4>;
+
+template <typename tValue>
+struct AnimationCurve {
+    std::vector<keyframe<tValue>> keyframes;
+};
+
+struct NodeAnimation {
+    AnimationCurve<Vector3> translate;
+    AnimationCurve<Vector4> rotate;
+    AnimationCurve<Vector3> scale;
+};
+
+struct Animation {
+    float duration; // アニメーション全体の尺
+    std::map<std::string, NodeAnimation> nodeAnimations;
+};
+
 struct ModelData {
     std::vector<VertexData> vertices;
     std::vector<uint32_t> indices;
     MaterialData material;
+    Node rootNode;
 };
 struct PointLigth {
     Vector4 color; // 色

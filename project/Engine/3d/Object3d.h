@@ -1,6 +1,7 @@
 #pragma once
 #include "../base/Math.h"
 #include "../externals/DirectXTex/DirectXTex.h"
+#include <assimp/scene.h>
 #include <d3d12.h>
 #include <wrl.h>
 
@@ -24,8 +25,10 @@ public:
     }
 
 public:
-    //static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+    // static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+    static Animation LoadAinmationFile(const std::string& directoryPath, const std::string& filename);
+    static Node ReadNode(aiNode* node);
 
     // 初期化
     void Initialize();

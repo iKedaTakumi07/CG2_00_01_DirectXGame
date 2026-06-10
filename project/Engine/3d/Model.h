@@ -13,6 +13,7 @@ public:
 
     // Get
     Material* GetmaterialData() { return materialData; }
+    const ModelData& GetModelData() const { return modelData; }
 
     // Set
     void SetEvnTexturefilePath(std::string texturefilePath) { texturefilePath_ = texturefilePath; }

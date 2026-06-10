@@ -6,7 +6,6 @@
 #include "Object3dCommon.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include <assimp/scene.h>
 #include <cassert>
 #include <fstream>
 #include <numbers>
@@ -14,28 +13,28 @@
 #include "../externals/imgui/imgui.h"
 #endif // USE_IMGUI
 
-//MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+// MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 //{
-//    MaterialData materialData; // 構築するMaterialData
-//    std::string line; // ファイルから読み込んだ1行を格納するもの
-//    std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
-//    assert(file.is_open()); // 開けられないなら止める
+//     MaterialData materialData; // 構築するMaterialData
+//     std::string line; // ファイルから読み込んだ1行を格納するもの
+//     std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+//     assert(file.is_open()); // 開けられないなら止める
 //
-//    while (std::getline(file, line)) {
-//        std::string identifier;
-//        std::istringstream s(line);
-//        s >> identifier;
+//     while (std::getline(file, line)) {
+//         std::string identifier;
+//         std::istringstream s(line);
+//         s >> identifier;
 //
-//        // identifierに応じた処理
-//        if (identifier == "map_Kd") {
-//            std::string textureFilename;
-//            s >> textureFilename;
-//            // 連結してファイルパスにする
-//            materialData.textureFilePath = directoryPath + "/" + textureFilename;
-//        }
-//    }
-//    return materialData;
-//}
+//         // identifierに応じた処理
+//         if (identifier == "map_Kd") {
+//             std::string textureFilename;
+//             s >> textureFilename;
+//             // 連結してファイルパスにする
+//             materialData.textureFilePath = directoryPath + "/" + textureFilename;
+//         }
+//     }
+//     return materialData;
+// }
 
 ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
@@ -95,7 +94,88 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
         }
     }
 
+    modelData.rootNode = ReadNode(scene->mRootNode);
+
     return modelData;
+}
+
+Animation Object3d::LoadAinmationFile(const std::string& directoryPath, const std::string& filename)
+{
+    Animation animation; // 構築するアニメーション
+
+    Assimp::Importer importer;
+    std::string filePath = directoryPath + "/" + filename;
+    const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
+    assert(scene->mNumAnimations != 0);
+    aiAnimation* animationAssimp = scene->mAnimations[0]; // 最初のアニメーションだけ採用。//[後日]複数対応予定。
+    animation.duration = float(animationAssimp->mDuration / animationAssimp->mTicksPerSecond); // 時間の単位を秒に変更
+
+    // nodeAnimationを解析
+    for (uint32_t channelIndex = 0; channelIndex < animationAssimp->mNumChannels; ++channelIndex) {
+        aiNodeAnim* nodeAnimatonAssimp = animationAssimp->mChannels[channelIndex];
+        NodeAnimation& nodeAnimation = animation.nodeAnimations[nodeAnimatonAssimp->mNodeName.C_Str()];
+
+        // 座標
+        for (uint32_t keyIndex = 0; keyIndex < nodeAnimatonAssimp->mNumPositionKeys; ++keyIndex) {
+            aiVectorKey& keyAssimp = nodeAnimatonAssimp->mPositionKeys[keyIndex];
+            keyframeVector3 keyframe;
+            keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond); // 秒に変換
+            keyframe.value = { -keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z }; // 右手->左手
+
+            nodeAnimation.translate.keyframes.push_back(keyframe);
+        }
+
+        // 回転
+        for (uint32_t keyIndex = 0; keyIndex < nodeAnimatonAssimp->mNumRotationKeys; ++keyIndex) {
+            aiQuatKey& keyAssimp = nodeAnimatonAssimp->mRotationKeys[keyIndex];
+            keyframeQuaternion keyframe;
+            keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+
+            keyframe.value = {
+                keyAssimp.mValue.x,
+                -keyAssimp.mValue.y,
+                -keyAssimp.mValue.z,
+                keyAssimp.mValue.w
+            };
+
+            nodeAnimation.rotate.keyframes.push_back(keyframe);
+        }
+
+        // 縮尺
+        for (uint32_t keyIndex = 0; keyIndex < nodeAnimatonAssimp->mNumScalingKeys; ++keyIndex) {
+            aiVectorKey& keyAssimp = nodeAnimatonAssimp->mScalingKeys[keyIndex];
+            keyframeVector3 keyframe;
+            keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+
+            keyframe.value = { keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z };
+
+            nodeAnimation.scale.keyframes.push_back(keyframe);
+        }
+    }
+
+    return animation;
+}
+
+Node Object3d::ReadNode(aiNode* node)
+{
+    Node result;
+    aiMatrix4x4 aiLocalMatrix = node->mTransformation;
+    aiLocalMatrix.Transpose();
+    for (int x = 0; x < 4; ++x) {
+        for (int y = 0; y < 4; ++y) {
+            result.localMatrix.m[x][y] = aiLocalMatrix[x][y];
+        }
+    }
+
+    result.name = node->mName.C_Str(); // node名を格納
+    result.childrem.resize(node->mNumChildren); // 子の数だけ確保
+
+    for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex) {
+        // 再帰関数
+        result.childrem[childIndex] = ReadNode(node->mChildren[childIndex]);
+    }
+
+    return result;
 }
 
 void Object3d::Initialize()
@@ -119,9 +199,17 @@ void Object3d::Initialize()
 void Object3d::Update()
 {
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+
+    if (model) {
+        const ModelData& modelData = model->GetModelData();
+
+        worldMatrix = Multiply(modelData.rootNode.localMatrix, worldMatrix);
+    }
+
     Matrix4x4 worldViewProjectionMatrix;
     const Matrix4x4& ViewProjectionMatrix = camera->GetViewProjectionMatrix();
     worldViewProjectionMatrix = Multiply(worldMatrix, ViewProjectionMatrix);
+
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
     transformationMatrixData->worldInverseTranspose = Transpose(Inverse(worldMatrix));
