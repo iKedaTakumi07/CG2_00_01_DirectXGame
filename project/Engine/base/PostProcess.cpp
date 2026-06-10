@@ -253,7 +253,7 @@ void PostProcess::DrawImGui()
     ImGui::Checkbox("BoxFillter", &enableBoxFilter_);
     if (enableBoxFilter_) {
         ImGui::Indent();
-        ImGui::SliderInt("Kernel Size##Box", &boxKernelSize_, 1, 15);
+        ImGui::SliderInt("Kernel Size##Box", &boxKernelSize_, 1, 31);
         if (boxKernelSize_ % 2 == 0)
             boxKernelSize_++; // 強制的に奇数にする
         ImGui::Unindent();
@@ -262,7 +262,7 @@ void PostProcess::DrawImGui()
     ImGui::Checkbox("GaussianFilter", &enableGaussianFilter_);
     if (enableGaussianFilter_) {
         ImGui::Indent();
-        ImGui::SliderInt("Kernel Size##Gauss", &gaussianKernelSize_, 1, 15);
+        ImGui::SliderInt("Kernel Size##Gauss", &gaussianKernelSize_, 1, 31);
         if (gaussianKernelSize_ % 2 == 0)
             gaussianKernelSize_++; // 強制的に奇数にする
         ImGui::SliderFloat("Sigma", &gaussianSigma_, 0.1f, 10.0f, "%.2f");
