@@ -11,21 +11,26 @@ void Model::Initialize(const std::string& directorypath, const std::string& file
 
     // 頂点データ初期化
     VertexResourceInitialize();
+    IndexResourceInitialize();
     MaterialResourceInitialize();
 }
 
 void Model::Draw()
 {
     modelCommon_->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+
+    modelCommon_->GetDxCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+
     modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
     modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(modelData.material.textureFilePath));
+
     if (!texturefilePath_.empty()) {
         modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
     } else {
         // Skyboxがない場合は、既にロードされている適当なテクスチャをダミーとしてバインドしてエラーを防ぐ
         modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/uvChecker.png"));
     }
-    modelCommon_->GetDxCommon()->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+    modelCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(UINT(modelData.vertices.size()), 1, 0, 0, 0);
 }
 
 void Model::VertexResourceInitialize()
@@ -40,6 +45,25 @@ void Model::VertexResourceInitialize()
 
     vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
     std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+}
+
+void Model::IndexResourceInitialize()
+{
+    size_t sizeInBytes = sizeof(uint32_t) * modelData.indices.size();
+
+    // バッファリソースの作成
+    indexResource = modelCommon_->GetDxCommon()->CreateBufferResource(sizeInBytes);
+
+    // インデックスバッファビュー
+    indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+    indexBufferView.SizeInBytes = UINT(sizeInBytes);
+    indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+    // GPUマッピング
+    indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+    std::memcpy(indexData, modelData.indices.data(), sizeInBytes);
+
+    indexResource->Unmap(0, nullptr);
 }
 
 void Model::MaterialResourceInitialize()
