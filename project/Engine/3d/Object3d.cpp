@@ -241,34 +241,41 @@ void Object3d::DrawImGui(const std::string& label)
 {
 #ifdef USE_IMGUI
     ImGui::Begin("Objects Control");
-
     ImGui::PushID(label.c_str());
 
     if (ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+
+        ImGui::Indent();
 
         ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
         ImGui::SliderAngle("RotateX", &transform.rotate.x);
         ImGui::SliderAngle("RotateY", &transform.rotate.y);
         ImGui::SliderAngle("RotateZ", &transform.rotate.z);
+        ImGui::Spacing();
 
         // --- Directional Light ---
         if (ImGui::CollapsingHeader("Directional Light")) {
+            ImGui::Indent();
             ImGui::SliderFloat3("direction", &directionalLightData->direction.x, -1.0f, 1.0f);
             ImGui::ColorEdit4("Color", &(directionalLightData->color).x);
             ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
+            ImGui::Unindent();
         }
 
         // --- Point Light ---
         if (ImGui::CollapsingHeader("Point Light")) {
+            ImGui::Indent();
             ImGui::ColorEdit4("color", &(PointLigthData->color).x);
             ImGui::DragFloat3("Position", &PointLigthData->position.x, 0.01f);
             ImGui::DragFloat("radius", &PointLigthData->radius, 0.01f);
             ImGui::DragFloat("intensity", &PointLigthData->intensity, 0.01f);
             ImGui::DragFloat("decay", &PointLigthData->decay, 0.01f);
+            ImGui::Unindent();
         }
 
         // --- Spot Light ---
         if (ImGui::CollapsingHeader("Spot Light")) {
+            ImGui::Indent();
             ImGui::ColorEdit4("color", &(SpotLigthData->color).x);
             ImGui::DragFloat3("position", &SpotLigthData->position.x, 0.01f);
             ImGui::DragFloat("intensity", &SpotLigthData->intensity, 0.01f);
@@ -277,9 +284,11 @@ void Object3d::DrawImGui(const std::string& label)
             ImGui::DragFloat("decay", &SpotLigthData->decay, 0.01f);
             ImGui::DragFloat("cosAngle", &SpotLigthData->cosAngle, 0.01f);
             ImGui::DragFloat("cosFalloffStart", &SpotLigthData->cosFalloffStart, 0.01f);
+            ImGui::Unindent();
         }
 
         if (ImGui::CollapsingHeader("materialData")) {
+            ImGui::Indent();
             Material* materialData = model->GetmaterialData();
             bool isLighting = (materialData->enableLighting != 0);
             if (ImGui::Checkbox("Enable Lighting (Unlit Texture)", &isLighting)) {
@@ -287,11 +296,13 @@ void Object3d::DrawImGui(const std::string& label)
             }
             ImGui::DragFloat("evnironmentCoefficient", &materialData->evnironmentCoefficient, 0.01f);
             model->SetMaterialDataEvnironmentCoefficient(materialData->evnironmentCoefficient);
+            ImGui::Unindent();
         }
+
+        ImGui::Unindent();
     }
 
     ImGui::PopID();
-
     ImGui::End();
 #endif // USE_IMGUI
 }

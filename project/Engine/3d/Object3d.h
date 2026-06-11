@@ -7,7 +7,7 @@
 
 class WinApp;
 class Object3dCommon;
-class Model;
+#include "Model.h"
 class Camera;
 
 class Object3d {
@@ -49,6 +49,36 @@ public:
     void SetTranslate(const Vector3& translate) { transform.translate = translate; }
     void SetModel(const std::string& filePath);
     void SetCamera(Camera* camera) { this->camera = camera; }
+
+    void SetDirectionalLight(const DirectionalLight& light)
+    {
+        if (directionalLightData)
+            *directionalLightData = light;
+    }
+    void SetPointLight(const PointLigth& light)
+    {
+        if (PointLigthData)
+            *PointLigthData = light;
+    }
+    void SetSpotLight(const SpotLigth& light)
+    {
+        if (SpotLigthData)
+            *SpotLigthData = light;
+    }
+
+    void SetEnableLighting(bool enable)
+    {
+        if (model && model->GetmaterialData()) {
+            model->GetmaterialData()->enableLighting = enable ? 1 : 0;
+        }
+    }
+    void SetEnvironmentCoefficient(float coefficient)
+    {
+        if (model && model->GetmaterialData()) {
+            model->GetmaterialData()->evnironmentCoefficient = coefficient;
+            model->SetMaterialDataEvnironmentCoefficient(coefficient);
+        }
+    }
 
     // Getter
     const Vector3& GetScale() const { return transform.scale; }
