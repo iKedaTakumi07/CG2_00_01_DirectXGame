@@ -1,9 +1,9 @@
 #pragma once
 #include <cmath>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 struct Vector2 {
     float x;
@@ -163,9 +163,17 @@ struct SpotLigth {
     float padding[2];
 };
 
+Vector3 CalculateValue(const std::vector<keyframeVector3>& keyframes, float time);
+
+Vector4 CalculateValue(const std::vector<keyframeQuaternion>& keyframes, float time);
+
+Vector3 Lerp(const Vector3& start, const Vector3& end, float t);
+
 Vector4 Lerp(const Vector4& start, const Vector4& end, float t);
 
 Matrix4x4 MakeIdentity4x4();
+
+Matrix4x4 MakeRotateMatrix(const Vector4& quaternion);
 
 Matrix4x4 MakeRotateXMatrix(float radian);
 
@@ -177,15 +185,17 @@ Matrix4x4 MakeScaleMatrix(const Vector3& scale);
 
 Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);
 
-Matrix4x4 Transpose(const Matrix4x4& m);
-
 Vector3 Multiply(const Vector3& m1, const float& m2);
+
+Matrix4x4 Transpose(const Matrix4x4& m);
 
 Matrix4x4 Inverse(const Matrix4x4& m);
 
 Vector3 Normalize(const Vector3& v);
 
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
+
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector4& rotate, const Vector3& translate);
 
 Matrix4x4 MakePrespectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
 

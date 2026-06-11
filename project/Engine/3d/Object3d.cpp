@@ -12,6 +12,7 @@
 #ifdef USE_IMGUI
 #include "../externals/imgui/imgui.h"
 #endif // USE_IMGUI
+#include <cmath>
 
 // MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 //{
@@ -178,6 +179,13 @@ Node Object3d::ReadNode(aiNode* node)
     return result;
 }
 
+void Object3d::PlayAnimation(const std::string& directoryPath, const std::string& filename)
+{
+    animation_ = LoadAinmationFile(directoryPath, filename);
+    animationTime_ = 0.0f;
+    isAnimating_ = true;
+}
+
 void Object3d::Initialize()
 {
     this->object3dCommon = Object3dCommon::GetInstance();
@@ -203,7 +211,19 @@ void Object3d::Update()
     if (model) {
         const ModelData& modelData = model->GetModelData();
 
-        worldMatrix = Multiply(modelData.rootNode.localMatrix, worldMatrix);
+        Matrix4x4 localMatrix = modelData.rootNode.localMatrix;
+
+        if (isAnimating_) {
+            animationTime_ += 1.0f / 60.0f;
+            animationTime_ = std::fmod(animationTime_, animation_.duration);
+            NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData.rootNode.name];
+            Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+            Vector4 rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+            Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
+            Matrix4x4 localMatrix = MakeAffineMatrix(scale, rotate, translate);
+        }
+
+        worldMatrix = Multiply(localMatrix, worldMatrix);
     }
 
     Matrix4x4 worldViewProjectionMatrix;
@@ -217,49 +237,61 @@ void Object3d::Update()
     directionalLightData->direction = Normalize(directionalLightData->direction);
 }
 
-void Object3d::DrawImGui()
+void Object3d::DrawImGui(const std::string& label)
 {
 #ifdef USE_IMGUI
-    ImGui::Begin("Lighting Control");
+    ImGui::Begin("Objects Control");
 
-    ImGui::DragFloat3("Translate##Model", &transform.translate.x, 0.01f);
-    ImGui::SliderAngle("RotateX##Model", &transform.rotate.x);
-    ImGui::SliderAngle("RotateY##Model", &transform.rotate.y);
-    ImGui::SliderAngle("RotateZ##Model", &transform.rotate.z);
+    ImGui::PushID(label.c_str());
 
-    // --- Directional Light ---
-    if (ImGui::CollapsingHeader("Directional Light")) {
-        ImGui::SliderFloat3("direction##ModelLight", &directionalLightData->direction.x, -1.0f, 1.0f);
-        ImGui::ColorEdit4("Color##ModelLight", &(directionalLightData->color).x);
-        ImGui::DragFloat("intensity##ModelLight", &directionalLightData->intensity, 0.01f);
+    if (ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+
+        ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
+        ImGui::SliderAngle("RotateX", &transform.rotate.x);
+        ImGui::SliderAngle("RotateY", &transform.rotate.y);
+        ImGui::SliderAngle("RotateZ", &transform.rotate.z);
+
+        // --- Directional Light ---
+        if (ImGui::CollapsingHeader("Directional Light")) {
+            ImGui::SliderFloat3("direction", &directionalLightData->direction.x, -1.0f, 1.0f);
+            ImGui::ColorEdit4("Color", &(directionalLightData->color).x);
+            ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
+        }
+
+        // --- Point Light ---
+        if (ImGui::CollapsingHeader("Point Light")) {
+            ImGui::ColorEdit4("color", &(PointLigthData->color).x);
+            ImGui::DragFloat3("Position", &PointLigthData->position.x, 0.01f);
+            ImGui::DragFloat("radius", &PointLigthData->radius, 0.01f);
+            ImGui::DragFloat("intensity", &PointLigthData->intensity, 0.01f);
+            ImGui::DragFloat("decay", &PointLigthData->decay, 0.01f);
+        }
+
+        // --- Spot Light ---
+        if (ImGui::CollapsingHeader("Spot Light")) {
+            ImGui::ColorEdit4("color", &(SpotLigthData->color).x);
+            ImGui::DragFloat3("position", &SpotLigthData->position.x, 0.01f);
+            ImGui::DragFloat("intensity", &SpotLigthData->intensity, 0.01f);
+            ImGui::DragFloat3("direction", &SpotLigthData->direction.x, 0.01f);
+            ImGui::DragFloat("distance", &SpotLigthData->distance, 0.01f);
+            ImGui::DragFloat("decay", &SpotLigthData->decay, 0.01f);
+            ImGui::DragFloat("cosAngle", &SpotLigthData->cosAngle, 0.01f);
+            ImGui::DragFloat("cosFalloffStart", &SpotLigthData->cosFalloffStart, 0.01f);
+        }
+
+        if (ImGui::CollapsingHeader("materialData")) {
+            Material* materialData = model->GetmaterialData();
+            bool isLighting = (materialData->enableLighting != 0);
+            if (ImGui::Checkbox("Enable Lighting (Unlit Texture)", &isLighting)) {
+                materialData->enableLighting = isLighting ? 1 : 0;
+            }
+            ImGui::DragFloat("evnironmentCoefficient", &materialData->evnironmentCoefficient, 0.01f);
+            model->SetMaterialDataEvnironmentCoefficient(materialData->evnironmentCoefficient);
+        }
     }
 
-    // --- Point Light ---
-    if (ImGui::CollapsingHeader("Point Light")) {
-        ImGui::ColorEdit4("color##PointLigth", &(PointLigthData->color).x);
-        ImGui::DragFloat3("Position##PointLigth", &PointLigthData->position.x, 0.01f);
-        ImGui::DragFloat("radius##PointLigth", &PointLigthData->radius, 0.01f);
-        ImGui::DragFloat("intensity##PointLigth", &PointLigthData->intensity, 0.01f);
-        ImGui::DragFloat("decay##PointLigth", &PointLigthData->decay, 0.01f);
-    }
+    ImGui::PopID();
 
-    // --- Spot Light ---
-    if (ImGui::CollapsingHeader("Spot Light")) {
-        ImGui::ColorEdit4("color##SpotLigth", &(SpotLigthData->color).x);
-        ImGui::DragFloat3("position##SpotLigth", &SpotLigthData->position.x, 0.01f);
-        ImGui::DragFloat("intensity##SpotLigth", &SpotLigthData->intensity, 0.01f);
-        ImGui::DragFloat3("direction##SpotLigth", &SpotLigthData->direction.x, 0.01f);
-        ImGui::DragFloat("distance##SpotLigth", &SpotLigthData->distance, 0.01f);
-        ImGui::DragFloat("decay##SpotLigth", &SpotLigthData->decay, 0.01f);
-        ImGui::DragFloat("cosAngle##SpotLigth", &SpotLigthData->cosAngle, 0.01f);
-        ImGui::DragFloat("cosFalloffStart##SpotLigth", &SpotLigthData->cosFalloffStart, 0.01f);
-    }
-
-    if (ImGui::CollapsingHeader("materialData")) {
-        Material* materialData = model->GetmaterialData();
-        ImGui::DragFloat("evnironmentCoefficient##materialData", &materialData->evnironmentCoefficient, 0.01f);
-        model->SetMaterialDataEvnironmentCoefficient(materialData->evnironmentCoefficient);
-    }
     ImGui::End();
 #endif // USE_IMGUI
 }

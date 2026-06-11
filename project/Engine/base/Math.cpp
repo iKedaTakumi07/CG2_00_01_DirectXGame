@@ -1,4 +1,50 @@
 #include "Math.h"
+#include <assert.h>
+
+Vector3 CalculateValue(const std::vector<keyframeVector3>& keyframes, float time)
+{
+    assert(!keyframes.empty());
+    if (keyframes.size() == 1 || time <= keyframes[0].time) {
+        return keyframes[0].value;
+    }
+    for (size_t index = 0; index < keyframes.size() - 1; ++index) {
+        size_t nextIndex = index + 1;
+        // indexとnextindexのkeyframeを取得して範囲内に時間があるかを判定
+        if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
+            // 範囲内を保管する
+            float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
+            return Lerp(keyframes[index].value, keyframes[nextIndex].value, t);
+        }
+    }
+    // ここまで来た場合は最後の値
+    return (*keyframes.rbegin()).value;
+}
+
+Vector4 CalculateValue(const std::vector<keyframeQuaternion>& keyframes, float time)
+{
+    assert(!keyframes.empty());
+    if (keyframes.size() == 1 || time <= keyframes[0].time) {
+        return keyframes[0].value;
+    }
+    for (size_t index = 0; index < keyframes.size() - 1; ++index) {
+        size_t nextIndex = index + 1;
+        if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
+            float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
+            // 💡 本来は Slerp(球面線形補間) が理想ですが、まずは既存の Lerp で代用します
+            return Lerp(keyframes[index].value, keyframes[nextIndex].value, t);
+        }
+    }
+    return (*keyframes.rbegin()).value;
+}
+
+Vector3 Lerp(const Vector3& start, const Vector3& end, float t)
+{
+    return {
+        start.x + t * (end.x - start.x),
+        start.y + t * (end.y - start.y),
+        start.z + t * (end.z - start.z),
+    };
+}
 
 Vector4 Lerp(const Vector4& start, const Vector4& end, float t)
 {
@@ -15,6 +61,23 @@ Matrix4x4 MakeIdentity4x4()
     Matrix4x4 num;
     num = { { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 } };
     return num;
+}
+
+Matrix4x4 MakeRotateMatrix(const Vector4& q)
+{
+    Matrix4x4 m = MakeIdentity4x4();
+    m.m[0][0] = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+    m.m[0][1] = 2.0f * (q.x * q.y + q.w * q.z);
+    m.m[0][2] = 2.0f * (q.x * q.z - q.w * q.y);
+
+    m.m[1][0] = 2.0f * (q.x * q.y - q.w * q.z);
+    m.m[1][1] = 1.0f - 2.0f * (q.x * q.x + q.z * q.z);
+    m.m[1][2] = 2.0f * (q.y * q.z + q.w * q.x);
+
+    m.m[2][0] = 2.0f * (q.x * q.z + q.w * q.y);
+    m.m[2][1] = 2.0f * (q.y * q.z - q.w * q.x);
+    m.m[2][2] = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+    return m;
 }
 
 Matrix4x4 MakeRotateXMatrix(float radian)
@@ -124,6 +187,16 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
     num.m[3][2] = translate.z;
     num.m[3][3] = 1.0f;
     return num;
+}
+
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector4& rotate, const Vector3& translate)
+{
+    Matrix4x4 sc = MakeScaleMatrix(scale);
+    Matrix4x4 rot = MakeRotateMatrix(rotate); // クォータニオン回転行列
+    Matrix4x4 trans = MakeTranslateMatrix(translate);
+
+    // S * R * T で合成
+    return Multiply(Multiply(sc, rot), trans);
 }
 
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
