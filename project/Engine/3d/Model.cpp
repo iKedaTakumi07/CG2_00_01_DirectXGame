@@ -30,7 +30,7 @@ void Model::Draw()
         // Skyboxがない場合は、既にロードされている適当なテクスチャをダミーとしてバインドしてエラーを防ぐ
         modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/uvChecker.png"));
     }
-    modelCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(UINT(modelData.vertices.size()), 1, 0, 0, 0);
+    modelCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
 }
 
 void Model::VertexResourceInitialize()

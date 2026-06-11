@@ -1,6 +1,7 @@
 #pragma once
 #include "../base/Math.h"
 #include "../externals/DirectXTex/DirectXTex.h"
+#include <assimp/scene.h>
 #include <d3d12.h>
 #include <wrl.h>
 
@@ -24,15 +25,19 @@ public:
     }
 
 public:
-    //static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+    // static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+
+    static Animation LoadAinmationFile(const std::string& directoryPath, const std::string& filename);
+    static Node ReadNode(aiNode* node);
+    void PlayAnimation(const std::string& directoryPath, const std::string& filename);
 
     // 初期化
     void Initialize();
 
     void Update();
 
-    void DrawImGui();
+    void DrawImGui(const std::string& label);
 
     // 更新
     void Draw();
@@ -78,6 +83,10 @@ private:
     PointLigth* PointLigthData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> spotLigth;
     SpotLigth* SpotLigthData = nullptr;
+
+    Animation animation_; // ロードしたアニメーションデータ
+    float animationTime_ = 0.0f; // 現在の再生時間（秒）
+    bool isAnimating_ = false; // アニメーション中かどうかのフラグ
 
     Transform transform = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameraTransform;
