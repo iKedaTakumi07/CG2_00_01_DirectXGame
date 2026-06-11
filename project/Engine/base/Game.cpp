@@ -77,11 +77,21 @@ void Game::Draw()
         std::swap(currentSource, currentDest);
     }
 
-    // ヴィネット
-    if (pp->IsVignette()) {
+    // アウトラインフィルタ(depth)
+    if (pp->IstDepthOutLine()) {
+        currentDest->PreDraw();
+        pp->SetDepthSrvHandle(currentSource->GetDepthSRVHandle());
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawDepthOutLine();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    // アウトラインフィルタ(輝度)
+    if (pp->IsLuminanceOutLine()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawVignette();
+        pp->DrawLuminanceOutLine();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
@@ -116,21 +126,11 @@ void Game::Draw()
         std::swap(currentSource, currentDest);
     }
 
-    // アウトラインフィルタ(輝度)
-    if (pp->IsLuminanceOutLine()) {
+    // ヴィネット
+    if (pp->IsVignette()) {
         currentDest->PreDraw();
         pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawLuminanceOutLine();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    // アウトラインフィルタ(depth)
-    if (pp->IstDepthOutLine()) {
-        currentDest->PreDraw();
-        pp->SetDepthSrvHandle(currentSource->GetDepthSRVHandle());
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawDepthOutLine();
+        pp->DrawVignette();
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
