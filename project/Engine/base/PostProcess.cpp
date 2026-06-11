@@ -223,6 +223,17 @@ void PostProcess::DrawDepthOutLine()
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
+void PostProcess::DrawRadialBlur()
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateRadialBlur.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
 void PostProcess::DrawImGui()
 {
 #ifdef USE_IMGUI
@@ -283,6 +294,12 @@ void PostProcess::DrawImGui()
         ImGui::Unindent();
     }
 
+   ImGui::Checkbox("RadialBlur", &enableRadialBlur_);
+    if (enableRadialBlur_) {
+        ImGui::Indent();
+        //ImGui::SliderFloat("weightMultiplier##RadialBlur", &weightMultiplierParam, 0.0f, 5.0f, "%.2f");
+        ImGui::Unindent();
+    }
     ImGui::End();
 #endif // USE_IMGUI
 }
@@ -430,6 +447,9 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderDepthBasedOutline = dxcommon->CompileShader(L"resources/shaders/DepthBasedOutline.PS.hlsl", L"ps_6_0");
     assert(pixeShaderDepthBasedOutline != nullptr);
 
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderRadialBlur = dxcommon->CompileShader(L"resources/shaders/RadialBlur.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderRadialBlur != nullptr);
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
@@ -516,5 +536,11 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.PS = { pixeShaderDepthBasedOutline->GetBufferPointer(), pixeShaderDepthBasedOutline->GetBufferSize() };
     pipelineStateDepthOutLine = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateDepthOutLine));
+    assert(SUCCEEDED(hr));
+
+    // アウトライン(Depth)
+    graphicsPipelineStateDesc.PS = { pixeShaderRadialBlur->GetBufferPointer(), pixeShaderRadialBlur->GetBufferSize() };
+    pipelineStateRadialBlur = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateRadialBlur));
     assert(SUCCEEDED(hr));
 }

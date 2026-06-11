@@ -59,6 +59,7 @@ public:
     void DrawGaussianFilterVertical();
     void DrawLuminanceOutLine();
     void DrawDepthOutLine();
+    void DrawRadialBlur();
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -76,6 +77,7 @@ public:
     bool IsGaussianFilter() const { return enableGaussianFilter_; }
     bool IsLuminanceOutLine() const { return enableLuminanceOutLine_; }
     bool IstDepthOutLine() const { return enableDepthOutLine_; }
+    bool IsRadialBlur() const { return enableRadialBlur_; }
 
     // set
     void SetDepthSrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE handle) { this->depthSrvHandle = handle; }
@@ -209,6 +211,9 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
     D3D12_GPU_DESCRIPTOR_HANDLE depthSrvHandle;
 
+    /* RadialBlur */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateRadialBlur = nullptr;
+
     // 現在のモード
     bool enableGrayscale_ = false;
     bool enableSepiascale_ = false;
@@ -217,4 +222,5 @@ private:
     bool enableGaussianFilter_ = false;
     bool enableLuminanceOutLine_ = false;
     bool enableDepthOutLine_ = false;
+    bool enableRadialBlur_ = false;
 };

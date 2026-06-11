@@ -126,6 +126,15 @@ void Game::Draw()
         std::swap(currentSource, currentDest);
     }
 
+    // ラジアルブラー
+    if (pp->IsRadialBlur()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawRadialBlur();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
     // ヴィネット
     if (pp->IsVignette()) {
         currentDest->PreDraw();
