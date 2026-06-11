@@ -220,7 +220,7 @@ void Object3d::Update()
             Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
             Vector4 rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
             Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
-            Matrix4x4 localMatrix = MakeAffineMatrix(scale, rotate, translate);
+            localMatrix = MakeAffineMatrix(scale, rotate, translate);
         }
 
         worldMatrix = Multiply(localMatrix, worldMatrix);
