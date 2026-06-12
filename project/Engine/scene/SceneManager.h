@@ -2,6 +2,7 @@
 #include "AbstractSceneFactory.h"
 #include <memory>
 
+#include <chrono>
 class BaseScene;
 
 class SceneManager {
@@ -14,7 +15,7 @@ public:
     };
 
     // passkeyを受け取るコンストラクタ
-    explicit SceneManager(ConstructorKey) { }
+    explicit SceneManager(ConstructorKey);
 
     // Singleton 取得
     static SceneManager* GetInstance();
@@ -27,6 +28,9 @@ public:
 
     // 描画
     void Draw();
+
+    // get
+    float GetDeltaTime() const { return deltaTime_; }
 
 public:
     /// <summary>
@@ -50,4 +54,7 @@ private:
     std::unique_ptr<BaseScene> nextScene_ = nullptr;
     std::unique_ptr<BaseScene> scene_ = nullptr;
     std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
+
+    std::chrono::steady_clock::time_point lastTime_; // 前フレームの時刻
+    float deltaTime_ = 0.0f; // 前フレームからの経過時間（秒）
 };

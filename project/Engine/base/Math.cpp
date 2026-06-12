@@ -30,8 +30,8 @@ Vector4 CalculateValue(const std::vector<keyframeQuaternion>& keyframes, float t
         size_t nextIndex = index + 1;
         if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
             float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
-            // 💡 本来は Slerp(球面線形補間) が理想ですが、まずは既存の Lerp で代用します
-            return Lerp(keyframes[index].value, keyframes[nextIndex].value, t);
+
+            return Slerp(keyframes[index].value, keyframes[nextIndex].value, t);
         }
     }
     return (*keyframes.rbegin()).value;
@@ -53,6 +53,56 @@ Vector4 Lerp(const Vector4& start, const Vector4& end, float t)
         start.y + t * (end.y - start.y),
         start.z + t * (end.z - start.z),
         start.w + t * (end.w - start.w)
+    };
+}
+
+Vector4 Slerp(const Vector4& start, const Vector4& end, float t)
+{
+    // 内積
+    float dot = start.x * end.x + start.y * end.y + start.z * end.z + start.w * end.w;
+
+    // 内積がマイナスなら反転
+    Vector4 targetEnd = end;
+    if (dot < 0.0f) {
+        dot = -dot;
+        targetEnd.x = -end.x;
+        targetEnd.y = -end.y;
+        targetEnd.z = -end.z;
+        targetEnd.w = -end.w;
+    }
+
+    // ゼロ除算対策
+    if (dot > 0.9995f) {
+        Vector4 result = {
+            start.x + t * (targetEnd.x - start.x),
+            start.y + t * (targetEnd.y - start.y),
+            start.z + t * (targetEnd.z - start.z),
+            start.w + t * (targetEnd.w - start.w)
+        };
+
+        // 正規化
+        float len = std::sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+        if (len > 0.0f) {
+            result.x /= len;
+            result.y /= len;
+            result.z /= len;
+            result.w /= len;
+        }
+        return result;
+    }
+
+    // 計算
+    float theta = std::acos(dot);
+    float sinTheta = std::sin(theta);
+
+    float scale0 = std::sin((1.0f - t) * theta) / sinTheta;
+    float scale1 = std::sin(t * theta) / sinTheta;
+
+    return {
+        scale0 * start.x + scale1 * targetEnd.x,
+        scale0 * start.y + scale1 * targetEnd.y,
+        scale0 * start.z + scale1 * targetEnd.z,
+        scale0 * start.w + scale1 * targetEnd.w
     };
 }
 

@@ -1,5 +1,6 @@
 #include "Object3d.h"
 #include "../base/TextureManager.h"
+#include "../scene/SceneManager.h"
 #include "Camera.h"
 #include "Model.h"
 #include "ModelManager.h"
@@ -214,7 +215,9 @@ void Object3d::Update()
         Matrix4x4 localMatrix = modelData.rootNode.localMatrix;
 
         if (isAnimating_) {
-            animationTime_ += 1.0f / 60.0f;
+            float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+            animationTime_ += deltaTime;
+
             animationTime_ = std::fmod(animationTime_, animation_.duration);
             NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData.rootNode.name];
             Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);

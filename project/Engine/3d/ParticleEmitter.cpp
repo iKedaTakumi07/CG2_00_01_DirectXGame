@@ -1,4 +1,5 @@
 #include "ParticleEmitter.h"
+#include "../scene/SceneManager.h"
 #include "ParticleManager.h"
 
 ParticleEmitter::ParticleEmitter(const std::string& groupName, const Transform& transform, float emitRate, uint32_t emitCount, bool isLoop)
@@ -21,7 +22,7 @@ void ParticleEmitter::Update()
         }
 
         // 時刻を進める
-        elapsedTime_ += 1.0f / 60.0f;
+        elapsedTime_ += SceneManager::GetInstance()->GetDeltaTime();
 
         // 1回発生するのに必要な時間
         const float emitInterval = 1.0f / emitRate_;

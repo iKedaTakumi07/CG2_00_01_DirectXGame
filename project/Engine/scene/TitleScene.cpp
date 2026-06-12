@@ -57,15 +57,15 @@ void TitleScene::Initialize()
     // model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
 
-    // object3d_2 = std::make_unique<Object3d>();
-    // object3d_2->Initialize();
-    // object3d_2->SetCamera(BaseScene::GetCamera());
+    object3d_2 = std::make_unique<Object3d>();
+    object3d_2->Initialize();
+    object3d_2->SetCamera(BaseScene::GetCamera());
 
-    // model_2 = std::make_unique<Model>();
-    // model_2->Initialize("resources", "AnimatedCube.gltf");
-    //// model_2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
-    // object3d_2->SetModel(model_2.get());
-    // object3d_2->PlayAnimation("resources", "AnimatedCube.gltf");
+    model_2 = std::make_unique<Model>();
+    model_2->Initialize("resources", "AnimatedCube.gltf");
+    // model_2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
+    object3d_2->SetModel(model_2.get());
+    object3d_2->PlayAnimation("resources", "AnimatedCube.gltf");
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
     ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
@@ -137,15 +137,15 @@ void TitleScene::Update()
     // skydox->Update();
 
     object3d->Update();
-    // object3d_2->Update();
+    object3d_2->Update();
 
     particleEmitter->Update();
     particleEmitter2->Update();
     particleEmitter3->Update();
 
     // IMGUI
-    // object3d->DrawImGui("Terrain");
-    // object3d_2->DrawImGui("Plane");
+    object3d->DrawImGui("Terrain");
+    object3d_2->DrawImGui("Plane");
 }
 
 void TitleScene::Draw()
@@ -157,7 +157,7 @@ void TitleScene::Draw()
     Object3dCommon::GetInstance()->PrepareObjectDraw();
 
     object3d->Draw();
-    // object3d_2->Draw();
+    object3d_2->Draw();
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
     // skydox->Draw();
