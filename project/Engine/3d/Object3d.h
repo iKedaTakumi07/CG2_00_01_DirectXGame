@@ -3,6 +3,8 @@
 #include "../externals/DirectXTex/DirectXTex.h"
 #include <assimp/scene.h>
 #include <d3d12.h>
+#include <string>
+#include <unordered_map>
 #include <wrl.h>
 
 class WinApp;
@@ -27,10 +29,28 @@ public:
 public:
     // static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
-
     static Animation LoadAinmationFile(const std::string& directoryPath, const std::string& filename);
     static Node ReadNode(aiNode* node);
-    void PlayAnimation(const std::string& directoryPath, const std::string& filename);
+
+    /// <summary>
+    /// アニメーション読み込み
+    /// </summary>
+    /// <param name="directoryPath"フォルダ名></param>
+    /// <param name="filenamem">ファイルネーム</param>
+    /// <param name="animName">アニメーション名(保存用)</param>
+    void LoadAnimation(const std::string& directoryPath, const std::string& filenamem, const std::string& animName);
+
+    /// <summary>
+    /// アニメーションを再生
+    /// </summary>
+    /// <param name="animName">アニメーション名</param>
+    /// <param name="loop">ループ再生</param>
+    void PlayAnimation(const std::string& animName, bool loop = true);
+
+    /// <summary>
+    /// アニメーションを停止
+    /// </summary>
+    void StopAnimation();
 
     // 初期化
     void Initialize();
@@ -114,9 +134,13 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> spotLigth;
     SpotLigth* SpotLigthData = nullptr;
 
-    Animation animation_; // ロードしたアニメーションデータ
+    // アニメーション
+    std::unordered_map<std::string, Animation> animation_; // ロード済みのアニメーション辞書
+    Animation* currentAnimation_ = nullptr; // 現在再生中のアニメーションへのポインタ
+    std::string currentAnimationName_ = ""; // 現在再生中のアニメーション名
     float animationTime_ = 0.0f; // 現在の再生時間（秒）
     bool isAnimating_ = false; // アニメーション中かどうかのフラグ
+    bool isLoop_ = true; // ループ再生フラグ
 
     Transform transform = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameraTransform;

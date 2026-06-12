@@ -171,6 +171,8 @@ Vector3 Lerp(const Vector3& start, const Vector3& end, float t);
 
 Vector4 Lerp(const Vector4& start, const Vector4& end, float t);
 
+Vector4 Slerp(const Vector4& start, const Vector4& end, float t);
+
 Matrix4x4 MakeIdentity4x4();
 
 Matrix4x4 MakeRotateMatrix(const Vector4& quaternion);

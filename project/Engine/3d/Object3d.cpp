@@ -1,5 +1,6 @@
 #include "Object3d.h"
 #include "../base/TextureManager.h"
+#include "../scene/SceneManager.h"
 #include "Camera.h"
 #include "Model.h"
 #include "ModelManager.h"
@@ -179,11 +180,34 @@ Node Object3d::ReadNode(aiNode* node)
     return result;
 }
 
-void Object3d::PlayAnimation(const std::string& directoryPath, const std::string& filename)
+void Object3d::LoadAnimation(const std::string& directoryPath, const std::string& filename, const std::string& animName)
 {
-    animation_ = LoadAinmationFile(directoryPath, filename);
+    // すでに同じ名前で登録されている場合はスキップ
+    if (animation_.find(animName) != animation_.end()) {
+        return;
+    }
+    // アニメーションファイルをロードしてマップに登録
+    animation_[animName] = LoadAinmationFile(directoryPath, filename);
+}
+
+void Object3d::PlayAnimation(const std::string& animName, bool loop)
+{
+    auto it = animation_.find(animName);
+    assert(it != animation_.end() && "指定されたアニメーションはロードされていません。");
+
+    currentAnimation_ = &it->second;
+    currentAnimationName_ = animName;
     animationTime_ = 0.0f;
     isAnimating_ = true;
+    isLoop_ = loop;
+}
+
+void Object3d::StopAnimation()
+{
+    isAnimating_ = false;
+    currentAnimation_ = nullptr;
+    currentAnimationName_ = "";
+    animationTime_ = 0.0f;
 }
 
 void Object3d::Initialize()
@@ -213,10 +237,22 @@ void Object3d::Update()
 
         Matrix4x4 localMatrix = modelData.rootNode.localMatrix;
 
-        if (isAnimating_) {
-            animationTime_ += 1.0f / 60.0f;
-            animationTime_ = std::fmod(animationTime_, animation_.duration);
-            NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData.rootNode.name];
+        if (isAnimating_ && currentAnimation_) {
+            float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+            animationTime_ += deltaTime;
+
+            if (isLoop_) {
+                animationTime_ = std::fmod(animationTime_, currentAnimation_->duration);
+            } else {
+                // 単発再生
+                if (animationTime_ >= currentAnimation_->duration) {
+                    // 最後に達したら再生停止
+                    animationTime_ = currentAnimation_->duration;
+                    isAnimating_ = false;
+                }
+            }
+           
+            NodeAnimation& rootNodeAnimation = currentAnimation_->nodeAnimations[modelData.rootNode.name];
             Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
             Vector4 rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
             Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
