@@ -1,5 +1,6 @@
 #pragma once
 #include "DirectXCommon.h"
+#include "Math.h"
 #include <memory>
 class Camera;
 
@@ -19,6 +20,12 @@ public:
         int32_t kernelSize; // 3, 5, 7 など
         float sigma; // ガウシアンフィルター用の標準偏差（Boxでは未使用）
         float padding[2]; // 16バイトアライメント調整用
+    };
+
+    struct BlurData {
+        Vector2 kCenter; // 中心点
+        float kBlurwidth; // ぼかしの幅
+        float padding[1];
     };
 
     // アウトライン用
@@ -125,6 +132,13 @@ public:
     void SetDepthOutLine(bool enable) { enableDepthOutLine_ = enable; }
     void SetDepthOutlineWeight(float weight) { weightMultiplierParam = weight; }
 
+    void SetRadialBlur(bool enabel) { enableRadialBlur_ = enabel; }
+    void SetRadialBlurParam(Vector2 pos, float kBlurwidth)
+    {
+        RadialBlurParam.kCenter = pos;
+        RadialBlurParam.kBlurwidth = kBlurwidth;
+    }
+
     void ClearAllEffects()
     {
         enableGrayscale_ = false;
@@ -134,6 +148,7 @@ public:
         enableGaussianFilter_ = false;
         enableLuminanceOutLine_ = false;
         enableDepthOutLine_ = false;
+        enableRadialBlur_ = false;
     }
 
 public:
@@ -213,6 +228,9 @@ private:
 
     /* RadialBlur */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateRadialBlur = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> RadialBlurBuffer_ = nullptr;
+    BlurData* RadialBlurData_ = nullptr;
+    BlurData RadialBlurParam = { { 0.5f, 0.5f }, 0.01f, { 0.0f } };
 
     // 現在のモード
     bool enableGrayscale_ = false;

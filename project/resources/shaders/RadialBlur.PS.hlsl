@@ -1,7 +1,14 @@
 #include "Fullscreen.hlsli"
 
+struct BlurData
+{
+    float32_t2 kCenter;
+    float32_t kBlurwidth;
+};
+
 Texture2D<float32_t4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
+ConstantBuffer<BlurData> gBlurData : register(b0);
 
 struct PixelShaderOutput
 {
@@ -10,9 +17,9 @@ struct PixelShaderOutput
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
-    const float32_t2 kCenter = float32_t2(0.5f, 0.5f); // 中心点
+    const float32_t2 kCenter = gBlurData.kCenter; // 中心点
     const int32_t kNumSamples = 10; // サンプリング数。多いと重い。
-    const float32_t kBlurWidth = 0.01f; //  ぼかしの幅。大きくするとよりボケる(なんでやねん！)
+    const float32_t kBlurWidth = gBlurData.kBlurwidth; //  ぼかしの幅。大きくするとよりボケる(なんでやねん！)
     
     float32_t2 direction = input.texcoord - kCenter;
     float32_t3 outputColor = float32_t3(0.0f, 0.0f, 0.0f);
