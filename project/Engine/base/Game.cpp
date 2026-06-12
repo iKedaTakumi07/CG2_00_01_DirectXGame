@@ -59,6 +59,8 @@ void Game::Draw()
     OffscreenSurface* currentDest = Framework::GetOffScreenSurfaceB();
     auto pp = PostProcess::GetInstance();
 
+    /* 色調補正 */
+
     // グレースケール
     if (pp->IsGrayscale()) {
         currentDest->PreDraw(); // Bを描画先に設定
@@ -76,6 +78,8 @@ void Game::Draw()
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
+
+    /* アウトライン */
 
     // アウトラインフィルタ(depth)
     if (pp->IstDepthOutLine()) {
@@ -95,6 +99,8 @@ void Game::Draw()
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
+
+    /* ブラー */
 
     // ボックスフィルター
     if (pp->IsBoxFilter()) {
@@ -125,6 +131,17 @@ void Game::Draw()
         currentDest->PostDraw();
         std::swap(currentSource, currentDest);
     }
+
+    // ラジアルブラー
+    if (pp->IsRadialBlur()) {
+        currentDest->PreDraw();
+        pp->SetsrvHandle(currentSource->GetSRVHandle());
+        pp->DrawRadialBlur();
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+
+    /* ヴィネット */
 
     // ヴィネット
     if (pp->IsVignette()) {

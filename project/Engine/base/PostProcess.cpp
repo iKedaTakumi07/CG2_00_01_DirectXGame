@@ -53,6 +53,10 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&outlineBuffer_));
     assert(SUCCEEDED(hr));
 
+    resDesc.Width = sizeof(BlurData);
+    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&RadialBlurBuffer_));
+    assert(SUCCEEDED(hr));
+
     // マップしてC++から書き込める状態にしておく
     GrayscaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&GrayscaleData_));
     SepiascaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&SepiascaleData_));
@@ -60,6 +64,7 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     filterBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&filterMappedData_));
     outlineBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&outlineMappedData_));
     LuminanceBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&LuminanceData_));
+    RadialBlurBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&RadialBlurData_));
 }
 
 void PostProcess::DrawNormal()
@@ -223,6 +228,21 @@ void PostProcess::DrawDepthOutLine()
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
+void PostProcess::DrawRadialBlur()
+{
+    if (RadialBlurData_) {
+        *RadialBlurData_ = RadialBlurParam;
+    }
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateRadialBlur.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootConstantBufferView(1, RadialBlurBuffer_->GetGPUVirtualAddress());
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
 void PostProcess::DrawImGui()
 {
 #ifdef USE_IMGUI
@@ -283,6 +303,13 @@ void PostProcess::DrawImGui()
         ImGui::Unindent();
     }
 
+    ImGui::Checkbox("RadialBlur", &enableRadialBlur_);
+    if (enableRadialBlur_) {
+        ImGui::Indent();
+        ImGui::SliderFloat2("kCenter##RadialBlur", &RadialBlurParam.kCenter.x, 0.0f, 1.0f, "%.2f");
+        ImGui::SliderFloat("kBlurwidth##RadialBlur", &RadialBlurParam.kBlurwidth, 0.0f, 1.0f, "%.2f");
+        ImGui::Unindent();
+    }
     ImGui::End();
 #endif // USE_IMGUI
 }
@@ -430,6 +457,9 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderDepthBasedOutline = dxcommon->CompileShader(L"resources/shaders/DepthBasedOutline.PS.hlsl", L"ps_6_0");
     assert(pixeShaderDepthBasedOutline != nullptr);
 
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderRadialBlur = dxcommon->CompileShader(L"resources/shaders/RadialBlur.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderRadialBlur != nullptr);
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
@@ -516,5 +546,11 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.PS = { pixeShaderDepthBasedOutline->GetBufferPointer(), pixeShaderDepthBasedOutline->GetBufferSize() };
     pipelineStateDepthOutLine = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateDepthOutLine));
+    assert(SUCCEEDED(hr));
+
+    // ラジアルブラー
+    graphicsPipelineStateDesc.PS = { pixeShaderRadialBlur->GetBufferPointer(), pixeShaderRadialBlur->GetBufferSize() };
+    pipelineStateRadialBlur = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateRadialBlur));
     assert(SUCCEEDED(hr));
 }
