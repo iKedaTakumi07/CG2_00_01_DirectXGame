@@ -3,6 +3,7 @@
 #include "Math.h"
 #include <memory>
 class Camera;
+class OffscreenSurface;
 
 class PostProcess {
 public:
@@ -39,6 +40,17 @@ public:
         float padding[3];
     };
 
+    enum class EffectType {
+        Grayscale,
+        Sepiascale,
+        DepthOutline,
+        LuminanceOutline,
+        BoxFilter,
+        GaussianFilter,
+        RadialBlur,
+        Vignette,
+    };
+
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
@@ -54,6 +66,12 @@ public:
 
     // 初期化
     void Initialize(DirectXCommon* dxcommon);
+
+    // 更新
+    void Update();
+
+    // 外部からエフェクトを一斉実行
+    void Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB);
 
     // 共通描画設定
     void DrawNormal();
@@ -72,19 +90,20 @@ public:
     void DrawImGui();
 
 public:
-    // get
+    // get //
+
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
     Camera* GetDefaultCamera() const { return defaultCamera_; }
 
-    bool IsGrayscale() const { return enableGrayscale_; }
-    bool IsSepiascale() const { return enableSepiascale_; }
-    bool IsVignette() const { return enableVignette_; }
+    bool IsGrayscale() const { return enableGrayscale_; } // グレイスケール
+    bool IsSepiascale() const { return enableSepiascale_; } // セピアスケール
+    bool IsVignette() const { return enableVignette_; } // ヴィネッティング
     VignetteData GetVignetteParam() const { return vignetteParam_; }
-    bool IsBoxFilter() const { return enableBoxFilter_; }
-    bool IsGaussianFilter() const { return enableGaussianFilter_; }
-    bool IsLuminanceOutLine() const { return enableLuminanceOutLine_; }
-    bool IstDepthOutLine() const { return enableDepthOutLine_; }
-    bool IsRadialBlur() const { return enableRadialBlur_; }
+    bool IsBoxFilter() const { return enableBoxFilter_; } // ボックスフィルター
+    bool IsGaussianFilter() const { return enableGaussianFilter_; } // ガウシアンフィルタ
+    bool IsLuminanceOutLine() const { return enableLuminanceOutLine_; } // 輝度アウトライン
+    bool IstDepthOutLine() const { return enableDepthOutLine_; } // Depthアウトライン
+    bool IsRadialBlur() const { return enableRadialBlur_; } // ラジアルブラー
 
     // set
     void SetDepthSrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE handle) { this->depthSrvHandle = handle; }
@@ -93,20 +112,20 @@ public:
     void SetsrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->srvHandle = srvHandle; }
 
     void SetEnableGrayscale(bool enable) { enableGrayscale_ = enable; }
-    void SetGrayscaleIntensity(float intensity) { GrayScaleParam_.intensity = intensity; }
+    void SetGrayscaleIntensity(float intensity) { GrayScaleParam_.intensity = intensity; } // グレイスケールパラメーターセット
 
     void SetEnableSepiascale(bool enable) { enableSepiascale_ = enable; }
-    void SetSepiascaleIntensity(float intensity) { SepiascaleParam_.intensity = intensity; }
+    void SetSepiascaleIntensity(float intensity) { SepiascaleParam_.intensity = intensity; } // セピアスケールパラメーターセット
 
     void SetEnableVignette(bool enable) { enableVignette_ = enable; }
-    void SetVignetteParam(float scale, float exponent)
+    void SetVignetteParam(float scale, float exponent) // ヴィネッティングパラメーターセット
     {
         vignetteParam_.scale = scale;
         vignetteParam_.exponent = exponent;
     }
 
     void SetEnableBoxFilter(bool enable) { enableBoxFilter_ = enable; }
-    void SetKernelSizeBoxFilter(int KernelSize)
+    void SetKernelSizeBoxFilter(int KernelSize) // ボックスフィルターパラメーターセット
     {
         boxKernelSize_ = KernelSize;
         if (boxKernelSize_ % 2 == 0)
@@ -116,7 +135,7 @@ public:
     }
 
     void SetEnableGaussianFilter(bool enable) { enableGaussianFilter_ = enable; }
-    void SetKernelSizeGaussianFilter(int KernelSize)
+    void SetKernelSizeGaussianFilter(int KernelSize) // ガウシアンフィルタカーネルサイズセット
     {
         gaussianKernelSize_ = KernelSize;
         if (gaussianKernelSize_ % 2 == 0)
@@ -124,22 +143,22 @@ public:
         if (gaussianKernelSize_ >= 31) // オーバーフロー&&過度なエフェクト対策
             gaussianKernelSize_ = 31;
     };
-    void SetSigmaGaussianFilter(float Sigma) { gaussianSigma_ = Sigma; }
+    void SetSigmaGaussianFilter(float Sigma) { gaussianSigma_ = Sigma; } // ガウシアンフィルタぼかし強度
 
     void SetEnableLuminanceOutLine(bool enable) { enableLuminanceOutLine_ = enable; }
-    void SetLuminanceOutlineWeight(float weight) { LuminanceParam.weightMultiplier = weight; }
+    void SetLuminanceOutlineWeight(float weight) { LuminanceParam.weightMultiplier = weight; } // 輝度アウトラインパラメーターセット
 
     void SetDepthOutLine(bool enable) { enableDepthOutLine_ = enable; }
-    void SetDepthOutlineWeight(float weight) { weightMultiplierParam = weight; }
+    void SetDepthOutlineWeight(float weight) { weightMultiplierParam = weight; } // Depthアウトラインパラメーターセット
 
     void SetRadialBlur(bool enabel) { enableRadialBlur_ = enabel; }
-    void SetRadialBlurParam(Vector2 pos, float kBlurwidth)
+    void SetRadialBlurParam(Vector2 pos, float kBlurwidth) // ラジアルブラーパラメーターセット
     {
         RadialBlurParam.kCenter = pos;
         RadialBlurParam.kBlurwidth = kBlurwidth;
     }
 
-    void ClearAllEffects()
+    void ClearAllEffects() // エフェクト全リセット
     {
         enableGrayscale_ = false;
         enableSepiascale_ = false;
@@ -197,16 +216,18 @@ private:
     /* BoxFillter */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterX = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateBoxFilterY = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> boxFilterBuffer_ = nullptr;
+    FilterData* boxFilterMappedData_ = nullptr;
+    FilterData boxFilterParam_;
 
     /* GaussianFilter */
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterX = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateGaussianFilterY = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> gaussianFilterBuffer_ = nullptr;
+    FilterData* gaussianFilterMappedData_ = nullptr;
+    FilterData gaussianFilterParam_;
 
     // Filter用
-    Microsoft::WRL::ComPtr<ID3D12Resource> filterBuffer_ = nullptr;
-    FilterData* filterMappedData_ = nullptr;
-    FilterData filterParam_ = { 3, 2.0f, { 0.0f, 0.0f } };
-
     int boxKernelSize_ = 3;
     int gaussianKernelSize_ = 3;
     float gaussianSigma_ = 2.0f;
@@ -241,4 +262,7 @@ private:
     bool enableLuminanceOutLine_ = false;
     bool enableDepthOutLine_ = false;
     bool enableRadialBlur_ = false;
+
+    // エフェクトの描画順を管理するためのリスト
+    std::vector<EffectType> effectOrder_;
 };
