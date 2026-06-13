@@ -40,7 +40,7 @@ void Game::Update()
     Framework::Update();
 
     SceneManager::GetInstance()->Update();
-    PostProcess::GetInstance()->DrawImGui();
+    PostProcess::GetInstance()->Update();
 }
 
 void Game::Draw()
@@ -55,110 +55,14 @@ void Game::Draw()
     // =============================================
     // ポストエフェクトのバケツリレー(Ping-Pong Buffer)
     // =============================================
-    OffscreenSurface* currentSource = Framework::GetOffScreenSurface();
-    OffscreenSurface* currentDest = Framework::GetOffScreenSurfaceB();
-    auto pp = PostProcess::GetInstance();
-
-    /* 色調補正 */
-
-    // グレースケール
-    if (pp->IsGrayscale()) {
-        currentDest->PreDraw(); // Bを描画先に設定
-        pp->SetsrvHandle(currentSource->GetSRVHandle()); // Aの画像をセット
-        pp->DrawGrayscale(); // フィルタ実行
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest); // 読込先と書込先を反転
-    }
-
-    // セピア調
-    if (pp->IsSepiascale()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawSepiascale();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    /* アウトライン */
-
-    // アウトラインフィルタ(depth)
-    if (pp->IstDepthOutLine()) {
-        currentDest->PreDraw();
-        pp->SetDepthSrvHandle(currentSource->GetDepthSRVHandle());
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawDepthOutLine();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    // アウトラインフィルタ(輝度)
-    if (pp->IsLuminanceOutLine()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawLuminanceOutLine();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    /* ブラー */
-
-    // ボックスフィルター
-    if (pp->IsBoxFilter()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawBoxFilterHorizontal();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawBoxFilterVertical();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    // ガウシアンフィルター
-    if (pp->IsGaussianFilter()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterHorizontal();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawGaussianFilterVertical();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    // ラジアルブラー
-    if (pp->IsRadialBlur()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawRadialBlur();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
-
-    /* ヴィネット */
-
-    // ヴィネット
-    if (pp->IsVignette()) {
-        currentDest->PreDraw();
-        pp->SetsrvHandle(currentSource->GetSRVHandle());
-        pp->DrawVignette();
-        currentDest->PostDraw();
-        std::swap(currentSource, currentDest);
-    }
+    PostProcess::GetInstance()->Execute(Framework::GetOffScreenSurface(), Framework::GetOffScreenSurfaceB());
 
     Framework::GetOffScreenSurface()->TransitionDepthToWritable();
 
     Framework::GetDirectXCommon()->PreDraw();
 
-    // スワップチェーンにコピー!w
-    pp->SetsrvHandle(currentSource->GetSRVHandle());
-    pp->DrawNormal();
+    // 最終結果を描画
+    PostProcess::GetInstance()->DrawNormal();
 
     // 実際のcommandListのImGuiの描画コマンドを詰む
     Framework::GetImGuiManager()->Draw();

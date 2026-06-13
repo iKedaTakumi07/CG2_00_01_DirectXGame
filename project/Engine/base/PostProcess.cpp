@@ -3,6 +3,7 @@
 #include "../3d/Camera.h"
 #include "../base/Logger.h"
 #include "OffscreenSurface.h"
+#include <algorithm>
 #include <cassert>
 #include <d3d12.h>
 #include <wrl.h>
@@ -42,7 +43,8 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     assert(SUCCEEDED(hr));
 
     resDesc.Width = (sizeof(FilterData));
-    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&filterBuffer_));
+    dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&boxFilterBuffer_));
+    dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&gaussianFilterBuffer_));
     assert(SUCCEEDED(hr));
 
     resDesc.Width = sizeof(LuminanceOutlineData);
@@ -61,10 +63,168 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     GrayscaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&GrayscaleData_));
     SepiascaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&SepiascaleData_));
     vignetteBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&vignetteMappedData_));
-    filterBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&filterMappedData_));
+    boxFilterBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&boxFilterMappedData_));
+    gaussianFilterBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&gaussianFilterMappedData_));
     outlineBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&outlineMappedData_));
     LuminanceBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&LuminanceData_));
     RadialBlurBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&RadialBlurData_));
+
+    effectOrder_ = {
+        EffectType::Grayscale,
+        EffectType::Sepiascale,
+        EffectType::DepthOutline,
+        EffectType::LuminanceOutline,
+        EffectType::BoxFilter,
+        EffectType::GaussianFilter,
+        EffectType::RadialBlur,
+        EffectType::Vignette
+    };
+}
+
+void PostProcess::Update()
+{
+    DrawImGui();
+
+    /* 反映 */
+
+    if (GrayscaleData_) {
+        *GrayscaleData_ = GrayScaleParam_;
+    }
+
+    if (SepiascaleData_) {
+        *SepiascaleData_ = SepiascaleParam_;
+    }
+
+    if (vignetteMappedData_) {
+        *vignetteMappedData_ = vignetteParam_;
+    }
+
+    if (boxFilterMappedData_) {
+        if (boxFilterParam_.kernelSize != boxKernelSize_) {
+            boxFilterParam_.kernelSize = boxKernelSize_;
+            boxFilterParam_.sigma = 0.0f;
+            *boxFilterMappedData_ = boxFilterParam_;
+        }
+    }
+
+    if (gaussianFilterMappedData_) {
+        if (gaussianFilterParam_.kernelSize != gaussianKernelSize_ || gaussianFilterParam_.sigma != gaussianSigma_) {
+            gaussianFilterParam_.kernelSize = gaussianKernelSize_;
+            gaussianFilterParam_.sigma = gaussianSigma_;
+            *gaussianFilterMappedData_ = gaussianFilterParam_;
+        }
+    }
+
+    if (LuminanceData_) {
+        *LuminanceData_ = LuminanceParam;
+    }
+    if (outlineMappedData_) {
+        // カメラから最新のプロジェクション逆行列を取得して転送
+        outlineMappedData_->projectionInverse = defaultCamera_->GetProjectionInverse();
+        outlineMappedData_->weightMultiplier = weightMultiplierParam;
+    }
+
+    if (RadialBlurData_) {
+        *RadialBlurData_ = RadialBlurParam;
+    }
+}
+
+void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB)
+{
+    OffscreenSurface* currentSource = surfaceA;
+    OffscreenSurface* currentDest = surfaceB;
+
+    // リスト順にループ処理
+    for (EffectType effect : effectOrder_) {
+        bool isEnabled = false;
+
+        switch (effect) {
+        case PostProcess::EffectType::Grayscale:
+            isEnabled = enableGrayscale_;
+            break;
+        case PostProcess::EffectType::Sepiascale:
+            isEnabled = enableSepiascale_;
+            break;
+        case PostProcess::EffectType::DepthOutline:
+            isEnabled = enableDepthOutLine_;
+            break;
+        case PostProcess::EffectType::LuminanceOutline:
+            isEnabled = enableLuminanceOutLine_;
+            break;
+        case PostProcess::EffectType::BoxFilter:
+            isEnabled = enableBoxFilter_;
+            break;
+        case PostProcess::EffectType::GaussianFilter:
+            isEnabled = enableGaussianFilter_;
+            break;
+        case PostProcess::EffectType::RadialBlur:
+            isEnabled = enableRadialBlur_;
+            break;
+        case PostProcess::EffectType::Vignette:
+            isEnabled = enableVignette_;
+            break;
+        }
+
+        // 実行しないものをスキップ
+        if (!isEnabled)
+            continue;
+
+        // バケツリレー
+        currentDest->PreDraw();
+
+        // 特定エフェクトの必要なもの
+        if (effect == EffectType::DepthOutline) {
+            SetDepthSrvHandle(currentSource->GetDepthSRVHandle());
+        }
+
+        SetsrvHandle(currentSource->GetSRVHandle());
+
+        // 各エフの描画実行
+        switch (effect) {
+        case PostProcess::EffectType::Grayscale:
+            DrawGrayscale();
+            break;
+        case PostProcess::EffectType::Sepiascale:
+            DrawSepiascale();
+            break;
+        case PostProcess::EffectType::DepthOutline:
+            DrawDepthOutLine();
+            break;
+        case PostProcess::EffectType::LuminanceOutline:
+            DrawLuminanceOutLine();
+            break;
+        case PostProcess::EffectType::BoxFilter:
+            DrawBoxFilterHorizontal();
+            currentDest->PreDraw();
+            std::swap(currentSource, currentDest);
+
+            currentDest->PreDraw();
+            SetsrvHandle(currentSource->GetDepthSRVHandle());
+            DrawBoxFilterVertical();
+            break;
+        case PostProcess::EffectType::GaussianFilter:
+            DrawGaussianFilterHorizontal();
+            currentDest->PostDraw();
+            std::swap(currentSource, currentDest);
+
+            currentDest->PreDraw();
+            SetsrvHandle(currentSource->GetSRVHandle());
+            DrawGaussianFilterVertical();
+            break;
+        case PostProcess::EffectType::RadialBlur:
+            DrawRadialBlur();
+            break;
+        case PostProcess::EffectType::Vignette:
+            DrawVignette();
+            break;
+        }
+
+        // バケツリレー/スワップ
+        currentDest->PostDraw();
+        std::swap(currentSource, currentDest);
+    }
+    // 最終実行したSRVをセット
+    SetsrvHandle(currentSource->GetSRVHandle());
 }
 
 void PostProcess::DrawNormal()
@@ -79,9 +239,6 @@ void PostProcess::DrawNormal()
 
 void PostProcess::DrawGrayscale()
 {
-    if (GrayscaleData_) {
-        *GrayscaleData_ = GrayScaleParam_;
-    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateGrayscale_.Get());
@@ -93,9 +250,6 @@ void PostProcess::DrawGrayscale()
 
 void PostProcess::DrawSepiascale()
 {
-    if (SepiascaleData_) {
-        *SepiascaleData_ = SepiascaleParam_;
-    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateSepiascale_.Get());
@@ -107,9 +261,6 @@ void PostProcess::DrawSepiascale()
 
 void PostProcess::DrawVignette()
 {
-    if (vignetteMappedData_) {
-        *vignetteMappedData_ = vignetteParam_;
-    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateVignette.Get());
@@ -121,81 +272,54 @@ void PostProcess::DrawVignette()
 
 void PostProcess::DrawBoxFilterHorizontal()
 {
-    if (filterMappedData_) {
-        filterParam_.kernelSize = boxKernelSize_;
-        filterParam_.sigma = 0.0f;
-        *filterMappedData_ = filterParam_;
-    }
-
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateBoxFilterX.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
-    cmd->SetGraphicsRootConstantBufferView(1, filterBuffer_->GetGPUVirtualAddress());
+    cmd->SetGraphicsRootConstantBufferView(1, boxFilterBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
 void PostProcess::DrawBoxFilterVertical()
 {
-    if (filterMappedData_) {
-        filterParam_.kernelSize = boxKernelSize_;
-        filterParam_.sigma = 0.0f;
-        *filterMappedData_ = filterParam_;
-    }
-
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateBoxFilterY.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
-    cmd->SetGraphicsRootConstantBufferView(1, filterBuffer_->GetGPUVirtualAddress());
+    cmd->SetGraphicsRootConstantBufferView(1, boxFilterBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
 void PostProcess::DrawGaussianFilterHorizontal()
 {
-    if (filterMappedData_) {
-        filterParam_.kernelSize = gaussianKernelSize_;
-        filterParam_.sigma = gaussianSigma_;
-        *filterMappedData_ = filterParam_;
-    }
-
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateGaussianFilterX.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
-    cmd->SetGraphicsRootConstantBufferView(1, filterBuffer_->GetGPUVirtualAddress());
+    cmd->SetGraphicsRootConstantBufferView(1, gaussianFilterBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
 void PostProcess::DrawGaussianFilterVertical()
 {
-    if (filterMappedData_) {
-        filterParam_.kernelSize = gaussianKernelSize_;
-        filterParam_.sigma = gaussianSigma_;
-        *filterMappedData_ = filterParam_;
-    }
-
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateGaussianFilterY.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
-    cmd->SetGraphicsRootConstantBufferView(1, filterBuffer_->GetGPUVirtualAddress());
+    cmd->SetGraphicsRootConstantBufferView(1, gaussianFilterBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
 void PostProcess::DrawLuminanceOutLine()
 {
-    if (LuminanceData_) {
-        *LuminanceData_ = LuminanceParam;
-    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateLuminanceOutLine.Get());
@@ -208,12 +332,6 @@ void PostProcess::DrawLuminanceOutLine()
 void PostProcess::DrawDepthOutLine()
 {
     assert(defaultCamera_ != nullptr && "PostProcessにカメラがセットされていません！");
-
-    if (outlineMappedData_) {
-        // カメラから最新のプロジェクション逆行列を取得して転送
-        outlineMappedData_->projectionInverse = defaultCamera_->GetProjectionInverse();
-        outlineMappedData_->weightMultiplier = weightMultiplierParam;
-    }
 
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
@@ -230,9 +348,6 @@ void PostProcess::DrawDepthOutLine()
 
 void PostProcess::DrawRadialBlur()
 {
-    if (RadialBlurData_) {
-        *RadialBlurData_ = RadialBlurParam;
-    }
     auto cmd = dxCommon_->GetCommandList();
     cmd->SetGraphicsRootSignature(rootSignature.Get());
     cmd->SetPipelineState(pipelineStateRadialBlur.Get());
