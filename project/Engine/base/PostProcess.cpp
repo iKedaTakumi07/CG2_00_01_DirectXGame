@@ -195,11 +195,11 @@ void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB
             break;
         case PostProcess::EffectType::BoxFilter:
             DrawBoxFilterHorizontal();
-            currentDest->PreDraw();
+            currentDest->PostDraw();
             std::swap(currentSource, currentDest);
 
             currentDest->PreDraw();
-            SetsrvHandle(currentSource->GetDepthSRVHandle());
+            SetsrvHandle(currentSource->GetSRVHandle());
             DrawBoxFilterVertical();
             break;
         case PostProcess::EffectType::GaussianFilter:

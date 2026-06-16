@@ -82,6 +82,10 @@ void OffscreenSurface::PreDraw(bool isSceneDraw)
         D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxCommon_->GetDSVCPUDescriptorHandle();
         commandList->OMSetRenderTargets(1, &rtvHandleCPU, false, &dsvHandle);
         commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+        // カラーのクリア
+        float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
+        commandList->ClearRenderTargetView(rtvHandleCPU, clearColor, 0, nullptr);
     } else {
         // ポストプロセス中は深度バッファを使わない(nullptr)
         commandList->OMSetRenderTargets(1, &rtvHandleCPU, false, nullptr);
@@ -92,10 +96,6 @@ void OffscreenSurface::PreDraw(bool isSceneDraw)
     D3D12_RECT scissorRect = { 0, 0, WinApp::KClientWidth, WinApp::KClientHeight };
     commandList->RSSetViewports(1, &viewport);
     commandList->RSSetScissorRects(1, &scissorRect);
-
-    // カラーのクリア
-    float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
-    commandList->ClearRenderTargetView(rtvHandleCPU, clearColor, 0, nullptr);
 }
 
 void OffscreenSurface::PostDraw()
