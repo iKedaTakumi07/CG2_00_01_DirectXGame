@@ -40,12 +40,15 @@ void TitleScene::Initialize()
     TextureManager::getInstance()->LoadTexture("resources/AnimatedCube_BaseColor.png");
     TextureManager::getInstance()->LoadTexture("resources/AnimatedCube_MetallicRoughness.png");
     TextureManager::getInstance()->LoadTexture("resources/simpleSkin/uvChecker.png");
+    TextureManager::getInstance()->LoadTexture("resources/human/white.png");
 
     ModelManager::GetInstance()->LoadModel("axis.obj");
     ModelManager::GetInstance()->LoadModel("terrain.obj");
     ModelManager::GetInstance()->LoadModel("plane.gltf");
     ModelManager::GetInstance()->LoadModel("AnimatedCube.gltf");
     ModelManager::GetInstance()->LoadModel("simpleSkin/simpleSkin.gltf");
+    ModelManager::GetInstance()->LoadModel("human/walk.gltf");
+    ModelManager::GetInstance()->LoadModel("human/sneakWalk.gltf");
 
     // skydox = std::make_unique<Skybox>();
     // skydox->Initialize("resources/rostock_laage_airport_4k.dds");
@@ -64,9 +67,13 @@ void TitleScene::Initialize()
     object3d_2->SetCamera(BaseScene::GetCamera());
 
     model_2 = std::make_unique<Model>();
-    model_2->Initialize("resources", "simpleSkin/simpleSkin.gltf");
+    model_2->Initialize("resources", "human/walk.gltf");
+    object3d_2->SetScale({ 100.0f, 100.0f, 100.0f });
     // model_2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d_2->SetModel(model_2.get()); // スケルトンもセットで構築
+    object3d_2->LoadAnimation("resources", "human/walk.gltf", "walk");
+    object3d_2->LoadAnimation("resources", "human/sneakWalk.gltf", "sneakWalk");
+    object3d_2->PlayAnimation("sneakWalk", true);
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
     ParticleManager::getInstance()->CreateParticleGroup("circle3", "resources/circle3.png", ParticleMeshType::kPlane);
@@ -176,7 +183,7 @@ void TitleScene::Draw()
     //
     Object3dCommon::GetInstance()->PrepareObjectDraw();
 
-    object3d->Draw();
+    // object3d->Draw();
     object3d_2->Draw();
 
 #ifdef USE_IMGUI
@@ -189,5 +196,5 @@ void TitleScene::Draw()
 
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
 
-    ParticleManager::getInstance()->Draw();
+    // ParticleManager::getInstance()->Draw();
 }
