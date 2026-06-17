@@ -165,7 +165,7 @@ private:
     D3D12_VERTEX_BUFFER_VIEW skeletonVertexBufferView_ { };
     uint32_t skeletonLineCount_ = 0;
     LineVertex* lineVertices = nullptr;
-#endif // USE_IMGUI(Release未使用)
+#endif // USE_IMGUI(Release版未使用)
 
     Transform transform = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameraTransform;
