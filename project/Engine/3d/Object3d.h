@@ -67,6 +67,12 @@ public:
 
     void DrawImGui(const std::string& label);
 
+#ifdef USE_IMGUI
+    void InitializeSkeletonBuffer();
+    void UpdateSkeletonLines();
+    void DrawSkeleton();
+#endif // USE_IMGUI
+
     // 更新
     void Draw();
 
@@ -152,6 +158,14 @@ private:
 
     // Skeleton
     Skeleton skeleton_;
+
+#ifdef USE_IMGUI
+    // スカルの千描画用
+    Microsoft::WRL::ComPtr<ID3D12Resource> skeletonVertexBuffer_;
+    D3D12_VERTEX_BUFFER_VIEW skeletonVertexBufferView_ { };
+    uint32_t skeletonLineCount_ = 0;
+    LineVertex* lineVertices = nullptr;
+#endif // USE_IMGUI(Release未使用)
 
     Transform transform = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameraTransform;

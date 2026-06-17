@@ -270,6 +270,10 @@ void Object3d::Initialize()
     cameraDataResourceInitialize();
     pointLightInitialize();
     spotLightInitialize();
+
+#ifdef USE_IMGUI
+    InitializeSkeletonBuffer();
+#endif
 }
 
 void Object3d::Update()
@@ -495,3 +499,80 @@ void Object3d::spotLightInitialize()
     SpotLigthData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
     SpotLigthData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 4.0f);
 }
+
+#ifdef USE_IMGUI
+void Object3d::InitializeSkeletonBuffer()
+{
+    // 100ジョイント分(100本)の線を想定
+    uint32_t maxLines = 100;
+    uint32_t bufferSize = sizeof(LineVertex) * maxLines * 2;
+
+    // ヒーププロパティの設定 (アップロードヒープ)
+    D3D12_HEAP_PROPERTIES heapProps { };
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    // リソース記述
+    D3D12_RESOURCE_DESC resDesc { };
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Width = bufferSize;
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.Format = DXGI_FORMAT_UNKNOWN;
+    resDesc.SampleDesc.Count = 1;
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    // リソースの生成
+    auto device = object3dCommon->GetDxCommon()->GetDevice();
+    device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&skeletonVertexBuffer_));
+
+    // ビューの作成
+    skeletonVertexBufferView_.BufferLocation = skeletonVertexBuffer_->GetGPUVirtualAddress();
+    skeletonVertexBufferView_.SizeInBytes = (UINT)bufferSize;
+    skeletonVertexBufferView_.StrideInBytes = sizeof(LineVertex);
+}
+
+void Object3d::UpdateSkeletonLines()
+{
+    if (skeleton_.joints.empty())
+        return;
+
+    skeletonVertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&lineVertices));
+
+    skeletonLineCount_ = 0;
+    for (const Joint& joint : skeleton_.joints) {
+        if (joint.parent) {
+            // 親の位置 (ローカルの累積行列の4列目)
+            const Matrix4x4& parentMat = skeleton_.joints[*joint.parent].skeletonSpaceMatrix;
+            Vector3 parentPos = { parentMat.m[3][0], parentMat.m[3][1], parentMat.m[3][2] };
+
+            // 自分の位置
+            const Matrix4x4& childMat = joint.skeletonSpaceMatrix;
+            Vector3 childPos = { childMat.m[3][0], childMat.m[3][1], childMat.m[3][2] };
+
+            // 頂点にセット（ワールド行列の適用はシェーダー側で行うため、ここではそのまま）
+            lineVertices[skeletonLineCount_ * 2 + 0].position = { parentPos.x, parentPos.y, parentPos.z, 1.0f };
+            lineVertices[skeletonLineCount_ * 2 + 1].position = { childPos.x, childPos.y, childPos.z, 1.0f };
+            skeletonLineCount_++;
+        }
+    }
+    skeletonVertexBuffer_->Unmap(0, nullptr);
+}
+
+void Object3d::DrawSkeleton()
+{
+    if (skeletonLineCount_ == 0)
+        return;
+
+    auto cmdList = object3dCommon->GetDxCommon()->GetCommandList();
+
+    cmdList->IASetVertexBuffers(0, 1, &skeletonVertexBufferView_);
+
+    // b0レジスタに WVP行列（transformationMatrixResource）を渡す
+    cmdList->SetGraphicsRootConstantBufferView(0, transformationMatrixResource->GetGPUVirtualAddress());
+
+    // 1本の線につき2頂点なので、総頂点数は LineCount * 2
+    cmdList->DrawInstanced(skeletonLineCount_ * 2, 1, 0, 0);
+}
+
+#endif // USE_IMGUI

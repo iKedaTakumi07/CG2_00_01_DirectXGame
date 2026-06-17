@@ -24,6 +24,9 @@ struct Vector4 {
 struct Matrix4x4 {
     float m[4][4];
 };
+struct LineVertex {
+    Vector4 position;
+};
 struct AABB {
     Vector3 min;
     Vector3 max;
