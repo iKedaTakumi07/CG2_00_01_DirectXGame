@@ -23,6 +23,9 @@ public:
 
     // 共通描画設定
     void PrepareObjectDraw();
+#ifdef USE_IMGUI
+    void PreLineObjectDraw();
+#endif // USE_IMGUI
 
     // get
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
@@ -51,7 +54,14 @@ private:
     // グラフィックスパイプラインの生成
     void graphicsPipelineInitialize(DirectXCommon* dxcommon);
 
+    // ラインパイプラインの生成
+    void LinePipelineInitialize(DirectXCommon* dxcommon);
+
     DirectXCommon* dxCommon_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+
+    // lineDraw用
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> lineRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> linePipelineState = nullptr;
 };

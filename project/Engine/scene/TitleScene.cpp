@@ -162,6 +162,10 @@ void TitleScene::Update()
     // IMGUI
     object3d->DrawImGui("Terrain");
     object3d_2->DrawImGui("Plane");
+
+#ifdef USE_IMGUI
+    object3d_2->UpdateSkeletonLines();
+#endif // USE_IMGUI
 }
 
 void TitleScene::Draw()
@@ -174,6 +178,11 @@ void TitleScene::Draw()
 
     object3d->Draw();
     object3d_2->Draw();
+
+#ifdef USE_IMGUI
+    Object3dCommon::GetInstance()->PreLineObjectDraw();
+    object3d_2->DrawSkeleton();
+#endif // USE_IMGUI
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
     // skydox->Draw();
