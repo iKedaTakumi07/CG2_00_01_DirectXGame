@@ -277,10 +277,6 @@ void Object3d::Update()
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
     if (model) {
-        const ModelData& modelData = model->GetModelData();
-
-        Matrix4x4 localMatrix = modelData.rootNode.localMatrix;
-
         if (isAnimating_ && currentAnimation_) {
             float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
             animationTime_ += deltaTime;
@@ -295,20 +291,23 @@ void Object3d::Update()
                     isAnimating_ = false;
                 }
             }
+            // スケルトンに現在のアニメーションを適応
+            ApplyAnimation(skeleton_, *currentAnimation_, animationTime_);
+        }
 
-            NodeAnimation& rootNodeAnimation = currentAnimation_->nodeAnimations[modelData.rootNode.name];
-            Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
-            Vector4 rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
-            Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
-            localMatrix = MakeAffineMatrix(scale, rotate, translate);
+        // スケルトンの行列変換
+        Update(skeleton_);
+
+        Matrix4x4 localMatrix = MakeIdentity4x4();
+        if (!skeleton_.joints.empty()) {
+            localMatrix = skeleton_.joints[skeleton_.root].skeletonSpaceMatrix;
+        } else {
+            // スケルトンが無い場合は元のノードの行列を使う（フォールバック）
+            localMatrix = model->GetModelData().rootNode.localMatrix;
         }
 
         worldMatrix = Multiply(localMatrix, worldMatrix);
     }
-
-    ApplyAnimation(skeleton, ainmtion, animationTime_);
-
-    Update(skeleton);
 
     Matrix4x4 worldViewProjectionMatrix;
     const Matrix4x4& ViewProjectionMatrix = camera->GetViewProjectionMatrix();
