@@ -10,6 +10,8 @@
 class WinApp;
 class Object3dCommon;
 #include "Model.h"
+#include <optional>
+#include <vector>
 class Camera;
 
 class Object3d {
@@ -47,15 +49,21 @@ public:
     /// <param name="loop">ループ再生</param>
     void PlayAnimation(const std::string& animName, bool loop = true);
 
+    void ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime);
+
     /// <summary>
     /// アニメーションを停止
     /// </summary>
     void StopAnimation();
 
+    Skeleton CreateSkeleton(const Node& rootNode);
+    int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
+
     // 初期化
     void Initialize();
 
     void Update();
+    void Update(Skeleton& skeleton);
 
     void DrawImGui(const std::string& label);
 
@@ -63,7 +71,7 @@ public:
     void Draw();
 
     // Setter
-    void SetModel(Model* model) { this->model = model; }
+    void SetModel(Model* model);
     void SetScale(const Vector3& scale) { transform.scale = scale; }
     void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
     void SetTranslate(const Vector3& translate) { transform.translate = translate; }
@@ -141,6 +149,9 @@ private:
     float animationTime_ = 0.0f; // 現在の再生時間（秒）
     bool isAnimating_ = false; // アニメーション中かどうかのフラグ
     bool isLoop_ = true; // ループ再生フラグ
+
+    // Skeleton
+    Skeleton skeleton_;
 
     Transform transform = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameraTransform;
