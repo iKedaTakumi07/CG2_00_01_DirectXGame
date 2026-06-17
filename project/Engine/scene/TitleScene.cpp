@@ -39,11 +39,13 @@ void TitleScene::Initialize()
     TextureManager::getInstance()->LoadTexture("resources/grass.png");
     TextureManager::getInstance()->LoadTexture("resources/AnimatedCube_BaseColor.png");
     TextureManager::getInstance()->LoadTexture("resources/AnimatedCube_MetallicRoughness.png");
+    TextureManager::getInstance()->LoadTexture("resources/simpleSkin/uvChecker.png");
 
     ModelManager::GetInstance()->LoadModel("axis.obj");
     ModelManager::GetInstance()->LoadModel("terrain.obj");
     ModelManager::GetInstance()->LoadModel("plane.gltf");
     ModelManager::GetInstance()->LoadModel("AnimatedCube.gltf");
+    ModelManager::GetInstance()->LoadModel("simpleSkin/simpleSkin.gltf");
 
     // skydox = std::make_unique<Skybox>();
     // skydox->Initialize("resources/rostock_laage_airport_4k.dds");
@@ -62,11 +64,9 @@ void TitleScene::Initialize()
     object3d_2->SetCamera(BaseScene::GetCamera());
 
     model_2 = std::make_unique<Model>();
-    model_2->Initialize("resources", "AnimatedCube.gltf");
+    model_2->Initialize("resources", "simpleSkin/simpleSkin.gltf");
     // model_2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
-    object3d_2->SetModel(model_2.get());
-    object3d_2->LoadAnimation("resources", "AnimatedCube.gltf", "test");
-    object3d_2->PlayAnimation("test", false);
+    object3d_2->SetModel(model_2.get()); // スケルトンもセットで構築
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
     ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
@@ -78,7 +78,7 @@ void TitleScene::Initialize()
     PostProcess::GetInstance()->SetKernelSizeBoxFilter(7);
 
     // 板ポリ
-    Transform emitter {};
+    Transform emitter { };
     emitter.translate = { 0.0f, 2.0f, 0.0f };
     emitter.rotate = { 0.0f, 0.0f, 1.0f };
     emitter.scale = { 0.05f, 1.0f, 1.0f };

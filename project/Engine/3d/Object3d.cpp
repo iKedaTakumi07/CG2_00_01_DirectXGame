@@ -161,13 +161,13 @@ Animation Object3d::LoadAinmationFile(const std::string& directoryPath, const st
 Node Object3d::ReadNode(aiNode* node)
 {
     Node result;
-    aiMatrix4x4 aiLocalMatrix = node->mTransformation;
-    aiLocalMatrix.Transpose();
-    for (int x = 0; x < 4; ++x) {
-        for (int y = 0; y < 4; ++y) {
-            result.localMatrix.m[x][y] = aiLocalMatrix[x][y];
-        }
-    }
+    aiVector3D scale, translate;
+    aiQuaternion rotate;
+    node->mTransformation.Decompose(scale, rotate, translate);
+    result.transfrom.scale = { scale.x, scale.y, scale.z };
+    result.transfrom.rotate = { rotate.x, -rotate.y, -rotate.z, rotate.w }; // x軸反転、回転方向が逆なので軸を反転させる
+    result.transfrom.translate = { -translate.x, translate.y, translate.z }; // x軸反転
+    result.localMatrix = MakeAffineMatrix(result.transfrom.scale, result.transfrom.rotate, result.transfrom.translate);
 
     result.name = node->mName.C_Str(); // node名を格納
     result.childrem.resize(node->mNumChildren); // 子の数だけ確保
@@ -202,12 +202,56 @@ void Object3d::PlayAnimation(const std::string& animName, bool loop)
     isLoop_ = loop;
 }
 
+void Object3d::ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime)
+{
+    for (Joint& joint : skeleton.joints) {
+        // 対象のjointのanimationがあれば、値の適応を行う。下記のif分はC++17から可能な奴
+        if (auto it = animation.nodeAnimations.find(joint.name); it != animation.nodeAnimations.end()) {
+            const NodeAnimation& rootNodeAnimaiton = (*it).second;
+            joint.transform.translate = CalculateValue(rootNodeAnimaiton.translate.keyframes, animationTime);
+            joint.transform.rotate = CalculateValue(rootNodeAnimaiton.rotate.keyframes, animationTime);
+            joint.transform.scale = CalculateValue(rootNodeAnimaiton.scale.keyframes, animationTime);
+        }
+    }
+}
+
 void Object3d::StopAnimation()
 {
     isAnimating_ = false;
     currentAnimation_ = nullptr;
     currentAnimationName_ = "";
     animationTime_ = 0.0f;
+}
+
+Skeleton Object3d::CreateSkeleton(const Node& rootNode)
+{
+    Skeleton skeleton;
+    skeleton.root = CreateJoint(rootNode, { }, skeleton.joints);
+
+    for (const Joint& joint : skeleton.joints) {
+        skeleton.jointMap.emplace(joint.name, joint.index);
+    }
+
+    return skeleton;
+}
+
+int32_t Object3d::CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints)
+{
+    Joint joint;
+    joint.name = node.name;
+    joint.localMatrix = node.localMatrix;
+    joint.skeletonSpaceMatrix = MakeIdentity4x4();
+    joint.transform = node.transfrom;
+    joint.index = int32_t(joints.size()); // 現在登録されている数をindex
+    joint.parent = parent;
+    joints.push_back(joint);
+    for (const Node& child : node.childrem) {
+        // 子jointを作成,index登録
+        int32_t childIndex = CreateJoint(child, joint.index, joints);
+        joints[joint.index].childern.push_back(childIndex);
+    }
+    // 自身のindexを返す
+    return joint.index;
 }
 
 void Object3d::Initialize()
@@ -251,7 +295,7 @@ void Object3d::Update()
                     isAnimating_ = false;
                 }
             }
-           
+
             NodeAnimation& rootNodeAnimation = currentAnimation_->nodeAnimations[modelData.rootNode.name];
             Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
             Vector4 rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
@@ -262,6 +306,10 @@ void Object3d::Update()
         worldMatrix = Multiply(localMatrix, worldMatrix);
     }
 
+    ApplyAnimation(skeleton, ainmtion, animationTime_);
+
+    Update(skeleton);
+
     Matrix4x4 worldViewProjectionMatrix;
     const Matrix4x4& ViewProjectionMatrix = camera->GetViewProjectionMatrix();
     worldViewProjectionMatrix = Multiply(worldMatrix, ViewProjectionMatrix);
@@ -271,6 +319,19 @@ void Object3d::Update()
     transformationMatrixData->worldInverseTranspose = Transpose(Inverse(worldMatrix));
 
     directionalLightData->direction = Normalize(directionalLightData->direction);
+}
+
+void Object3d::Update(Skeleton& skeleton)
+{
+    // すべてのjointを更新。親がわっ回ので通常ループで処理可
+    for (Joint& joint : skeleton.joints) {
+        joint.localMatrix = MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
+        if (joint.parent) { // 親がいれば親の行列をかける
+            joint.skeletonSpaceMatrix = joint.localMatrix * skeleton.joints[*joint.parent].skeletonSpaceMatrix;
+        } else {
+            joint.skeletonSpaceMatrix = joint.localMatrix;
+        }
+    }
 }
 
 void Object3d::DrawImGui(const std::string& label)
@@ -352,6 +413,16 @@ void Object3d::Draw()
     object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLigth->GetGPUVirtualAddress());
     if (model) {
         model->Draw();
+    }
+}
+
+void Object3d::SetModel(Model* model)
+{
+    this->model = model;
+
+    // スケルトン構築
+    if (this->model) {
+        skeleton_ = CreateSkeleton(this->model->GetModelData().rootNode);
     }
 }
 

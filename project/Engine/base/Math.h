@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,11 @@ struct AABB {
 struct Transform {
     Vector3 scale;
     Vector3 rotate;
+    Vector3 translate;
+};
+struct QuaternionTransform {
+    Vector3 scale;
+    Vector4 rotate;
     Vector3 translate;
 };
 struct VertexData {
@@ -75,7 +81,24 @@ struct MaterialData {
     std::string textureFilePath;
     uint32_t textureIndex = 0;
 };
+
+struct Joint {
+    QuaternionTransform transform; // transform情報
+    Matrix4x4 localMatrix; // localMatrix
+    Matrix4x4 skeletonSpaceMatrix; // skeletonSpaceでの変換行列
+    std::string name; // 名前
+    std::vector<int32_t> childern; // 子jointのindexのリスト。いなければ空
+    int32_t index; // 自身のindex
+    std::optional<int32_t> parent; // 親jointのindex.いないならnull
+};
+
+struct Skeleton {
+    int32_t root; // rootjointのindex
+    std::map<std::string, int32_t> jointMap; // joint名とindexとの辞書
+    std::vector<Joint> joints; // 所属しているジョイント
+};
 struct Node {
+    QuaternionTransform transfrom;
     Matrix4x4 localMatrix;
     std::string name;
     std::vector<Node> childrem;
@@ -204,6 +227,10 @@ Matrix4x4 MakePrespectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 
 bool IsCollision(const AABB& aabb, const Vector3& point);
+
+// --- Matrix4x4 ---
+// 行列の掛け算
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);
 
 Vector3 operator*(const Vector3& m1, const float& m2);
 Vector3& operator+=(Vector3& lhv, const Vector3& rhv);

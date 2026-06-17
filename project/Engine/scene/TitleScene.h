@@ -35,6 +35,8 @@ private:
     std::unique_ptr<Model> model_2;
     std::unique_ptr<Object3d> object3d_2;
 
+    std::unique_ptr<Skeleton> skeleton_2;
+
     std::unique_ptr<Skybox> skydox;
 
     std::unique_ptr<ParticleEmitter> particleEmitter;

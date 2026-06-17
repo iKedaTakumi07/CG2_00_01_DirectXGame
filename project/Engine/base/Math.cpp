@@ -336,7 +336,10 @@ bool IsCollision(const AABB& aabb, const Vector3& point)
     }
     return false;
 }
-
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2)
+{
+    return Multiply(m1, m2);
+}
 Vector3 operator*(const Vector3& m1, const float& m2) { return Multiply(m1, m2); }
 Vector3& operator+=(Vector3& lhv, const Vector3& rhv)
 {
