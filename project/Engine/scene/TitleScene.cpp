@@ -66,9 +66,7 @@ void TitleScene::Initialize()
     model_2 = std::make_unique<Model>();
     model_2->Initialize("resources", "simpleSkin/simpleSkin.gltf");
     // model_2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
-    object3d_2->SetModel(model_2.get());
-    object3d_2->LoadAnimation("resources", "AnimatedCube.gltf", "test");
-    object3d_2->PlayAnimation("test", true);
+    object3d_2->SetModel(model_2.get()); // スケルトンもセットで構築
 
     ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
     ParticleManager::getInstance()->CreateParticleGroup("circle3", "resources/circle3.png", ParticleMeshType::kPlane);
