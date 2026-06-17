@@ -44,6 +44,10 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
 
     Assimp::Importer importer;
     std::string filePath = directoryPath + "/" + filename;
+
+    size_t lastSlash = filePath.find_last_of("/\\");
+    std::string modelDirectory = (lastSlash != std::string::npos) ? filePath.substr(0, lastSlash) : directoryPath;
+
     const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
     assert(scene->HasMeshes());
 
@@ -92,7 +96,9 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
         if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
             aiString texttureFilePath;
             material->GetTexture(aiTextureType_DIFFUSE, 0, &texttureFilePath);
-            modelData.material.textureFilePath = directoryPath + "/" + texttureFilePath.C_Str();
+
+            std::string texName = texttureFilePath.C_Str();
+            modelData.material.textureFilePath = modelDirectory + "/" + texName;
         }
     }
 
