@@ -159,7 +159,7 @@ void TitleScene::Update()
     // skydox->Update();
 
     object3d->Update();
-    // object3d_2->Update();
+     object3d_2->Update();
 
     particleEmitter->Update();
     particleEmitter2->Update();
@@ -184,7 +184,7 @@ void TitleScene::Draw()
     Object3dCommon::GetInstance()->PrepareObjectDraw();
 
     object3d->Draw();
-    // object3d_2->Draw();
+     object3d_2->Draw();
 
 #ifdef USE_IMGUI
     Object3dCommon::GetInstance()->PreLineObjectDraw();
