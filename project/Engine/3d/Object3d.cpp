@@ -51,29 +51,22 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
     const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
     assert(scene->HasMeshes());
 
-    uint32_t vertexOffset = 0;
-
     for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
         aiMesh* mesh = scene->mMeshes[meshIndex];
         assert(mesh->HasNormals());
         assert(mesh->HasTextureCoords(0));
 
+        modelData.vertices.resize(mesh->mNumVertices); // 最初に頂点数分のメモリを確保しておく
         // メッシュ頂点データ
         for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
             aiVector3D& position = mesh->mVertices[vertexIndex];
             aiVector3D& normal = mesh->mNormals[vertexIndex];
             aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
 
-            VertexData vertex;
-            vertex.position = { position.x, position.y, position.z, 1.0f };
-            vertex.normal = { normal.x, normal.y, normal.z };
-            vertex.texcoord = { texcoord.x, texcoord.y };
-
-            // aiProcess_FlipWindingOrderはz*=-1,右手->左手に変換するので手動で対処
-            vertex.position.x *= -1.0f;
-            vertex.normal.x *= -1.0f;
-
-            modelData.vertices.push_back(vertex);
+            // 右手->左手
+            modelData.vertices[vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
+            modelData.vertices[vertexIndex].normal = { -normal.x, normal.y, normal.z };
+            modelData.vertices[vertexIndex].texcoord = { texcoord.x, texcoord.y };
         }
 
         // Face解析
@@ -83,11 +76,10 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
 
             // veertex解析
             for (uint32_t element = 0; element < face.mNumIndices; ++element) {
-                uint32_t globalVertexIndex = face.mIndices[element] + vertexOffset;
-                modelData.indices.push_back(globalVertexIndex);
+                uint32_t vertexIndex = face.mIndices[element];
+                modelData.indices.push_back(vertexIndex);
             }
         }
-        vertexOffset += mesh->mNumVertices;
     }
 
     // マテリアる

@@ -30,6 +30,7 @@ void Object3dCommon::PrepareObjectDraw()
     dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
+#ifdef USE_IMGUI
 void Object3dCommon::PreLineObjectDraw()
 {
 
@@ -40,6 +41,7 @@ void Object3dCommon::PreLineObjectDraw()
     // ⭐️ 描画トポロジを LINELIST に変更
     dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 }
+#endif // USE_IMGUI
 
 void Object3dCommon::RootSignatureInitialize(DirectXCommon* dxcommon)
 {
