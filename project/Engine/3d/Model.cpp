@@ -75,7 +75,7 @@ void Model::MaterialResourceInitialize()
 
     // 今回は白を書き込んでみる
     materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    materialData->enableLighting = true;
+    materialData->enableLighting = false;
     materialData->shininess = 20.0f;
     materialData->uvTransform = MakeIdentity4x4();
     materialData->evnironmentCoefficient = 0.0f;

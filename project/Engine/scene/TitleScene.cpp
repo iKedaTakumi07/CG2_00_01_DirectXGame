@@ -114,7 +114,7 @@ void TitleScene::Initialize()
     particleEmitter2->SetParam(fireParam);
 
     // [アップデート予定]パーティクルPS閾値をCBuffer経由で設定できるようにする
-    emitter.translate = { 0.0f, 0.0f, 0.0f };
+    /*emitter.translate = { 0.0f, 0.0f, 0.0f };
     particleEmitter4 = std::make_unique<ParticleEmitter>("Cylinder", emitter, 10.0f, 1, false);
     fireParam.SetScale({ 1.0f, 1.0f, 1.0f });
     fireParam.SetRotate({ 0.0f, 0.0f, 0.0f });
@@ -124,7 +124,7 @@ void TitleScene::Initialize()
     fireParam.SetLifeTime(10.0f);
     fireParam.isInfinite = true;
     particleEmitter4->SetParam(fireParam);
-    ParticleManager::getInstance()->SetGroupScrollSpeed("Cylinder", { 0.2f, 0.0f });
+    ParticleManager::getInstance()->SetGroupScrollSpeed("Cylinder", { 0.2f, 0.0f });*/
 
     emitter.translate = { 0.0f, 2.0f, 0.0f };
     particleEmitter3 = std::make_unique<ParticleEmitter>("circle3", emitter, 0.8f, 32, true);
@@ -159,12 +159,12 @@ void TitleScene::Update()
     // skydox->Update();
 
     object3d->Update();
-    object3d_2->Update();
+    // object3d_2->Update();
 
     particleEmitter->Update();
     particleEmitter2->Update();
     particleEmitter3->Update();
-    particleEmitter4->Update();
+    /*particleEmitter4->Update();*/
 
     // IMGUI
     object3d->DrawImGui("Terrain");
@@ -183,8 +183,8 @@ void TitleScene::Draw()
     //
     Object3dCommon::GetInstance()->PrepareObjectDraw();
 
-    // object3d->Draw();
-    object3d_2->Draw();
+    object3d->Draw();
+    // object3d_2->Draw();
 
 #ifdef USE_IMGUI
     Object3dCommon::GetInstance()->PreLineObjectDraw();
@@ -196,5 +196,5 @@ void TitleScene::Draw()
 
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
 
-    // ParticleManager::getInstance()->Draw();
+    ParticleManager::getInstance()->Draw();
 }
