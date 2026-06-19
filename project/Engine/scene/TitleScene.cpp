@@ -24,6 +24,7 @@
 
 #include "../io/Input.h"
 
+#include "../../Game/Particle/LaserParticle.h"
 #include "math.h"
 
 TitleScene::TitleScene()
@@ -138,6 +139,10 @@ void TitleScene::Initialize()
     fireParam.isInfinite = false;
     fireParam.SetLifeTime(1.2f);
     particleEmitter3->SetParam(fireParam);
+
+    laserTest = std::make_unique<LaserParticle>();
+    laserTest->Initialize();
+    laserTest->NewTransform();
 }
 
 void TitleScene::Finalize()
@@ -159,12 +164,22 @@ void TitleScene::Update()
     // skydox->Update();
 
     object3d->Update();
-     object3d_2->Update();
+    object3d_2->Update();
 
     particleEmitter->Update();
     particleEmitter2->Update();
     particleEmitter3->Update();
     /*particleEmitter4->Update();*/
+
+    // 5秒ごとに生成(軽いテストなう)
+    if (testTimer >= 5.0f) {
+        testTimer = 0.0f;
+        laserTest->NewTransform();
+    }
+    float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+    testTimer += deltaTime;
+
+    laserTest->Update();
 
     // IMGUI
     object3d->DrawImGui("Terrain");
@@ -184,7 +199,7 @@ void TitleScene::Draw()
     Object3dCommon::GetInstance()->PrepareObjectDraw();
 
     object3d->Draw();
-     object3d_2->Draw();
+    object3d_2->Draw();
 
 #ifdef USE_IMGUI
     Object3dCommon::GetInstance()->PreLineObjectDraw();

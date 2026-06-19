@@ -46,7 +46,7 @@ struct EmitterParam {
     float minLifeTime = 1.0f;
     float maxLifeTime = 2.0f;
 
-    bool isInfinite = false;
+    bool isInfinite = false; // パーティクル自体を消滅させないかどうか?
     
     // 固定値で運用可能にするため
     void SetScale(const Vector3& scale) { minScale = maxScale = scale; }

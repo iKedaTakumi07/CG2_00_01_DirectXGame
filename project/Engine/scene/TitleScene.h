@@ -5,6 +5,9 @@
 #include "../2d/Sprite.h"
 #include "../3d/ParticleEmitter.h"
 #include "../audio/Sound.h"
+
+class LaserParticle;
+
 class Model;
 class Object3d;
 class Skybox;
@@ -43,4 +46,7 @@ private:
     std::unique_ptr<ParticleEmitter> particleEmitter2;
     std::unique_ptr<ParticleEmitter> particleEmitter3;
     std::unique_ptr<ParticleEmitter> particleEmitter4;
+
+    std::unique_ptr<LaserParticle> laserTest;
+    float testTimer = 0.0f;
 };
