@@ -140,9 +140,9 @@ void TitleScene::Initialize()
     fireParam.SetLifeTime(1.2f);
     particleEmitter3->SetParam(fireParam);
 
-    laserTest = std::make_unique<LaserParticle>();
+ /*   laserTest = std::make_unique<LaserParticle>();
     laserTest->Initialize();
-    laserTest->NewTransform();
+    laserTest->NewTransform();*/
 }
 
 void TitleScene::Finalize()
@@ -172,14 +172,14 @@ void TitleScene::Update()
     /*particleEmitter4->Update();*/
 
     // 5秒ごとに生成(軽いテストなう)
-    if (testTimer >= 5.0f) {
+   /* if (testTimer >= 5.0f) {
         testTimer = 0.0f;
         laserTest->NewTransform();
     }
     float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     testTimer += deltaTime;
 
-    laserTest->Update();
+    laserTest->Update();*/
 
     // IMGUI
     object3d->DrawImGui("Terrain");
@@ -199,11 +199,11 @@ void TitleScene::Draw()
     Object3dCommon::GetInstance()->PrepareObjectDraw();
 
     object3d->Draw();
-    object3d_2->Draw();
+    //object3d_2->Draw();
 
 #ifdef USE_IMGUI
     Object3dCommon::GetInstance()->PreLineObjectDraw();
-    object3d_2->DrawSkeleton();
+    //object3d_2->DrawSkeleton();
 #endif // USE_IMGUI
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
