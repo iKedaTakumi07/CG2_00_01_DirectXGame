@@ -33,6 +33,9 @@ void ImGuiManager::Initialize([[maybe_unused]] DirectXCommon* dxCommon, [[maybe_
         srvManager_->GetdescriptorHeap().Get(),
         srvManager_->GetCPUDescriptorHandle(SrvIndex),
         srvManager_->GetGPUDescriptorHandle(SrvIndex));
+
+    bool isCreated = ImGui_ImplDX12_CreateDeviceObjects();
+
 #endif // USE_IMGUI
 }
 
