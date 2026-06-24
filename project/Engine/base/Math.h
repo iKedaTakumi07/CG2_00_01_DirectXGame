@@ -1,10 +1,14 @@
 #pragma once
+#include <array>
 #include <cmath>
 #include <cstdint>
+#include <d3d12.h>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
+#include <wrl/client.h>
 
 struct Vector2 {
     float x;
@@ -131,7 +135,35 @@ struct Animation {
     std::map<std::string, NodeAnimation> nodeAnimations;
 };
 
+struct VertexWeightData {
+    float weight;
+    uint32_t vertexIndex;
+};
+struct JointWeightData {
+    Matrix4x4 inverseBindPoseMatrix;
+    std::vector<VertexWeightData> vertexWeights;
+};
+const uint32_t kNumMaxInfluence = 4;
+struct VertexInfluence {
+    std::array<float, kNumMaxInfluence> weights;
+    std::array<int32_t, kNumMaxInfluence> jointIndices;
+};
+struct WellForGPU {
+    Matrix4x4 skeletonSpaceMatrix;
+    Matrix4x4 skeletonSpaceInverseTransposeMatrix;
+};
+struct SkinCluster {
+    std::vector<Matrix4x4> inverseBindPoseMatrices;
+    Microsoft::WRL::ComPtr<ID3D12Resource> influenceResource;
+    D3D12_VERTEX_BUFFER_VIEW influenceResourceView;
+    std::span<VertexInfluence> mappedInfluence;
+    Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
+    std::span<WellForGPU> mappedPalette;
+    std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandel;
+};
+
 struct ModelData {
+    std::map<std::string, JointWeightData> skinClusterData;
     std::vector<VertexData> vertices;
     std::vector<uint32_t> indices;
     MaterialData material;

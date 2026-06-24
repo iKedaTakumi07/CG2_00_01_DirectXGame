@@ -58,12 +58,14 @@ public:
 
     Skeleton CreateSkeleton(const Node& rootNode);
     int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
+    SkinCluster CreateSkinCluster(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Skeleton& skeleton, const ModelData& modelData);
 
     // 初期化
     void Initialize();
 
     void Update();
     void Update(Skeleton& skeleton);
+    void Update(SkinCluster& skinCluster, Skeleton& skeleton);
 
     void DrawImGui(const std::string& label);
 
@@ -158,6 +160,7 @@ private:
 
     // Skeleton
     Skeleton skeleton_;
+    SkinCluster skinCluster_;
 
 #ifdef USE_IMGUI
     // スカルの千描画用
