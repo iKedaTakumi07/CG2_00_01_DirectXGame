@@ -82,7 +82,7 @@ void Framework::Initialize()
 
     SpriteCommon::GetInstance()->Initialize(dxCommon.get());
 
-    Object3dCommon::GetInstance()->Initialize(dxCommon.get());
+    Object3dCommon::GetInstance()->Initialize(dxCommon.get(), srvManager.get());
 
     ModelCommon::GetInstance()->Initialize(dxCommon.get());
 

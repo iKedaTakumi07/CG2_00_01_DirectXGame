@@ -30,6 +30,32 @@ void Model::Draw()
         // Skyboxがない場合は、既にロードされている適当なテクスチャをダミーとしてバインドしてエラーを防ぐ
         modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/uvChecker.png"));
     }
+
+    modelCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
+}
+
+void Model::Draw(const SkinCluster& skinCluster)
+{
+    D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+        vertexBufferView, // VertextDataのVBV
+        skinCluster.influenceResourceView // influenceのVBV
+    };
+    modelCommon_->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
+
+    modelCommon_->GetDxCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+
+    modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+    modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(modelData.material.textureFilePath));
+
+    if (!texturefilePath_.empty()) {
+        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
+    } else {
+        // Skyboxがない場合は、既にロードされている適当なテクスチャをダミーとしてバインドしてエラーを防ぐ
+        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/uvChecker.png"));
+    }
+
+    modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(8, skinCluster.paletteSrvHandel.second);
+
     modelCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
 }
 

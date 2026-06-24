@@ -1,5 +1,6 @@
 #pragma once
 #include "../base/DirectXCommon.h"
+#include "../base/TextureManager.h"
 #include <memory>
 class Camera;
 
@@ -19,16 +20,19 @@ public:
     static Object3dCommon* GetInstance();
 
     // 初期化
-    void Initialize(DirectXCommon* dxcommon);
+    void Initialize(DirectXCommon* dxcommon, SrvManager* srvManager);
 
     // 共通描画設定
     void PrepareObjectDraw();
+    // スキンモデル用
+    void PrepareSkinObjectDraw();
 #ifdef USE_IMGUI
     void PreLineObjectDraw();
 #endif // USE_IMGUI
 
     // get
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
+    SrvManager* GetSrvManager() const { return srvManager_; }
     Camera* GetDefaultCamera() const { return defaultCamera_; }
 
     // set
@@ -47,6 +51,7 @@ private:
 
 private:
     Camera* defaultCamera_ = nullptr;
+    SrvManager* srvManager_ = nullptr;
 
     // ルートシグネチャの作成
     void RootSignatureInitialize(DirectXCommon* dxcommon);
@@ -54,12 +59,19 @@ private:
     // グラフィックスパイプラインの生成
     void graphicsPipelineInitialize(DirectXCommon* dxcommon);
 
-    // ラインパイプラインの生成
-    void LinePipelineInitialize(DirectXCommon* dxcommon);
-
     DirectXCommon* dxCommon_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+
+    // スキンモデル
+    void SkinRootSignatureInitialize(DirectXCommon* dxcommon);
+    void SkinPipelineInitialize(DirectXCommon* dxcommon);
+
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> skinRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> skinPipelineState = nullptr;
+
+    // ラインパイプラインの生成
+    void LinePipelineInitialize(DirectXCommon* dxcommon);
 
     // lineDraw用
     Microsoft::WRL::ComPtr<ID3D12RootSignature> lineRootSignature = nullptr;
