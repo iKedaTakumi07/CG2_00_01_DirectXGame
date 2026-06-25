@@ -160,6 +160,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Engine\3d\Animator.cpp" />
     <ClCompile Include="Engine\scene\AbstractSceneFactory.cpp" />
     <ClCompile Include="Engine\base\PostProcess.cpp" />
     <ClCompile Include="Engine\audio\Audio.cpp" />
@@ -203,6 +204,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\base\Logger.cpp" />
     <ClCompile Include="Engine\3d\IParticleMesh.cpp" />
     <ClCompile Include="Game\Particle\LaserParticle.cpp" />
+    <ClCompile Include="Engine\3d\LightManager.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -416,6 +418,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Engine\3d\Animator.h" />
     <ClInclude Include="Engine\scene\AbstractSceneFactory.h" />
     <ClInclude Include="Engine\base\PostProcess.h" />
     <ClInclude Include="Engine\audio\Audio.h" />
@@ -468,6 +471,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\3d\IParticleMesh.h" />
     <ClInclude Include="Engine\scene\SceneFactory.h" />
     <ClInclude Include="Game\Particle\LaserParticle.h" />
+    <ClInclude Include="Engine\3d\LightManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

@@ -4,6 +4,7 @@
 #include "../base/TextureManager.h"
 #include "../scene/SceneManager.h"
 #include "Camera.h"
+#include "LightManager.h"
 #include "Model.h"
 #include "ModelManager.h"
 #include "Object3dCommon.h"
@@ -17,29 +18,6 @@
 #endif // USE_IMGUI
 #include <algorithm>
 #include <cmath>
-
-// MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
-//{
-//     MaterialData materialData; // 構築するMaterialData
-//     std::string line; // ファイルから読み込んだ1行を格納するもの
-//     std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
-//     assert(file.is_open()); // 開けられないなら止める
-//
-//     while (std::getline(file, line)) {
-//         std::string identifier;
-//         std::istringstream s(line);
-//         s >> identifier;
-//
-//         // identifierに応じた処理
-//         if (identifier == "map_Kd") {
-//             std::string textureFilename;
-//             s >> textureFilename;
-//             // 連結してファイルパスにする
-//             materialData.textureFilePath = directoryPath + "/" + textureFilename;
-//         }
-//     }
-//     return materialData;
-// }
 
 ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
@@ -123,63 +101,6 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
     return modelData;
 }
 
-Animation Object3d::LoadAinmationFile(const std::string& directoryPath, const std::string& filename)
-{
-    Animation animation; // 構築するアニメーション
-
-    Assimp::Importer importer;
-    std::string filePath = directoryPath + "/" + filename;
-    const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
-    assert(scene->mNumAnimations != 0);
-    aiAnimation* animationAssimp = scene->mAnimations[0]; // 最初のアニメーションだけ採用。//[後日]複数対応予定。
-    animation.duration = float(animationAssimp->mDuration / animationAssimp->mTicksPerSecond); // 時間の単位を秒に変更
-
-    // nodeAnimationを解析
-    for (uint32_t channelIndex = 0; channelIndex < animationAssimp->mNumChannels; ++channelIndex) {
-        aiNodeAnim* nodeAnimatonAssimp = animationAssimp->mChannels[channelIndex];
-        NodeAnimation& nodeAnimation = animation.nodeAnimations[nodeAnimatonAssimp->mNodeName.C_Str()];
-
-        // 座標
-        for (uint32_t keyIndex = 0; keyIndex < nodeAnimatonAssimp->mNumPositionKeys; ++keyIndex) {
-            aiVectorKey& keyAssimp = nodeAnimatonAssimp->mPositionKeys[keyIndex];
-            keyframeVector3 keyframe;
-            keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond); // 秒に変換
-            keyframe.value = { -keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z }; // 右手->左手
-
-            nodeAnimation.translate.keyframes.push_back(keyframe);
-        }
-
-        // 回転
-        for (uint32_t keyIndex = 0; keyIndex < nodeAnimatonAssimp->mNumRotationKeys; ++keyIndex) {
-            aiQuatKey& keyAssimp = nodeAnimatonAssimp->mRotationKeys[keyIndex];
-            keyframeQuaternion keyframe;
-            keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
-
-            keyframe.value = {
-                keyAssimp.mValue.x,
-                -keyAssimp.mValue.y,
-                -keyAssimp.mValue.z,
-                keyAssimp.mValue.w
-            };
-
-            nodeAnimation.rotate.keyframes.push_back(keyframe);
-        }
-
-        // 縮尺
-        for (uint32_t keyIndex = 0; keyIndex < nodeAnimatonAssimp->mNumScalingKeys; ++keyIndex) {
-            aiVectorKey& keyAssimp = nodeAnimatonAssimp->mScalingKeys[keyIndex];
-            keyframeVector3 keyframe;
-            keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
-
-            keyframe.value = { keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z };
-
-            nodeAnimation.scale.keyframes.push_back(keyframe);
-        }
-    }
-
-    return animation;
-}
-
 Node Object3d::ReadNode(aiNode* node)
 {
     Node result;
@@ -202,149 +123,6 @@ Node Object3d::ReadNode(aiNode* node)
     return result;
 }
 
-void Object3d::LoadAnimation(const std::string& directoryPath, const std::string& filename, const std::string& animName)
-{
-    // すでに同じ名前で登録されている場合はスキップ
-    if (animation_.find(animName) != animation_.end()) {
-        return;
-    }
-    // アニメーションファイルをロードしてマップに登録
-    animation_[animName] = LoadAinmationFile(directoryPath, filename);
-}
-
-void Object3d::PlayAnimation(const std::string& animName, bool loop)
-{
-    auto it = animation_.find(animName);
-    assert(it != animation_.end() && "指定されたアニメーションはロードされていません。");
-
-    currentAnimation_ = &it->second;
-    currentAnimationName_ = animName;
-    animationTime_ = 0.0f;
-    isAnimating_ = true;
-    isLoop_ = loop;
-}
-
-void Object3d::ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime)
-{
-    for (Joint& joint : skeleton.joints) {
-        // 対象のjointのanimationがあれば、値の適応を行う。下記のif分はC++17から可能な奴
-        if (auto it = animation.nodeAnimations.find(joint.name); it != animation.nodeAnimations.end()) {
-            const NodeAnimation& rootNodeAnimaiton = (*it).second;
-            joint.transform.translate = CalculateValue(rootNodeAnimaiton.translate.keyframes, animationTime);
-            joint.transform.rotate = CalculateValue(rootNodeAnimaiton.rotate.keyframes, animationTime);
-            joint.transform.scale = CalculateValue(rootNodeAnimaiton.scale.keyframes, animationTime);
-        }
-    }
-}
-
-void Object3d::StopAnimation()
-{
-    isAnimating_ = false;
-    currentAnimation_ = nullptr;
-    currentAnimationName_ = "";
-    animationTime_ = 0.0f;
-}
-
-Skeleton Object3d::CreateSkeleton(const Node& rootNode)
-{
-    Skeleton skeleton;
-    skeleton.root = CreateJoint(rootNode, { }, skeleton.joints);
-
-    for (const Joint& joint : skeleton.joints) {
-        skeleton.jointMap.emplace(joint.name, joint.index);
-    }
-
-    return skeleton;
-}
-
-int32_t Object3d::CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints)
-{
-    Joint joint;
-    joint.name = node.name;
-    joint.localMatrix = node.localMatrix;
-    joint.skeletonSpaceMatrix = MakeIdentity4x4();
-    joint.transform = node.transfrom;
-    joint.index = int32_t(joints.size()); // 現在登録されている数をindex
-    joint.parent = parent;
-    joints.push_back(joint);
-    for (const Node& child : node.childrem) {
-        // 子jointを作成,index登録
-        int32_t childIndex = CreateJoint(child, joint.index, joints);
-        joints[joint.index].childern.push_back(childIndex);
-    }
-    // 自身のindexを返す
-    return joint.index;
-}
-
-SkinCluster Object3d::CreateSkinCluster(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Skeleton& skeleton, const ModelData& modelData)
-{
-    SkinCluster skinCluster;
-    // Palette余用のResource確保
-    skinCluster.paletteResource = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(WellForGPU) * skeleton.joints.size());
-    WellForGPU* mappedPalette = nullptr;
-    skinCluster.paletteResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedPalette));
-    skinCluster.mappedPalette = { mappedPalette, skeleton.joints.size() };
-    uint32_t srvIndex = object3dCommon->GetSrvManager()->Allocate();
-    skinCluster.paletteSrvHandel.first = object3dCommon->GetSrvManager()->GetCPUDescriptorHandle(srvIndex);
-    skinCluster.paletteSrvHandel.second = object3dCommon->GetSrvManager()->GetGPUDescriptorHandle(srvIndex);
-    object3dCommon->GetSrvManager()->CreateSRVforStructuredBuffer(
-        srvIndex,
-        skinCluster.paletteResource.Get(),
-        static_cast<UINT>(skeleton.joints.size()),
-        sizeof(WellForGPU));
-
-    // Palette用のsrvを作成
-    D3D12_SHADER_RESOURCE_VIEW_DESC paletteSrvDesc { };
-    paletteSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
-    paletteSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    paletteSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-    paletteSrvDesc.Buffer.FirstElement = 0;
-    paletteSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-    paletteSrvDesc.Buffer.NumElements = UINT(skeleton.joints.size());
-    paletteSrvDesc.Buffer.StructureByteStride = sizeof(WellForGPU);
-    device->CreateShaderResourceView(skinCluster.paletteResource.Get(), &paletteSrvDesc, skinCluster.paletteSrvHandel.first);
-
-    // influence用のResourceを確保
-    skinCluster.influenceResource = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(VertexInfluence) * modelData.vertices.size());
-    VertexInfluence* mappedInfluence = nullptr;
-    skinCluster.influenceResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInfluence));
-    std::memset(mappedInfluence, 0, sizeof(VertexInfluence) * modelData.vertices.size());
-    skinCluster.mappedInfluence = { mappedInfluence, modelData.vertices.size() };
-
-    //  influence用のVBVを作成
-    skinCluster.influenceResourceView.BufferLocation = skinCluster.influenceResource->GetGPUVirtualAddress();
-    skinCluster.influenceResourceView.SizeInBytes = UINT(sizeof(VertexInfluence) * modelData.vertices.size());
-    skinCluster.influenceResourceView.StrideInBytes = sizeof(VertexInfluence);
-
-    // InverseBindPoseMatrixの保存領域を作成
-    skinCluster.inverseBindPoseMatrices.resize(skeleton.joints.size());
-    // 範囲ベースforループで1つずつ単位行列を代入
-    for (auto& matrix : skinCluster.inverseBindPoseMatrices) {
-        matrix = MakeIdentity4x4();
-    }
-
-    // ModelDataのSkinCluster情報を解析してinfluenceの中身を埋める
-    for (const auto& JointWeightData : modelData.skinClusterData) {
-        // modelのskinClusterの情報を解析
-        auto it = skeleton.jointMap.find(JointWeightData.first); // skelrtonに対象となるjointが含まれているか判断
-        if (it == skeleton.jointMap.end()) {
-            continue; // 存在しない場合。次に回す
-        }
-        // 存在する,該当のindexのinverseBindPosMatrixを代入―(*it).secondにはjointのindexがはいいている。
-        skinCluster.inverseBindPoseMatrices[(*it).second] = JointWeightData.second.inverseBindPoseMatrix;
-        for (const auto& VertexWeight : JointWeightData.second.vertexWeights) {
-            auto& currentInfluence = skinCluster.mappedInfluence[VertexWeight.vertexIndex]; // 該当のvertexindexのInfluence情報を参照
-            for (uint32_t index = 0; index < kNumMaxInfluence; index++) {
-                if (currentInfluence.weights[index] == 0.0f) { // weigth==0が空いている状態。weightとjointのindexを代入
-                    currentInfluence.weights[index] = VertexWeight.weight;
-                    currentInfluence.jointIndices[index] = (*it).second;
-                    break;
-                }
-            }
-        }
-    }
-    return skinCluster;
-}
 
 void Object3d::Initialize()
 {
@@ -358,89 +136,36 @@ void Object3d::Initialize()
     cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.3f, 0.0f, 0.0f }, { 0.0f, 4.0f, -10.0f } };
 
     TransMatrixResourceInitialize();
-    directionalLightInitialize();
     cameraDataResourceInitialize();
-    pointLightInitialize();
-    spotLightInitialize();
-
-#ifdef USE_IMGUI
-    InitializeSkeletonBuffer();
-#endif
 }
 
 void Object3d::Update()
 {
+    // 1. アニメーションの更新
+    if (animator_) {
+        float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+        animator_->Update(deltaTime);
+    }
+
+    // 2. ワールド行列の計算
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
     if (model) {
-
-        // アニメーションの時間を進める
-        if (isAnimating_ && currentAnimation_) {
-            float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
-            animationTime_ += deltaTime;
-
-            if (isLoop_) {
-                animationTime_ = std::fmod(animationTime_, currentAnimation_->duration);
-            } else {
-                // 単発再生
-                if (animationTime_ >= currentAnimation_->duration) {
-                    // 最後に達したら再生停止
-                    animationTime_ = currentAnimation_->duration;
-                    isAnimating_ = false;
-                }
-            }
-            // スケルトンに現在のアニメーションを適応
-            ApplyAnimation(skeleton_, *currentAnimation_, animationTime_);
-        }
-
-        // スケルトンの行列変換
-        Update(skeleton_);
-
         Matrix4x4 localMatrix = MakeIdentity4x4();
-        if (!skeleton_.joints.empty()) {
-            localMatrix = skeleton_.joints[skeleton_.root].skeletonSpaceMatrix;
+        if (animator_) {
+            // アニメーターからルートジョイントの行列をもらう
+            localMatrix = animator_->GetSkeleton().joints[animator_->GetSkeleton().root].skeletonSpaceMatrix;
         } else {
-            // スケルトンが無い場合は元のノードの行列を使う（フォールバック）
             localMatrix = model->GetModelData().rootNode.localMatrix;
         }
-
         worldMatrix = Multiply(localMatrix, worldMatrix);
     }
 
-    // SkinCluster更新
-    Update(skinCluster_, skeleton_);
-
-    Matrix4x4 worldViewProjectionMatrix;
-    const Matrix4x4& ViewProjectionMatrix = camera->GetViewProjectionMatrix();
-    worldViewProjectionMatrix = Multiply(worldMatrix, ViewProjectionMatrix);
-
+    // 3. WVPなどの転送用行列計算
+    Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera->GetViewProjectionMatrix());
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
     transformationMatrixData->worldInverseTranspose = Transpose(Inverse(worldMatrix));
-
-    directionalLightData->direction = Normalize(directionalLightData->direction);
-}
-
-void Object3d::Update(Skeleton& skeleton)
-{
-    // すべてのjointを更新。親がわっ回ので通常ループで処理可
-    for (Joint& joint : skeleton.joints) {
-        joint.localMatrix = MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
-        if (joint.parent) { // 親がいれば親の行列をかける
-            joint.skeletonSpaceMatrix = joint.localMatrix * skeleton.joints[*joint.parent].skeletonSpaceMatrix;
-        } else {
-            joint.skeletonSpaceMatrix = joint.localMatrix;
-        }
-    }
-}
-
-void Object3d::Update(SkinCluster& skinCluster, Skeleton& skeleton)
-{
-    for (size_t jointIndex = 0; jointIndex < skeleton.joints.size(); ++jointIndex) {
-        assert(jointIndex < skinCluster.inverseBindPoseMatrices.size());
-        skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix = skinCluster.inverseBindPoseMatrices[jointIndex] * skeleton.joints[jointIndex].skeletonSpaceMatrix;
-        skinCluster.mappedPalette[jointIndex].skeletonSpaceInverseTransposeMatrix = Transpose(skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix);
-    }
 }
 
 void Object3d::DrawImGui(const std::string& label)
@@ -458,40 +183,6 @@ void Object3d::DrawImGui(const std::string& label)
         ImGui::SliderAngle("RotateY", &transform.rotate.y);
         ImGui::SliderAngle("RotateZ", &transform.rotate.z);
         ImGui::Spacing();
-
-        // --- Directional Light ---
-        if (ImGui::CollapsingHeader("Directional Light")) {
-            ImGui::Indent();
-            ImGui::SliderFloat3("direction", &directionalLightData->direction.x, -1.0f, 1.0f);
-            ImGui::ColorEdit4("Color", &(directionalLightData->color).x);
-            ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
-            ImGui::Unindent();
-        }
-
-        // --- Point Light ---
-        if (ImGui::CollapsingHeader("Point Light")) {
-            ImGui::Indent();
-            ImGui::ColorEdit4("color", &(PointLigthData->color).x);
-            ImGui::DragFloat3("Position", &PointLigthData->position.x, 0.01f);
-            ImGui::DragFloat("radius", &PointLigthData->radius, 0.01f);
-            ImGui::DragFloat("intensity", &PointLigthData->intensity, 0.01f);
-            ImGui::DragFloat("decay", &PointLigthData->decay, 0.01f);
-            ImGui::Unindent();
-        }
-
-        // --- Spot Light ---
-        if (ImGui::CollapsingHeader("Spot Light")) {
-            ImGui::Indent();
-            ImGui::ColorEdit4("color", &(SpotLigthData->color).x);
-            ImGui::DragFloat3("position", &SpotLigthData->position.x, 0.01f);
-            ImGui::DragFloat("intensity", &SpotLigthData->intensity, 0.01f);
-            ImGui::DragFloat3("direction", &SpotLigthData->direction.x, 0.01f);
-            ImGui::DragFloat("distance", &SpotLigthData->distance, 0.01f);
-            ImGui::DragFloat("decay", &SpotLigthData->decay, 0.01f);
-            ImGui::DragFloat("cosAngle", &SpotLigthData->cosAngle, 0.01f);
-            ImGui::DragFloat("cosFalloffStart", &SpotLigthData->cosFalloffStart, 0.01f);
-            ImGui::Unindent();
-        }
 
         if (ImGui::CollapsingHeader("materialData")) {
             ImGui::Indent();
@@ -513,24 +204,49 @@ void Object3d::DrawImGui(const std::string& label)
 #endif // USE_IMGUI
 }
 
+#ifdef USE_IMGUI
+void Object3d::DrawSkeleton()
+{
+    // アニメーター（骨）が存在する場合のみ処理する
+    if (animator_) {
+        // 1. 描画する前に最新のジョイント行列から線の頂点データを更新
+        animator_->UpdateSkeletonLines();
+
+        // 2. Animatorが必要とするDirectXの情報をObject3dから取得
+        auto cmdList = object3dCommon->GetDxCommon()->GetCommandList();
+        auto wvpAddress = transformationMatrixResource->GetGPUVirtualAddress();
+
+        // 3. アニメーター側の描画関数を呼び出す
+        animator_->DrawSkeleton(cmdList, wvpAddress);
+    }
+}
+#endif // USE_IMGUI
+
 void Object3d::Draw()
 {
+    auto cmdList = object3dCommon->GetDxCommon()->GetCommandList();
+    auto lightManager = LightManager::GetInstance();
 
-    if (!skeleton_.joints.empty()) {
+    // アニメーターが居るかどうかでパイプラインを切り替える
+    if (animator_) {
         object3dCommon->PrepareSkinObjectDraw();
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(4, CameraDataResourceModel->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLigth->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLigth->GetGPUVirtualAddress());
-        model->Draw(skinCluster_);
     } else {
         object3dCommon->PrepareObjectDraw();
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightMatrixResource->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(4, CameraDataResourceModel->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLigth->GetGPUVirtualAddress());
-        object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLigth->GetGPUVirtualAddress());
+    }
+
+    // 座標/カメラ(分離するかは不明)
+    cmdList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+    cmdList->SetGraphicsRootConstantBufferView(4, CameraDataResourceModel->GetGPUVirtualAddress());
+
+    // ライト関連
+    cmdList->SetGraphicsRootConstantBufferView(3, lightManager->GetDirectionalLightAddress());
+    cmdList->SetGraphicsRootConstantBufferView(5, lightManager->GetPointLightAddress());
+    cmdList->SetGraphicsRootConstantBufferView(6, lightManager->GetSpotLightAddress());
+
+    // モデルを描画
+    if (animator_) {
+        model->Draw(animator_->GetSkinCluster());
+    } else {
         model->Draw();
     }
 }
@@ -539,20 +255,14 @@ void Object3d::SetModel(Model* model)
 {
     this->model = model;
 
-    // スケルトン構築
     if (this->model) {
+        // モデルがスキンデータを持っていれば、アニメーターコンポーネントを生成
         if (!this->model->GetModelData().skinClusterData.empty()) {
-            skeleton_ = CreateSkeleton(this->model->GetModelData().rootNode);
-
-            auto device = object3dCommon->GetDxCommon()->GetDevice();
-            skinCluster_ = CreateSkinCluster(
-                device,
-                skeleton_,
-                this->model->GetModelData());
+            animator_ = std::make_unique<Animator>();
+            animator_->Initialize(object3dCommon, this->model->GetModelData());
         } else {
-            // 骨がない静的モデル（terrain.obj等）の場合は、念のためスケルトンを完全に空にする
-            skeleton_.joints.clear();
-            skeleton_.jointMap.clear();
+            // 静的モデルならアニメーターは不要なので解放
+            animator_ = nullptr;
         }
     }
 }
@@ -575,17 +285,6 @@ void Object3d::TransMatrixResourceInitialize()
     transformationMatrixData->worldInverseTranspose = MakeIdentity4x4();
 }
 
-void Object3d::directionalLightInitialize()
-{
-    directionalLightMatrixResource = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(DirectionalLight));
-    // アドレスを取得
-    directionalLightMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-    // 書き込み
-    directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData->direction = { 0.0f, 0.0f, -1.0f };
-    directionalLightData->intensity = 1.0f;
-}
-
 void Object3d::cameraDataResourceInitialize()
 {
     // sphere用のマテリアルリソースを作る
@@ -596,111 +295,3 @@ void Object3d::cameraDataResourceInitialize()
     // 今回は白を書き込んでみる
     CameraForGPUData->worldPosition = cameraTransform.translate;
 }
-
-void Object3d::pointLightInitialize()
-{
-    pointLigth = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(PointLigth));
-
-    // mapして書き込み
-    pointLigth->Map(0, nullptr, reinterpret_cast<void**>(&PointLigthData));
-    // 今回は白を書き込んでみる
-    PointLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    PointLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
-    PointLigthData->intensity = 0.0f;
-    PointLigthData->decay = 1.0f;
-    PointLigthData->radius = 0.0f;
-}
-
-void Object3d::spotLightInitialize()
-{
-    spotLigth = object3dCommon->GetDxCommon()->CreateBufferResource(sizeof(SpotLigth));
-
-    // mapして書き込み
-    spotLigth->Map(0, nullptr, reinterpret_cast<void**>(&SpotLigthData));
-    // 今回は白を書き込んでみる
-    SpotLigthData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    SpotLigthData->position = Vector3(0.0f, 2.0f, 0.0f);
-    SpotLigthData->distance = 1.0f;
-    SpotLigthData->direction = Normalize({ -1.0f, -1.0f, 0.0f });
-    SpotLigthData->intensity = 0.0f;
-    SpotLigthData->decay = 2.0f;
-    SpotLigthData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
-    SpotLigthData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 4.0f);
-}
-
-#ifdef USE_IMGUI
-void Object3d::InitializeSkeletonBuffer()
-{
-    // 100ジョイント分(100本)の線を想定
-    uint32_t maxLines = 100;
-    uint32_t bufferSize = sizeof(LineVertex) * maxLines * 2;
-
-    // ヒーププロパティの設定 (アップロードヒープ)
-    D3D12_HEAP_PROPERTIES heapProps { };
-    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-    // リソース記述
-    D3D12_RESOURCE_DESC resDesc { };
-    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resDesc.Width = bufferSize;
-    resDesc.Height = 1;
-    resDesc.DepthOrArraySize = 1;
-    resDesc.MipLevels = 1;
-    resDesc.Format = DXGI_FORMAT_UNKNOWN;
-    resDesc.SampleDesc.Count = 1;
-    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-    // リソースの生成
-    auto device = object3dCommon->GetDxCommon()->GetDevice();
-    device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&skeletonVertexBuffer_));
-
-    // ビューの作成
-    skeletonVertexBufferView_.BufferLocation = skeletonVertexBuffer_->GetGPUVirtualAddress();
-    skeletonVertexBufferView_.SizeInBytes = (UINT)bufferSize;
-    skeletonVertexBufferView_.StrideInBytes = sizeof(LineVertex);
-}
-
-void Object3d::UpdateSkeletonLines()
-{
-    if (skeleton_.joints.empty())
-        return;
-
-    skeletonVertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&lineVertices));
-
-    skeletonLineCount_ = 0;
-    for (const Joint& joint : skeleton_.joints) {
-        if (joint.parent) {
-            // 親の位置 (ローカルの累積行列の4列目)
-            const Matrix4x4& parentMat = skeleton_.joints[*joint.parent].skeletonSpaceMatrix;
-            Vector3 parentPos = { parentMat.m[3][0], parentMat.m[3][1], parentMat.m[3][2] };
-
-            // 自分の位置
-            const Matrix4x4& childMat = joint.skeletonSpaceMatrix;
-            Vector3 childPos = { childMat.m[3][0], childMat.m[3][1], childMat.m[3][2] };
-
-            // 頂点にセット（ワールド行列の適用はシェーダー側で行うため、ここではそのまま）
-            lineVertices[skeletonLineCount_ * 2 + 0].position = { parentPos.x, parentPos.y, parentPos.z, 1.0f };
-            lineVertices[skeletonLineCount_ * 2 + 1].position = { childPos.x, childPos.y, childPos.z, 1.0f };
-            skeletonLineCount_++;
-        }
-    }
-    skeletonVertexBuffer_->Unmap(0, nullptr);
-}
-
-void Object3d::DrawSkeleton()
-{
-    if (skeletonLineCount_ == 0)
-        return;
-
-    auto cmdList = object3dCommon->GetDxCommon()->GetCommandList();
-
-    cmdList->IASetVertexBuffers(0, 1, &skeletonVertexBufferView_);
-
-    // b0レジスタに WVP行列（transformationMatrixResource）を渡す
-    cmdList->SetGraphicsRootConstantBufferView(0, transformationMatrixResource->GetGPUVirtualAddress());
-
-    // 1本の線につき2頂点なので、総頂点数は LineCount * 2
-    cmdList->DrawInstanced(skeletonLineCount_ * 2, 1, 0, 0);
-}
-
-#endif // USE_IMGUI

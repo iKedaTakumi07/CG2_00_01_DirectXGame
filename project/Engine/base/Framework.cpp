@@ -84,6 +84,8 @@ void Framework::Initialize()
 
     Object3dCommon::GetInstance()->Initialize(dxCommon.get(), srvManager.get());
 
+    LightManager::GetInstance()->Initialize();
+
     ModelCommon::GetInstance()->Initialize(dxCommon.get());
 
     SkyBoxCommon::GetInstance()->Initialize(dxCommon.get());
@@ -148,12 +150,16 @@ void Framework::Update()
     ImGui::DragFloat3("Position", &cameraPos.x, 0.1f);
     ImGui::DragFloat3("Rotation", &cameraRot.x, 0.01f);
     ImGui::End();
+
+    LightManager::GetInstance()->DrawImGui();
 #endif // USE_IMGUI
 
     camera->SetTranslate(cameraPos);
     camera->SetRotate(cameraRot);
 
     camera->Update();
+
+    LightManager::GetInstance()->Update();
 
     ParticleManager::getInstance()->Update();
 }

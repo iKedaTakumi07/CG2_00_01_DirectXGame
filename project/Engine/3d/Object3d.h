@@ -3,12 +3,14 @@
 #include "../externals/DirectXTex/DirectXTex.h"
 #include <assimp/scene.h>
 #include <d3d12.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <wrl.h>
 
 class WinApp;
 class Object3dCommon;
+#include "Animator.h"
 #include "Model.h"
 #include <optional>
 #include <vector>
@@ -16,11 +18,6 @@ class Camera;
 
 class Object3d {
 public:
-    struct DirectionalLight {
-        Vector4 color;
-        Vector3 direction;
-        float intensity;
-    };
     Matrix4x4 MakeIdentity4x4()
     {
         Matrix4x4 num;
@@ -29,49 +26,18 @@ public:
     }
 
 public:
-    // static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
     static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
-    static Animation LoadAinmationFile(const std::string& directoryPath, const std::string& filename);
     static Node ReadNode(aiNode* node);
-
-    /// <summary>
-    /// アニメーション読み込み
-    /// </summary>
-    /// <param name="directoryPath"フォルダ名></param>
-    /// <param name="filenamem">ファイルネーム</param>
-    /// <param name="animName">アニメーション名(保存用)</param>
-    void LoadAnimation(const std::string& directoryPath, const std::string& filenamem, const std::string& animName);
-
-    /// <summary>
-    /// アニメーションを再生
-    /// </summary>
-    /// <param name="animName">アニメーション名</param>
-    /// <param name="loop">ループ再生</param>
-    void PlayAnimation(const std::string& animName, bool loop = true);
-
-    void ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime);
-
-    /// <summary>
-    /// アニメーションを停止
-    /// </summary>
-    void StopAnimation();
-
-    Skeleton CreateSkeleton(const Node& rootNode);
-    int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
-    SkinCluster CreateSkinCluster(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Skeleton& skeleton, const ModelData& modelData);
 
     // 初期化
     void Initialize();
 
     void Update();
-    void Update(Skeleton& skeleton);
-    void Update(SkinCluster& skinCluster, Skeleton& skeleton);
 
     void DrawImGui(const std::string& label);
 
 #ifdef USE_IMGUI
-    void InitializeSkeletonBuffer();
-    void UpdateSkeletonLines();
+    // 内部のアニメーターに骨の描画を依頼する
     void DrawSkeleton();
 #endif // USE_IMGUI
 
@@ -85,22 +51,6 @@ public:
     void SetTranslate(const Vector3& translate) { transform.translate = translate; }
     void SetModel(const std::string& filePath);
     void SetCamera(Camera* camera) { this->camera = camera; }
-
-    void SetDirectionalLight(const DirectionalLight& light)
-    {
-        if (directionalLightData)
-            *directionalLightData = light;
-    }
-    void SetPointLight(const PointLigth& light)
-    {
-        if (PointLigthData)
-            *PointLigthData = light;
-    }
-    void SetSpotLight(const SpotLigth& light)
-    {
-        if (SpotLigthData)
-            *SpotLigthData = light;
-    }
 
     void SetEnableLighting(bool enable)
     {
@@ -116,6 +66,26 @@ public:
         }
     }
 
+    // アニメーション命令
+    void LoadAnimation(const std::string& dir, const std::string& file, const std::string& name)
+    {
+        if (animator_)
+            animator_->LoadAnimation(dir, file, name);
+    }
+    void PlayAnimation(const std::string& name, bool loop = true)
+    {
+        if (animator_)
+            animator_->PlayAnimation(name, loop);
+    }
+    void StopAnimation()
+    {
+        if (animator_)
+            animator_->StopAnimation();
+    }
+
+    // 外部からボーン情報を覗きたい時用のゲッター
+    Animator* GetAnimator() const { return animator_.get(); }
+
     // Getter
     const Vector3& GetScale() const { return transform.scale; }
     const Vector3& GetRotate() const { return transform.rotate; }
@@ -123,10 +93,7 @@ public:
 
 private:
     void TransMatrixResourceInitialize();
-    void directionalLightInitialize();
     void cameraDataResourceInitialize();
-    void pointLightInitialize();
-    void spotLightInitialize();
 
     Object3dCommon* object3dCommon = nullptr;
     WinApp* winApp_ = nullptr;
@@ -138,37 +105,11 @@ private:
     // model用のtransformMatrix用のリソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
 
-    // 平行光源
-    Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightMatrixResource;
-    // データを書き込み
-    DirectionalLight* directionalLightData = nullptr;
-
     Microsoft::WRL::ComPtr<ID3D12Resource> CameraDataResourceModel;
     CameraForGPU* CameraForGPUData = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12Resource> pointLigth;
-    PointLigth* PointLigthData = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12Resource> spotLigth;
-    SpotLigth* SpotLigthData = nullptr;
 
-    // アニメーション
-    std::unordered_map<std::string, Animation> animation_; // ロード済みのアニメーション辞書
-    Animation* currentAnimation_ = nullptr; // 現在再生中のアニメーションへのポインタ
-    std::string currentAnimationName_ = ""; // 現在再生中のアニメーション名
-    float animationTime_ = 0.0f; // 現在の再生時間（秒）
-    bool isAnimating_ = false; // アニメーション中かどうかのフラグ
-    bool isLoop_ = true; // ループ再生フラグ
-
-    // Skeleton
-    Skeleton skeleton_;
-    SkinCluster skinCluster_;
-
-#ifdef USE_IMGUI
-    // スカルの千描画用
-    Microsoft::WRL::ComPtr<ID3D12Resource> skeletonVertexBuffer_;
-    D3D12_VERTEX_BUFFER_VIEW skeletonVertexBufferView_ { };
-    uint32_t skeletonLineCount_ = 0;
-    LineVertex* lineVertices = nullptr;
-#endif // USE_IMGUI(Release版未使用)
+    // アニメーションこれ一本
+    std::unique_ptr<Animator> animator_ = nullptr;
 
     Transform transform = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     Transform cameraTransform;
