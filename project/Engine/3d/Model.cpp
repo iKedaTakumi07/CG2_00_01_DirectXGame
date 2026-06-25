@@ -28,7 +28,7 @@ void Model::Draw()
         modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
     } else {
         // Skyboxがない場合は、既にロードされている適当なテクスチャをダミーとしてバインドしてエラーを防ぐ
-        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/uvChecker.png"));
+        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/rostock_laage_airport_4k.dds"));
     }
 
     modelCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
@@ -51,7 +51,7 @@ void Model::Draw(const SkinCluster& skinCluster)
         modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU(texturefilePath_));
     } else {
         // Skyboxがない場合は、既にロードされている適当なテクスチャをダミーとしてバインドしてエラーを防ぐ
-        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/uvChecker.png"));
+        modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/rostock_laage_airport_4k.dds"));
     }
 
     modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(8, skinCluster.paletteSrvHandel.second);
@@ -101,7 +101,7 @@ void Model::MaterialResourceInitialize()
 
     // 今回は白を書き込んでみる
     materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    materialData->enableLighting = false;
+    materialData->enableEnvironmentMap = false;
     materialData->shininess = 20.0f;
     materialData->uvTransform = MakeIdentity4x4();
     materialData->evnironmentCoefficient = 0.0f;

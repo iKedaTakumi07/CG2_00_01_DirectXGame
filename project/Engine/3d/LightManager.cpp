@@ -32,34 +32,46 @@ void LightManager::DrawImGui()
     // --- Directional Light ---
     if (ImGui::CollapsingHeader("Directional Light")) {
         ImGui::Indent();
-        ImGui::SliderFloat3("direction", &directionalLightData_->direction.x, -1.0f, 1.0f);
-        ImGui::ColorEdit4("Color", &(directionalLightData_->color).x);
-        ImGui::DragFloat("intensity", &directionalLightData_->intensity, 0.01f);
+        ImGui::SliderFloat3("direction##Directional", &directionalLightData_->direction.x, -1.0f, 1.0f);
+        ImGui::ColorEdit4("Color##Directional", &(directionalLightData_->color).x);
+        ImGui::DragFloat("intensity##Directional", &directionalLightData_->intensity, 0.01f);
+        bool isLighting = (directionalLightData_->active != 0);
+        if (ImGui::Checkbox("Lightactive##Directional", &isLighting)) {
+            directionalLightData_->active = isLighting ? 1 : 0;
+        }
         ImGui::Unindent();
     }
 
     // --- Point Light ---
     if (ImGui::CollapsingHeader("Point Light")) {
         ImGui::Indent();
-        ImGui::ColorEdit4("color", &(pointLightData_->color).x);
-        ImGui::DragFloat3("Position", &pointLightData_->position.x, 0.01f);
-        ImGui::DragFloat("radius", &pointLightData_->radius, 0.01f);
-        ImGui::DragFloat("intensity", &pointLightData_->intensity, 0.01f);
-        ImGui::DragFloat("decay", &pointLightData_->decay, 0.01f);
+        ImGui::ColorEdit4("color##Point", &(pointLightData_->color).x);
+        ImGui::DragFloat3("Position##Point", &pointLightData_->position.x, 0.01f);
+        ImGui::DragFloat("radius##Point", &pointLightData_->radius, 0.01f);
+        ImGui::DragFloat("intensity##Point", &pointLightData_->intensity, 0.01f);
+        ImGui::DragFloat("decay##Point", &pointLightData_->decay, 0.01f);
+        bool isLighting = (pointLightData_->active != 0);
+        if (ImGui::Checkbox("Lightactive##Point", &isLighting)) {
+            pointLightData_->active = isLighting ? 1 : 0;
+        }
         ImGui::Unindent();
     }
 
     // --- Spot Light ---
     if (ImGui::CollapsingHeader("Spot Light")) {
         ImGui::Indent();
-        ImGui::ColorEdit4("color", &(spotLightData_->color).x);
-        ImGui::DragFloat3("position", &spotLightData_->position.x, 0.01f);
-        ImGui::DragFloat("intensity", &spotLightData_->intensity, 0.01f);
-        ImGui::DragFloat3("direction", &spotLightData_->direction.x, 0.01f);
-        ImGui::DragFloat("distance", &spotLightData_->distance, 0.01f);
-        ImGui::DragFloat("decay", &spotLightData_->decay, 0.01f);
-        ImGui::DragFloat("cosAngle", &spotLightData_->cosAngle, 0.01f);
-        ImGui::DragFloat("cosFalloffStart", &spotLightData_->cosFalloffStart, 0.01f);
+        ImGui::ColorEdit4("color##Spot", &(spotLightData_->color).x);
+        ImGui::DragFloat3("position##Spot", &spotLightData_->position.x, 0.01f);
+        ImGui::DragFloat("intensity##Spot", &spotLightData_->intensity, 0.01f);
+        ImGui::DragFloat3("direction##Spot", &spotLightData_->direction.x, 0.01f);
+        ImGui::DragFloat("distance##Spot", &spotLightData_->distance, 0.01f);
+        ImGui::DragFloat("decay##Spot", &spotLightData_->decay, 0.01f);
+        ImGui::DragFloat("cosAngle##Spot", &spotLightData_->cosAngle, 0.01f);
+        ImGui::DragFloat("cosFalloffStart##Spot", &spotLightData_->cosFalloffStart, 0.01f);
+        bool isLighting = (spotLightData_->active != 0);
+        if (ImGui::Checkbox("Lightactive##Spot", &isLighting)) {
+            spotLightData_->active = isLighting ? 1 : 0;
+        }
         ImGui::Unindent();
     }
     ImGui::End();
@@ -77,6 +89,7 @@ void LightManager::directionalLightInitialize()
     directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     directionalLightData_->direction = { 0.0f, 0.0f, -1.0f };
     directionalLightData_->intensity = 1.0f;
+    directionalLightData_->active = 1;
 }
 
 void LightManager::pointLightInitialize()
@@ -92,6 +105,7 @@ void LightManager::pointLightInitialize()
     pointLightData_->intensity = 0.0f;
     pointLightData_->decay = 1.0f;
     pointLightData_->radius = 0.0f;
+    pointLightData_->active = 0;
 }
 
 void LightManager::spotLightInitialize()
@@ -110,4 +124,5 @@ void LightManager::spotLightInitialize()
     spotLightData_->decay = 2.0f;
     spotLightData_->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
     spotLightData_->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 4.0f);
+    spotLightData_->active = 0;
 }
