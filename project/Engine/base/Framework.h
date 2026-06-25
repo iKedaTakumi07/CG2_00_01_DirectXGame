@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "../3d/Camera.h"
+#include "../3d/LightManager.h"
 #include "../io/Input.h"
 #include "../scene/AbstractSceneFactory.h"
 #include "../scene/BaseScene.h"

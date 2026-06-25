@@ -184,15 +184,10 @@ void TitleScene::Update()
     // IMGUI
     object3d->DrawImGui("Terrain");
     object3d_2->DrawImGui("Plane");
-
-#ifdef USE_IMGUI
-    object3d_2->UpdateSkeletonLines();
-#endif // USE_IMGUI
 }
 
 void TitleScene::Draw()
 {
-
     //
     // モデルデータ
     //

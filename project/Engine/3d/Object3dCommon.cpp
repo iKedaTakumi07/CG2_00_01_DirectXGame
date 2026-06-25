@@ -43,12 +43,11 @@ void Object3dCommon::PrepareSkinObjectDraw()
 #ifdef USE_IMGUI
 void Object3dCommon::PreLineObjectDraw()
 {
-
     // ライン用のパイプラインとシグネチャをセット
     dxCommon_->GetCommandList()->SetPipelineState(linePipelineState.Get());
     dxCommon_->GetCommandList()->SetGraphicsRootSignature(lineRootSignature.Get());
 
-    // ⭐️ 描画トポロジを LINELIST に変更
+    // 描画トポロジを LINELIST に変更
     dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 }
 #endif // USE_IMGUI
