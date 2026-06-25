@@ -187,9 +187,9 @@ void Object3d::DrawImGui(const std::string& label)
         if (ImGui::CollapsingHeader("materialData")) {
             ImGui::Indent();
             Material* materialData = model->GetmaterialData();
-            bool isLighting = (materialData->enableLighting != 0);
+            bool isLighting = (materialData->enableEnvironmentMap != 0);
             if (ImGui::Checkbox("Enable Lighting (Unlit Texture)", &isLighting)) {
-                materialData->enableLighting = isLighting ? 1 : 0;
+                materialData->enableEnvironmentMap = isLighting ? 1 : 0;
             }
             ImGui::DragFloat("evnironmentCoefficient", &materialData->evnironmentCoefficient, 0.01f);
             model->SetMaterialDataEvnironmentCoefficient(materialData->evnironmentCoefficient);

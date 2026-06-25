@@ -48,7 +48,7 @@ void Sprite::MaterialResourceInitialize()
     // 今回は白を書き込んでみる
     materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-    materialData->enableLighting = false;
+    materialData->enableEnvironmentMap = false;
     materialData->uvTransform = MakeIdentity4x4();
 }
 

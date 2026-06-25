@@ -61,7 +61,7 @@ struct ParticleForGPU {
 };
 struct Material {
     Vector4 color;
-    int32_t enableLighting;
+    int32_t enableEnvironmentMap;
     float padding[3];
     Matrix4x4 uvTransform;
     float shininess;
@@ -83,6 +83,7 @@ struct DirectionalLight {
     Vector4 color;
     Vector3 direction;
     float intensity;
+    int32_t active;
 };
 struct MaterialData {
     std::string textureFilePath;
@@ -175,7 +176,8 @@ struct PointLigth {
     float intensity; // 輝度
     float radius; // ライトの届く最大距離
     float decay; // 減衰率
-    float Padding[2];
+    int32_t active;
+    float Padding;
 };
 
 struct AccelerationField {
@@ -218,7 +220,7 @@ struct SpotLigth {
     float decay;
     float cosAngle;
     float cosFalloffStart; // スポットライトの内側の角度（減衰開始の余弦）
-    float padding[2];
+    int32_t active;
 };
 
 Vector3 CalculateValue(const std::vector<keyframeVector3>& keyframes, float time);

@@ -55,7 +55,7 @@ public:
     void SetEnableLighting(bool enable)
     {
         if (model && model->GetmaterialData()) {
-            model->GetmaterialData()->enableLighting = enable ? 1 : 0;
+            model->GetmaterialData()->enableEnvironmentMap = enable ? 1 : 0;
         }
     }
     void SetEnvironmentCoefficient(float coefficient)

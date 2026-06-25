@@ -51,8 +51,8 @@ void TitleScene::Initialize()
     ModelManager::GetInstance()->LoadModel("human/walk.gltf");
     ModelManager::GetInstance()->LoadModel("human/sneakWalk.gltf");
 
-    // skydox = std::make_unique<Skybox>();
-    // skydox->Initialize("resources/rostock_laage_airport_4k.dds");
+    skydox = std::make_unique<Skybox>();
+    //skydox->Initialize("resources/rostock_laage_airport_4k.dds");
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
@@ -60,7 +60,7 @@ void TitleScene::Initialize()
 
     model = std::make_unique<Model>();
     model->Initialize("resources", "terrain.obj");
-    // model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
+    //model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
 
     object3d_2 = std::make_unique<Object3d>();
