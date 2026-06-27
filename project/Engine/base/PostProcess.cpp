@@ -1,8 +1,10 @@
 #include "PostProcess.h"
 #include "../../externals/imgui/imgui.h"
 #include "../3d/Camera.h"
+#include "../3d/Object3d.h"
 #include "../base/Logger.h"
 #include "OffscreenSurface.h"
+#include "TextureManager.h"
 #include <algorithm>
 #include <cassert>
 #include <d3d12.h>
@@ -21,10 +23,18 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
 
     graphicsPipelineInitialize(dxCommon_);
 
-    D3D12_HEAP_PROPERTIES heapProps {};
+    maskTexturePaths_.clear();
+
+    AddMaskTexture("resources/noise0.png");
+    AddMaskTexture("resources/noise1.png");
+
+    // 最初は0番目のテクスチャを選択状態にする
+    maskTextureFilePath_ = maskTexturePaths_[selectedMaskIndex_];
+
+    D3D12_HEAP_PROPERTIES heapProps { };
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
 
-    D3D12_RESOURCE_DESC resDesc {};
+    D3D12_RESOURCE_DESC resDesc { };
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resDesc.Width = (sizeof(VignetteData));
     resDesc.Height = 1;
@@ -59,6 +69,10 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&RadialBlurBuffer_));
     assert(SUCCEEDED(hr));
 
+    resDesc.Width = sizeof(dissolveData);
+    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&DissolveBuffer_));
+    assert(SUCCEEDED(hr));
+
     // マップしてC++から書き込める状態にしておく
     GrayscaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&GrayscaleData_));
     SepiascaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&SepiascaleData_));
@@ -68,6 +82,7 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     outlineBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&outlineMappedData_));
     LuminanceBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&LuminanceData_));
     RadialBlurBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&RadialBlurData_));
+    DissolveBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&DissolveData_));
 
     effectOrder_ = {
         EffectType::Grayscale,
@@ -77,7 +92,8 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
         EffectType::BoxFilter,
         EffectType::GaussianFilter,
         EffectType::RadialBlur,
-        EffectType::Vignette
+        EffectType::Vignette,
+        EffectType::Dissolve,
     };
 }
 
@@ -127,6 +143,10 @@ void PostProcess::Update()
     if (RadialBlurData_) {
         *RadialBlurData_ = RadialBlurParam;
     }
+
+    if (DissolveData_) {
+        *DissolveData_ = dissolveParam_;
+    }
 }
 
 void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB)
@@ -162,6 +182,9 @@ void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB
             break;
         case PostProcess::EffectType::Vignette:
             isEnabled = enableVignette_;
+            break;
+        case PostProcess::EffectType::Dissolve:
+            isEnabled = enableDissolve_;
             break;
         }
 
@@ -216,6 +239,10 @@ void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB
             break;
         case PostProcess::EffectType::Vignette:
             DrawVignette();
+            break;
+
+        case PostProcess::EffectType::Dissolve:
+            DrawDissolve();
             break;
         }
 
@@ -358,6 +385,20 @@ void PostProcess::DrawRadialBlur()
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
+void PostProcess::DrawDissolve()
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateDissolve.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootConstantBufferView(1, DissolveBuffer_->GetGPUVirtualAddress());
+    cmd->SetGraphicsRootDescriptorTable(2, TextureManager::getInstance()->GetSrvHandelGPU(maskTextureFilePath_));
+
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
 void PostProcess::DrawImGui()
 {
 #ifdef USE_IMGUI
@@ -425,30 +466,96 @@ void PostProcess::DrawImGui()
         ImGui::SliderFloat("kBlurwidth##RadialBlur", &RadialBlurParam.kBlurwidth, 0.0f, 1.0f, "%.2f");
         ImGui::Unindent();
     }
+
+    ImGui::Checkbox("Dissolve", &enableDissolve_);
+    if (enableDissolve_) {
+        ImGui::Indent();
+
+        // 1. 閾値（進行度）の調整
+        ImGui::SliderFloat("Threshold##Dissolve", &dissolveParam_.gthreshold, 0.0f, 1.0f, "%.2f");
+
+        // 2. エッジ幅の調整
+        ImGui::SliderFloat("Edge Width##Dissolve", &dissolveParam_.edgeWidth, 0.001f, 0.2f, "%.3f");
+
+        // 3. 溶けた先の色（背景色）の調整
+        ImGui::ColorEdit4("Threshold Color##Dissolve", &dissolveParam_.thresholdcolor.x);
+
+        // 4. エッジの発光色の調整
+        ImGui::ColorEdit3("Edge Color##Dissolve", &dissolveParam_.Edegcolor.x);
+
+        // 5. マスクテクスチャを一覧から選べるコンボボックス
+        if (ImGui::BeginCombo("Mask Texture##Dissolve", maskTexturePaths_[selectedMaskIndex_].c_str())) {
+            for (int i = 0; i < maskTexturePaths_.size(); i++) {
+                bool isSelected = (selectedMaskIndex_ == i);
+                if (ImGui::Selectable(maskTexturePaths_[i].c_str(), isSelected)) {
+                    selectedMaskIndex_ = i;
+                    // 選択されたら即座にパスを更新
+                    SetDissolveMaskTexture(maskTexturePaths_[i]);
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        static char newTexturePath[256] = "";
+        ImGui::InputText("New Mask Path##Dissolve", newTexturePath, sizeof(newTexturePath));
+
+        ImGui::SameLine(); // ボタンを横並びに
+        if (ImGui::Button("Add & Load##Dissolve")) {
+            if (strlen(newTexturePath) > 0) {
+                // 入力されたパスをリストとテクスチャに書き込む！
+                AddMaskTexture(newTexturePath);
+
+                // 入力欄をクリア
+                memset(newTexturePath, 0, sizeof(newTexturePath));
+            }
+        }
+
+        ImGui::Unindent();
+    }
     ImGui::End();
 #endif // USE_IMGUI
+}
+
+void PostProcess::AddMaskTexture(const std::string& filePath)
+{
+    auto it = std::find(maskTexturePaths_.begin(), maskTexturePaths_.end(), filePath);
+
+    if (it == maskTexturePaths_.end()) {
+        // 1. TextureManagerでテクスチャを読み込む（GPUへの書き込み）
+        TextureManager::getInstance()->LoadTexture(filePath);
+
+        // 2. ImGuiなどの選択リスト（std::vector）にパスを書き込む
+        maskTexturePaths_.push_back(filePath);
+
+        Logger::Log("Added and Loaded Mask Texture: " + filePath + "\n");
+    } else {
+        Logger::Log("Texture already exists: " + filePath + "\n");
+    }
 }
 
 void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)
 {
     // RootSignature作成
-    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
+    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = { };
     descriptorRange[0].BaseShaderRegister = 0;
     descriptorRange[0].NumDescriptors = 1;
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_DESCRIPTOR_RANGE descriptorRangeDepth[1] = {};
+    D3D12_DESCRIPTOR_RANGE descriptorRangeDepth[1] = { };
     descriptorRangeDepth[0].BaseShaderRegister = 1; // t1
     descriptorRangeDepth[0].NumDescriptors = 1;
     descriptorRangeDepth[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRangeDepth[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     //// RootParameter作成
-    D3D12_ROOT_PARAMETER rootParameters[3] = {};
+    D3D12_ROOT_PARAMETER rootParameters[3] = { };
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRange;
@@ -464,7 +571,7 @@ void PostProcess::RootSignatureInitialize(DirectXCommon* dxcommon)
     rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeDepth;
     rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeDepth);
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = {};
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = { };
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -508,7 +615,7 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     RootSignatureInitialize(dxcommon);
 
     // InputLayout
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = { };
     inputElementDescs[0].SemanticName = "POSITION";
     inputElementDescs[0].SemanticIndex = 0;
     inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -518,24 +625,18 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
     inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc {};
+    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc { };
     inputLayoutDesc.pInputElementDescs = nullptr;
     inputLayoutDesc.NumElements = 0;
 
     // BlendStateの設定
-    D3D12_BLEND_DESC blendDesc {};
+    D3D12_BLEND_DESC blendDesc { };
     // 全ての色要素を書き込む
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
     blendDesc.RenderTarget[0].BlendEnable = false;
-    /*blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-    blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-    blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;*/
 
     // RasterizerStateの設定
-    D3D12_RASTERIZER_DESC rasterizerDesc {};
+    D3D12_RASTERIZER_DESC rasterizerDesc { };
     // 裏面(時計回り)を表示しない
     rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
     // 三角形の中を塗りつぶす
@@ -575,7 +676,10 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderRadialBlur = dxcommon->CompileShader(L"resources/shaders/RadialBlur.PS.hlsl", L"ps_6_0");
     assert(pixeShaderRadialBlur != nullptr);
 
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderDissolve = dxcommon->CompileShader(L"resources/shaders/Dissolve.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderDissolve != nullptr);
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc { };
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
@@ -592,7 +696,7 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
     // depthStencilStateの設定
-    D3D12_DEPTH_STENCIL_DESC depthStencilDesc {};
+    D3D12_DEPTH_STENCIL_DESC depthStencilDesc { };
     // depthを有効化
     depthStencilDesc.DepthEnable = false;
     // 書き込み
@@ -667,5 +771,11 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.PS = { pixeShaderRadialBlur->GetBufferPointer(), pixeShaderRadialBlur->GetBufferSize() };
     pipelineStateRadialBlur = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateRadialBlur));
+
+    // でぃそるぶ
+    graphicsPipelineStateDesc.PS = { pixeShaderDissolve->GetBufferPointer(), pixeShaderDissolve->GetBufferSize() };
+    pipelineStateDissolve = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateDissolve));
+
     assert(SUCCEEDED(hr));
 }

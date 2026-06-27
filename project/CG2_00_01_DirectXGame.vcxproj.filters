@@ -230,6 +230,7 @@
     <FxCompile Include="resources\shaders\Line.VS.hlsl" />
     <FxCompile Include="resources\shaders\Line.PS.hlsl" />
     <FxCompile Include="resources\shaders\SkinningObject3d.VS.hlsl" />
+    <FxCompile Include="resources\shaders\Dissolve.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\io\Input.h">
