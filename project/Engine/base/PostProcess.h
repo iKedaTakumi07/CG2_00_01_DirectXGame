@@ -40,6 +40,15 @@ public:
         float padding[3];
     };
 
+    // dissolve用
+    struct dissolveData {
+        Vector4 thresholdcolor;
+        Vector3 Edegcolor;
+        float gthreshold;
+        float edgeWidth;
+        float Padding[3];
+    };
+
     enum class EffectType {
         Grayscale,
         Sepiascale,
@@ -49,6 +58,7 @@ public:
         GaussianFilter,
         RadialBlur,
         Vignette,
+        Dissolve,
     };
 
     // コンストラクタに渡すための鍵
@@ -85,6 +95,7 @@ public:
     void DrawLuminanceOutLine();
     void DrawDepthOutLine();
     void DrawRadialBlur();
+    void DrawDissolve();
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -104,6 +115,7 @@ public:
     bool IsLuminanceOutLine() const { return enableLuminanceOutLine_; } // 輝度アウトライン
     bool IstDepthOutLine() const { return enableDepthOutLine_; } // Depthアウトライン
     bool IsRadialBlur() const { return enableRadialBlur_; } // ラジアルブラー
+    bool IsDissolve() const { return enableDissolve_; }
 
     // set
     void SetDepthSrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE handle) { this->depthSrvHandle = handle; }
@@ -152,11 +164,42 @@ public:
     void SetDepthOutlineWeight(float weight) { weightMultiplierParam = weight; } // Depthアウトラインパラメーターセット
 
     void SetRadialBlur(bool enabel) { enableRadialBlur_ = enabel; }
-    void SetRadialBlurParam(Vector2 pos, float kBlurwidth) // ラジアルブラーパラメーターセット
+    void SetRadialBlurParam(Vector2 Center, float kBlurwidth) // ラジアルブラーパラメーターセット
     {
-        RadialBlurParam.kCenter = pos;
+        RadialBlurParam.kCenter = Center;
         RadialBlurParam.kBlurwidth = kBlurwidth;
     }
+
+    void SetDissolve(bool enabel) { enableDissolve_ = enabel; }
+    /// <summary>
+    /// パラメータセット
+    /// </summary>
+    /// <param name="thresholdcolor">閾値の色</param>
+    /// <param name="Edegcolor">閾値に近い部分の色</param>
+    /// <param name="gthreshold">閾値の値</param>
+    /// <param name="edgeWidth">閾値に近い範囲</param>
+    void SetDissolveParam(Vector4 thresholdcolor, Vector3 Edegcolor, float gthreshold, float edgeWidth)
+    {
+        dissolveParam_.thresholdcolor = thresholdcolor;
+        dissolveParam_.Edegcolor = Edegcolor;
+        dissolveParam_.gthreshold = gthreshold;
+        dissolveParam_.edgeWidth = edgeWidth;
+    }
+
+    /// <summary>
+    /// マスクをセット(読み込み不可)
+    /// </summary>
+    /// <param name="filePath">読み込み済みのファイル</param>
+    void SetDissolveMaskTexture(const std::string& filePath)
+    {
+        maskTextureFilePath_ = filePath;
+    }
+
+    /// <summary>
+    /// 新しいマスクテクスチャをリストに追加し、ロードする
+    /// </summary>
+    /// <param name="filePath">追加したいテクスチャのファイルパス</param>
+    void AddMaskTexture(const std::string& filePath);
 
     void ClearAllEffects() // エフェクト全リセット
     {
@@ -168,6 +211,7 @@ public:
         enableLuminanceOutLine_ = false;
         enableDepthOutLine_ = false;
         enableRadialBlur_ = false;
+        enableDissolve_ = false;
     }
 
 public:
@@ -253,6 +297,19 @@ private:
     BlurData* RadialBlurData_ = nullptr;
     BlurData RadialBlurParam = { { 0.5f, 0.5f }, 0.01f, { 0.0f } };
 
+    /* Dissolve */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateDissolve = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> DissolveBuffer_ = nullptr;
+    dissolveData* DissolveData_ = nullptr;
+    dissolveData dissolveParam_ = { { 0.0, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.4f, 0.3f }, 0.5, 0.03f, { 0.0f, 0.0f } };
+    std::string maskTextureFilePath_;
+
+    std::vector<std::string> maskTexturePaths_ = {
+        "resources/noise0.png",
+        "resources/noise1.png"
+    };
+    int selectedMaskIndex_ = 0;
+
     // 現在のモード
     bool enableGrayscale_ = false;
     bool enableSepiascale_ = false;
@@ -262,6 +319,7 @@ private:
     bool enableLuminanceOutLine_ = false;
     bool enableDepthOutLine_ = false;
     bool enableRadialBlur_ = false;
+    bool enableDissolve_ = false;
 
     // エフェクトの描画順を管理するためのリスト
     std::vector<EffectType> effectOrder_;

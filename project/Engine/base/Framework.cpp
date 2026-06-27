@@ -94,17 +94,17 @@ void Framework::Initialize()
     camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
     camera->SetRotate({ 0.3f, 0.0f, 0.0f });
 
+    TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
+    ModelManager::GetInstance()->Initialize(dxCommon.get());
+    ParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
+    ParticleManager::getInstance()->SetDefaultCamera(camera.get());
+
     PostProcess::GetInstance()->Initialize(dxCommon.get());
     PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
     PostProcess::GetInstance()->SetDepthSrvHandle(offscreenSurface->GetDepthSRVHandle());
     PostProcess::GetInstance()->SetDefaultCamera(camera.get());
 
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
-
-    TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
-    ModelManager::GetInstance()->Initialize(dxCommon.get());
-    ParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
-    ParticleManager::getInstance()->SetDefaultCamera(camera.get());
 
     sceneFactory_ = std::make_unique<SceneFactory>(input.get(), camera.get());
     SceneManager::GetInstance()->SetSceneFactory(std::move(sceneFactory_));
