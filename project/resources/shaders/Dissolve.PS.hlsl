@@ -5,10 +5,10 @@ Texture2D<float32_t> gMaskTexture : register(t1);
 SamplerState gSampler : register(s0);
 cbuffer DessolveParameta : register(b0)
 {
-    float32_t4 thresholdcolor;
-    float32_t3 Edegcolor;
-    float32_t gthreshold;
-    float32_t edgeWidth;
+    float32_t4 thresholdcolor; // 閾値の色
+    float32_t3 Edegcolor; // 閾値の近い値の色
+    float32_t gthreshold; // 閾値
+    float32_t edgeWidth; // 閾値の近い値に色を加える範囲
 };
 
 
@@ -32,7 +32,6 @@ PixelShaderOutput main(VertexShaderOutput input)
     else
     {
         // Edeg
-        float32_t edgeWidth = 0.03f;
         float32_t edge = 1.0f - smoothstep(gthreshold, gthreshold + edgeWidth, mask);
         
         output.color = gTexture.Sample(gSampler, input.texcoord);
