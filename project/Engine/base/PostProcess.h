@@ -59,6 +59,7 @@ public:
         RadialBlur,
         Vignette,
         Dissolve,
+        Random,
     };
 
     // コンストラクタに渡すための鍵
@@ -96,6 +97,7 @@ public:
     void DrawDepthOutLine();
     void DrawRadialBlur();
     void DrawDissolve();
+    void DrawRandom();
 
     // ImGuiのUIを描画する関数
     void DrawImGui();
@@ -116,6 +118,7 @@ public:
     bool IstDepthOutLine() const { return enableDepthOutLine_; } // Depthアウトライン
     bool IsRadialBlur() const { return enableRadialBlur_; } // ラジアルブラー
     bool IsDissolve() const { return enableDissolve_; }
+    bool IsRandom() const { return enableRandom_; }
 
     // set
     void SetDepthSrvHandle(D3D12_GPU_DESCRIPTOR_HANDLE handle) { this->depthSrvHandle = handle; }
@@ -201,6 +204,8 @@ public:
     /// <param name="filePath">追加したいテクスチャのファイルパス</param>
     void AddMaskTexture(const std::string& filePath);
 
+    void SetRandom(bool enable) { enableRandom_ = enable; }
+
     void ClearAllEffects() // エフェクト全リセット
     {
         enableGrayscale_ = false;
@@ -212,6 +217,7 @@ public:
         enableDepthOutLine_ = false;
         enableRadialBlur_ = false;
         enableDissolve_ = false;
+        enableRandom_ = false;
     }
 
 public:
@@ -310,6 +316,13 @@ private:
     };
     int selectedMaskIndex_ = 0;
 
+    /* Random */
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineStateRandom = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> RandomBuffer_ = nullptr;
+    Material* RandomMaterialData_ = nullptr;
+    Material RandomMaterialParam_;
+    std::chrono::steady_clock::time_point lastTime_; // 前フレームの時刻
+
     // 現在のモード
     bool enableGrayscale_ = false;
     bool enableSepiascale_ = false;
@@ -320,6 +333,7 @@ private:
     bool enableDepthOutLine_ = false;
     bool enableRadialBlur_ = false;
     bool enableDissolve_ = false;
+    bool enableRandom_ = false;
 
     // エフェクトの描画順を管理するためのリスト
     std::vector<EffectType> effectOrder_;

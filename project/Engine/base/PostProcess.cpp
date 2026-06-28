@@ -3,6 +3,7 @@
 #include "../3d/Camera.h"
 #include "../3d/Object3d.h"
 #include "../base/Logger.h"
+#include "Framework.h"
 #include "OffscreenSurface.h"
 #include "TextureManager.h"
 #include <algorithm>
@@ -73,6 +74,9 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&DissolveBuffer_));
     assert(SUCCEEDED(hr));
 
+    resDesc.Width = sizeof(Material);
+    hr = dxCommon_->GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&RandomBuffer_));
+
     // マップしてC++から書き込める状態にしておく
     GrayscaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&GrayscaleData_));
     SepiascaleBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&SepiascaleData_));
@@ -83,6 +87,15 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
     LuminanceBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&LuminanceData_));
     RadialBlurBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&RadialBlurData_));
     DissolveBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&DissolveData_));
+    RandomBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&RandomMaterialData_));
+
+    // 初期化がだるいっぴ。
+    RandomMaterialParam_.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+    RandomMaterialParam_.enableEnvironmentMap = 0;
+    RandomMaterialParam_.evnironmentCoefficient = 0.0f;
+    RandomMaterialParam_.shininess = 0.0f;
+    RandomMaterialParam_.uvTransform = MakeIdentity4x4();
+    RandomMaterialParam_.time = 0.0f;
 
     effectOrder_ = {
         EffectType::Grayscale,
@@ -94,6 +107,7 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
         EffectType::RadialBlur,
         EffectType::Vignette,
         EffectType::Dissolve,
+        EffectType::Random,
     };
 }
 
@@ -147,6 +161,14 @@ void PostProcess::Update()
     if (DissolveData_) {
         *DissolveData_ = dissolveParam_;
     }
+
+    if (RandomMaterialData_) {
+        auto now = std::chrono::steady_clock::now();
+        std::chrono::duration<float> elapsed = now - lastTime_;
+        lastTime_ = now;
+        RandomMaterialParam_.time += elapsed.count();
+        *RandomMaterialData_ = RandomMaterialParam_;
+    }
 }
 
 void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB)
@@ -186,6 +208,8 @@ void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB
         case PostProcess::EffectType::Dissolve:
             isEnabled = enableDissolve_;
             break;
+        case PostProcess::EffectType::Random:
+            isEnabled = enableRandom_;
         }
 
         // 実行しないものをスキップ
@@ -243,6 +267,9 @@ void PostProcess::Execute(OffscreenSurface* surfaceA, OffscreenSurface* surfaceB
 
         case PostProcess::EffectType::Dissolve:
             DrawDissolve();
+            break;
+        case PostProcess::EffectType::Random:
+            DrawRandom();
             break;
         }
 
@@ -399,6 +426,18 @@ void PostProcess::DrawDissolve()
     cmd->DrawInstanced(3, 1, 0, 0);
 }
 
+void PostProcess::DrawRandom()
+{
+    auto cmd = dxCommon_->GetCommandList();
+    cmd->SetGraphicsRootSignature(rootSignature.Get());
+    cmd->SetPipelineState(pipelineStateRandom.Get());
+    cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootConstantBufferView(1, RandomBuffer_->GetGPUVirtualAddress());
+    cmd->DrawInstanced(3, 1, 0, 0);
+}
+
 void PostProcess::DrawImGui()
 {
 #ifdef USE_IMGUI
@@ -515,6 +554,9 @@ void PostProcess::DrawImGui()
 
         ImGui::Unindent();
     }
+
+    ImGui::Checkbox("RandomFilter", &enableRandom_);
+
     ImGui::End();
 #endif // USE_IMGUI
 }
@@ -679,6 +721,9 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderDissolve = dxcommon->CompileShader(L"resources/shaders/Dissolve.PS.hlsl", L"ps_6_0");
     assert(pixeShaderDissolve != nullptr);
 
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderRandom = dxcommon->CompileShader(L"resources/shaders/Random.PS.hlsl", L"ps_6_0");
+    assert(pixeShaderRandom != nullptr);
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc { };
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
@@ -776,6 +821,11 @@ void PostProcess::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.PS = { pixeShaderDissolve->GetBufferPointer(), pixeShaderDissolve->GetBufferSize() };
     pipelineStateDissolve = nullptr;
     hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateDissolve));
+
+    // ランダム(ノイズ)
+    graphicsPipelineStateDesc.PS = { pixeShaderRandom->GetBufferPointer(), pixeShaderRandom->GetBufferSize() };
+    pipelineStateRandom = nullptr;
+    hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&pipelineStateRandom));
 
     assert(SUCCEEDED(hr));
 }
