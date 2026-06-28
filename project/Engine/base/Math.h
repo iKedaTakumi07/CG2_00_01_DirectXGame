@@ -62,10 +62,10 @@ struct ParticleForGPU {
 struct Material {
     Vector4 color;
     int32_t enableEnvironmentMap;
-    float padding[3];
-    Matrix4x4 uvTransform;
     float shininess;
     float evnironmentCoefficient;
+    float time;
+    Matrix4x4 uvTransform;
 };
 struct ParticleMaterial {
     Matrix4x4 uvTransform;
