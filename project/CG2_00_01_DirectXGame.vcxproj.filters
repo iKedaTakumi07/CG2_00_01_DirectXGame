@@ -235,6 +235,7 @@
     <FxCompile Include="resources\shaders\SkinningObject3d.VS.hlsl" />
     <FxCompile Include="resources\shaders\Dissolve.PS.hlsl" />
     <FxCompile Include="resources\shaders\Random.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Skinning.CS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\io\Input.h">

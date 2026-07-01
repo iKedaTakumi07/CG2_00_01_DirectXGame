@@ -13,6 +13,7 @@ void Model::Initialize(const std::string& directorypath, const std::string& file
     VertexResourceInitialize();
     IndexResourceInitialize();
     MaterialResourceInitialize();
+    SkinningInformationResourceInitialize(); // CS用
 }
 
 void Model::Draw()
@@ -36,11 +37,7 @@ void Model::Draw()
 
 void Model::Draw(const SkinCluster& skinCluster)
 {
-    D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
-        vertexBufferView, // VertextDataのVBV
-        skinCluster.influenceResourceView // influenceのVBV
-    };
-    modelCommon_->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
+    modelCommon_->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &skinCluster.outputVerticesBufferView);
 
     modelCommon_->GetDxCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 
@@ -54,9 +51,34 @@ void Model::Draw(const SkinCluster& skinCluster)
         modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::getInstance()->GetSrvHandelGPU("resources/rostock_laage_airport_4k.dds"));
     }
 
-    modelCommon_->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(8, skinCluster.paletteSrvHandel.second);
-
     modelCommon_->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
+}
+
+void Model::CSDraw(const SkinCluster& skinCluster)
+{
+    auto cmdList = modelCommon_->GetDxCommon()->GetCommandList();
+
+    // b0
+    cmdList->SetComputeRootConstantBufferView(0, skinningInformationResource_->GetGPUVirtualAddress());
+
+    // t0
+    cmdList->SetComputeRootShaderResourceView(1, skinCluster.paletteResource->GetGPUVirtualAddress());
+
+    // t1
+    cmdList->SetComputeRootShaderResourceView(2, vertexResource->GetGPUVirtualAddress());
+
+    // t2
+    cmdList->SetComputeRootShaderResourceView(3, skinCluster.influenceResource->GetGPUVirtualAddress());
+
+    // u0
+    cmdList->SetComputeRootUnorderedAccessView(4, skinCluster.outputVerticesResource->GetGPUVirtualAddress());
+
+    // 2. コンピュートシェーダーを実行 (スレッドグループ数を計算)
+    // HLSL側が [numthreads(1024, 1, 1)] なので、1024で割る（切り上げ処理）
+    uint32_t numVertices = static_cast<uint32_t>(modelData.vertices.size());
+    uint32_t groupCount = (numVertices + 1023) / 1024;
+
+    cmdList->Dispatch(groupCount, 1, 1);
 }
 
 void Model::VertexResourceInitialize()
@@ -105,4 +127,16 @@ void Model::MaterialResourceInitialize()
     materialData->shininess = 20.0f;
     materialData->uvTransform = MakeIdentity4x4();
     materialData->evnironmentCoefficient = 0.0f;
+}
+
+void Model::SkinningInformationResourceInitialize()
+{
+    skinningInformationResource_ = modelCommon_->GetDxCommon()->CreateBufferResource(sizeof(uint32_t));
+
+    uint32_t* mappedData = nullptr;
+    skinningInformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData));
+
+    *mappedData = static_cast<uint32_t>(modelData.vertices.size());
+
+    skinningInformationResource_->Unmap(0, nullptr);
 }

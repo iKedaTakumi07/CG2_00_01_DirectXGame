@@ -123,7 +123,6 @@ Node Object3d::ReadNode(aiNode* node)
     return result;
 }
 
-
 void Object3d::Initialize()
 {
     this->object3dCommon = Object3dCommon::GetInstance();
@@ -227,12 +226,25 @@ void Object3d::Draw()
     auto cmdList = object3dCommon->GetDxCommon()->GetCommandList();
     auto lightManager = LightManager::GetInstance();
 
-    // アニメーターが居るかどうかでパイプラインを切り替える
+    // cs
     if (animator_) {
-        object3dCommon->PrepareSkinObjectDraw();
-    } else {
-        object3dCommon->PrepareObjectDraw();
+        // CS用パイプラインのセット
+        object3dCommon->PrepareCSObjectDraw();
+
+        // CSを実行（頂点バッファを書き換える）
+        model->CSDraw(animator_->GetSkinCluster());
+
+        // 重要: CSでの書き込み完了を待機するUAVバリアを発行
+        D3D12_RESOURCE_BARRIER barrier = { };
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        // UAVとして書き込んだリソースを指定
+        barrier.UAV.pResource = animator_->GetSkinCluster().outputVerticesResource.Get();
+        cmdList->ResourceBarrier(1, &barrier);
     }
+
+    // CSで計算済みなので通常のオブジェクト用で可。
+    object3dCommon->PrepareObjectDraw();
 
     // 座標/カメラ(分離するかは不明)
     cmdList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
