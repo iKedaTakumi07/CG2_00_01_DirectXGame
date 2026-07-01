@@ -26,6 +26,8 @@ public:
     void PrepareObjectDraw();
     // スキンモデル用
     void PrepareSkinObjectDraw();
+    // CS
+    void PrepareCSObjectDraw();
 #ifdef USE_IMGUI
     void PreLineObjectDraw();
 #endif // USE_IMGUI
@@ -69,6 +71,13 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> skinRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> skinPipelineState = nullptr;
+
+    // Cs用パイプライン
+    void CSRootSignatureInitialize(DirectXCommon* dxcommon);
+    void CSPipelineInitialize(DirectXCommon* dxcommon);
+
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> csRootSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> csPipelineState;
 
     // ラインパイプラインの生成
     void LinePipelineInitialize(DirectXCommon* dxcommon);

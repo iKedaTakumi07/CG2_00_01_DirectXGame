@@ -270,6 +270,40 @@ SkinCluster Animator::CreateSkinCluster(const Microsoft::WRL::ComPtr<ID3D12Devic
             }
         }
     }
+
+    uint32_t numVertices = static_cast<uint32_t>(modelData.vertices.size());
+    UINT sizeInBytes = sizeof(VertexData) * numVertices;
+
+    // ヒーププロパティ
+    D3D12_HEAP_PROPERTIES uploadHeapProps { };
+    uploadHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    // リソース作成
+    // uavの生成
+    D3D12_RESOURCE_DESC resDesc { };
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Width = sizeInBytes;
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.Format = DXGI_FORMAT_UNKNOWN;
+    resDesc.SampleDesc.Count = 1;
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    HRESULT hr = device->CreateCommittedResource(
+        &uploadHeapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        D3D12_RESOURCE_STATE_COMMON,
+        nullptr,
+        IID_PPV_ARGS(&skinCluster.outputVerticesResource));
+    assert(SUCCEEDED(hr));
+
+    skinCluster.outputVerticesBufferView.BufferLocation = skinCluster.outputVerticesResource->GetGPUVirtualAddress();
+    skinCluster.outputVerticesBufferView.SizeInBytes = sizeInBytes;
+    skinCluster.outputVerticesBufferView.StrideInBytes = sizeof(VertexData);
+
     return skinCluster;
 }
 

@@ -13,6 +13,8 @@ public:
 
     // スキンモデル用
     void Draw(const SkinCluster& skinCluster);
+    // CS用
+    void CSDraw(const SkinCluster& skinCluster);
 
     // Get
     Material* GetmaterialData() { return materialData; }
@@ -29,6 +31,7 @@ private:
     void VertexResourceInitialize();
     void IndexResourceInitialize();
     void MaterialResourceInitialize();
+    void SkinningInformationResourceInitialize();
 
     ModelCommon* modelCommon_ = nullptr;
 
@@ -47,4 +50,6 @@ private:
     // バッファリソース
     Material* materialData;
     std::string texturefilePath_;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> skinningInformationResource_;
 };

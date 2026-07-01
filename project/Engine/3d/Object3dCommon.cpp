@@ -20,6 +20,8 @@ void Object3dCommon::Initialize(DirectXCommon* dxcommon, SrvManager* srvManager)
 
     SkinPipelineInitialize(dxCommon_);
 
+    CSPipelineInitialize(dxCommon_);
+
 #ifdef USE_IMGUI
     LinePipelineInitialize(dxCommon_);
 #endif // USE_IMGUI
@@ -38,6 +40,12 @@ void Object3dCommon::PrepareSkinObjectDraw()
     dxCommon_->GetCommandList()->SetGraphicsRootSignature(skinRootSignature.Get());
     dxCommon_->GetCommandList()->SetPipelineState(skinPipelineState.Get());
     dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void Object3dCommon::PrepareCSObjectDraw()
+{
+    dxCommon_->GetCommandList()->SetComputeRootSignature(csRootSignature.Get());
+    dxCommon_->GetCommandList()->SetPipelineState(csPipelineState.Get());
 }
 
 #ifdef USE_IMGUI
@@ -250,7 +258,7 @@ void Object3dCommon::SkinRootSignatureInitialize(DirectXCommon* dxcommon)
     descriptorRangePalette[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRangePalette[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[9] = { };
+    D3D12_ROOT_PARAMETER rootParameters[8] = { };
 
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -285,11 +293,6 @@ void Object3dCommon::SkinRootSignatureInitialize(DirectXCommon* dxcommon)
     rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[7].DescriptorTable.pDescriptorRanges = descriptorRangeEnv;
     rootParameters[7].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeEnv);
-
-    rootParameters[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; // Vertex用にするのが肝！
-    rootParameters[8].DescriptorTable.pDescriptorRanges = descriptorRangePalette;
-    rootParameters[8].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangePalette);
 
     // サンプラー設定
     D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = { };
@@ -374,7 +377,7 @@ void Object3dCommon::SkinPipelineInitialize(DirectXCommon* dxcommon)
     rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
     // スキン用の頂点シェーダーをコンパイル
-    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/SkinningObject3d.VS.hlsl", L"vs_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/Object3d.VS.hlsl", L"vs_6_0");
     assert(vertexShaderBlob != nullptr);
 
     // ピクセルシェーダーは既存のものを流用
@@ -406,6 +409,76 @@ void Object3dCommon::SkinPipelineInitialize(DirectXCommon* dxcommon)
 
     HRESULT hr = dxcommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&skinPipelineState));
     assert(SUCCEEDED(hr));
+}
+
+void Object3dCommon::CSRootSignatureInitialize(DirectXCommon* dxcommon)
+{
+    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
+    descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
+
+    D3D12_ROOT_PARAMETER rootParameters[5] = { };
+
+    // b0: SkinningInformation (CBV)
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[0].Descriptor.ShaderRegister = 0;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // t0: gMatrixPalette (SRV)
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+    rootParameters[1].Descriptor.ShaderRegister = 0;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // t1: gInputVertices (SRV)
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+    rootParameters[2].Descriptor.ShaderRegister = 1;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // t2: gInfluences (SRV)
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+    rootParameters[3].Descriptor.ShaderRegister = 2;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // u0: gOutputVertices (UAV)
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[4].Descriptor.ShaderRegister = 0;
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    descriptionRootSignature.pParameters = rootParameters;
+    descriptionRootSignature.NumParameters = _countof(rootParameters);
+
+    HRESULT hr;
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+    hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+    if (FAILED(hr)) {
+        Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        assert(false);
+    }
+
+    csRootSignature = nullptr;
+    hr = dxcommon->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&csRootSignature));
+    assert(SUCCEEDED(hr));
+}
+
+void Object3dCommon::CSPipelineInitialize(DirectXCommon* dxcommon)
+{
+    CSRootSignatureInitialize(dxcommon);
+
+    HRESULT hr;
+
+    // CSをコンパイル
+    Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob = dxcommon->CompileShader(L"resources/shaders/Skinning.CS.hlsl", L"cs_6_0");
+    assert(computeShaderBlob != nullptr);
+    // PSOの設定
+    D3D12_COMPUTE_PIPELINE_STATE_DESC computePipelineStateDesc { };
+    computePipelineStateDesc.CS = {
+        .pShaderBytecode = computeShaderBlob->GetBufferPointer(),
+        .BytecodeLength = computeShaderBlob->GetBufferSize()
+    };
+    computePipelineStateDesc.pRootSignature = csRootSignature.Get();
+
+    csPipelineState = nullptr;
+    hr = dxcommon->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&csPipelineState));
 }
 
 void Object3dCommon::LinePipelineInitialize(DirectXCommon* dxcommon)

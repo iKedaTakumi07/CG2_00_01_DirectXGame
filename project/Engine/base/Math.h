@@ -161,6 +161,8 @@ struct SkinCluster {
     Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
     std::span<WellForGPU> mappedPalette;
     std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandel;
+    Microsoft::WRL::ComPtr<ID3D12Resource> outputVerticesResource;
+    D3D12_VERTEX_BUFFER_VIEW outputVerticesBufferView { };
 };
 
 struct ModelData {
@@ -177,7 +179,6 @@ struct PointLigth {
     float radius; // ライトの届く最大距離
     float decay; // 減衰率
     int32_t active;
-    float Padding;
 };
 
 struct AccelerationField {
