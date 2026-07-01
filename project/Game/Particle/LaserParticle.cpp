@@ -14,7 +14,7 @@ void LaserParticle::NewTransform()
     // ゲーム作り始めたら削除(弾完成後)
     pos.scale = { 1.0f, 1.0f, 1.0f };
     pos.rotate = { 0.0f, 0.0f, 0.0f };
-    pos.translate = { 0.0f, 2.0f, 0.0f };
+    pos.translate = { 0.0f, 2.0f, -2.0f };
 
     Pos.push_back(pos);
 }

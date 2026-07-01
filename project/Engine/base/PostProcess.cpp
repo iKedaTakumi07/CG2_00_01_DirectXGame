@@ -8,6 +8,7 @@
 #include "TextureManager.h"
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <d3d12.h>
 #include <wrl.h>
 
@@ -167,6 +168,8 @@ void PostProcess::Update()
         std::chrono::duration<float> elapsed = now - lastTime_;
         lastTime_ = now;
         RandomMaterialParam_.time += elapsed.count();
+        // オーバーフロー対策
+        RandomMaterialParam_.time = std::fmod(RandomMaterialParam_.time, 100.0f);
         *RandomMaterialData_ = RandomMaterialParam_;
     }
 }
@@ -433,7 +436,7 @@ void PostProcess::DrawRandom()
     cmd->SetPipelineState(pipelineStateRandom.Get());
     cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-     cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
+    cmd->SetGraphicsRootDescriptorTable(0, srvHandle);
     cmd->SetGraphicsRootConstantBufferView(1, RandomBuffer_->GetGPUVirtualAddress());
     cmd->DrawInstanced(3, 1, 0, 0);
 }
