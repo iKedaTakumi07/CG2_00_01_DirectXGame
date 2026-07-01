@@ -205,6 +205,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\3d\IParticleMesh.cpp" />
     <ClCompile Include="Game\Particle\LaserParticle.cpp" />
     <ClCompile Include="Engine\3d\LightManager.cpp" />
+    <ClCompile Include="Game\Particle\HitParticle.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -488,6 +489,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\scene\SceneFactory.h" />
     <ClInclude Include="Game\Particle\LaserParticle.h" />
     <ClInclude Include="Engine\3d\LightManager.h" />
+    <ClInclude Include="Game\Particle\HitParticle.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

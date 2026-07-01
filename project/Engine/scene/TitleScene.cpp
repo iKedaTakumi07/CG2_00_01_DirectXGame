@@ -24,6 +24,7 @@
 
 #include "../io/Input.h"
 
+#include "../../Game/Particle/HitParticle.h"
 #include "../../Game/Particle/LaserParticle.h"
 #include "math.h"
 
@@ -52,7 +53,7 @@ void TitleScene::Initialize()
     ModelManager::GetInstance()->LoadModel("human/sneakWalk.gltf");
 
     skydox = std::make_unique<Skybox>();
-    //skydox->Initialize("resources/rostock_laage_airport_4k.dds");
+    // skydox->Initialize("resources/rostock_laage_airport_4k.dds");
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
@@ -60,7 +61,7 @@ void TitleScene::Initialize()
 
     model = std::make_unique<Model>();
     model->Initialize("resources", "terrain.obj");
-    //model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
+    // model->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d->SetModel(model.get());
 
     object3d_2 = std::make_unique<Object3d>();
@@ -91,17 +92,7 @@ void TitleScene::Initialize()
     emitter.translate = { 0.0f, 2.0f, 0.0f };
     emitter.rotate = { 0.0f, 0.0f, 1.0f };
     emitter.scale = { 0.05f, 1.0f, 1.0f };
-    particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 0.8f, 8, true);
     EmitterParam fireParam;
-    fireParam.maxRotate = { 0.0f, 0.0f, std::numbers::pi_v<float> };
-    fireParam.minRotate = { 0.0f, 0.0f, -std::numbers::pi_v<float> };
-    fireParam.maxScale = { 0.05f, 1.5f, 1.0f };
-    fireParam.minScale = { 0.05f, 0.4f, 1.0f };
-    fireParam.SetStartColor({ 1.0f, 1.0f, 0.5f, 1.0f });
-    fireParam.SetEndColor({ 1.0f, 1.0f, 1.0f, 0.0f });
-    fireParam.SetVelocity({ 0.0f, 0.0f, 0.0f });
-    fireParam.SetLifeTime(1.0f);
-    particleEmitter->SetParam(fireParam);
 
     particleEmitter2 = std::make_unique<ParticleEmitter>("gradationLine", emitter, 0.8f, 3, true);
     fireParam.maxRotate = { std::numbers::pi_v<float>, std::numbers::pi_v<float>, 0.0f };
@@ -127,22 +118,13 @@ void TitleScene::Initialize()
     particleEmitter4->SetParam(fireParam);
     ParticleManager::getInstance()->SetGroupScrollSpeed("Cylinder", { 0.2f, 0.0f });*/
 
-    emitter.translate = { 0.0f, 2.0f, 0.0f };
-    particleEmitter3 = std::make_unique<ParticleEmitter>("circle3", emitter, 0.8f, 32, true);
-    fireParam.maxRotate = { 0.0f, 0.0f, 0.0f };
-    fireParam.minRotate = { 0.0f, 0.0f, 0.0f };
-    fireParam.SetScale({ 0.02f, 0.02f, 0.02f });
-    fireParam.maxVelocity = { 2.0f, 2.0f, 2.0f };
-    fireParam.minVelocity = { -2.0f, -2.0f, -2.0f };
-    fireParam.SetStartColor({ 1.0f, 1.0f, 0.0f, 1.0f });
-    fireParam.SetEndColor({ 1.0f, 1.0f, 0.0f, 0.0f });
-    fireParam.isInfinite = false;
-    fireParam.SetLifeTime(1.2f);
-    particleEmitter3->SetParam(fireParam);
-
     laserTest = std::make_unique<LaserParticle>();
     laserTest->Initialize();
     laserTest->NewTransform();
+
+    hitParticle = std::make_unique<HitParticle>();
+    hitParticle->Initialize();
+    hitParticle->NewTransform();
 }
 
 void TitleScene::Finalize()
@@ -166,9 +148,7 @@ void TitleScene::Update()
     object3d->Update();
     object3d_2->Update();
 
-    particleEmitter->Update();
     particleEmitter2->Update();
-    particleEmitter3->Update();
     /*particleEmitter4->Update();*/
 
     // 5秒ごとに生成(軽いテストなう)
@@ -180,6 +160,7 @@ void TitleScene::Update()
     testTimer += deltaTime;
 
     laserTest->Update();
+    hitParticle->Update();
 
     // IMGUI
     object3d->DrawImGui("Terrain");

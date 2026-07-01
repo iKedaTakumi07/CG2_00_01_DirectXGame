@@ -7,6 +7,7 @@
 #include "../audio/Sound.h"
 
 class LaserParticle;
+class HitParticle;
 
 class Model;
 class Object3d;
@@ -42,11 +43,11 @@ private:
 
     std::unique_ptr<Skybox> skydox;
 
-    std::unique_ptr<ParticleEmitter> particleEmitter;
     std::unique_ptr<ParticleEmitter> particleEmitter2;
-    std::unique_ptr<ParticleEmitter> particleEmitter3;
+
     std::unique_ptr<ParticleEmitter> particleEmitter4;
 
     std::unique_ptr<LaserParticle> laserTest;
+    std::unique_ptr<HitParticle> hitParticle;
     float testTimer = 0.0f;
 };
