@@ -1,6 +1,18 @@
 #include "Math.h"
 #include <assert.h>
 
+bool AreMatricesEqual(const Matrix4x4& a, const Matrix4x4& b, float epsilon)
+{
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (std::abs(a.m[i][j] - b.m[i][j]) > epsilon) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 Vector3 CalculateValue(const std::vector<keyframeVector3>& keyframes, float time)
 {
     assert(!keyframes.empty());
