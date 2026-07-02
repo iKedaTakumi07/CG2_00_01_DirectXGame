@@ -67,8 +67,20 @@ void Animator::UpdateSkinCluster(SkinCluster& skinCluster, Skeleton& skeleton)
 {
     for (size_t jointIndex = 0; jointIndex < skeleton.joints.size(); ++jointIndex) {
         assert(jointIndex < skinCluster.inverseBindPoseMatrices.size());
-        skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix = skinCluster.inverseBindPoseMatrices[jointIndex] * skeleton.joints[jointIndex].skeletonSpaceMatrix;
-        skinCluster.mappedPalette[jointIndex].skeletonSpaceInverseTransposeMatrix = Transpose(Inverse(skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix));
+
+        // 仮計算
+        Matrix4x4 currentPaletteMatrix = skinCluster.inverseBindPoseMatrices[jointIndex] * skeleton.joints[jointIndex].skeletonSpaceMatrix;
+
+        // 比較
+        if (AreMatricesEqual(currentPaletteMatrix, skinCluster.lastPaletteMatrices[jointIndex])) {
+            continue;
+        }
+
+        skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix = currentPaletteMatrix;
+        skinCluster.mappedPalette[jointIndex].skeletonSpaceInverseTransposeMatrix = Transpose(Inverse(currentPaletteMatrix));
+        
+        // 過去座標更新
+        skinCluster.lastPaletteMatrices[jointIndex] = currentPaletteMatrix;
     }
 }
 
@@ -245,9 +257,11 @@ SkinCluster Animator::CreateSkinCluster(const Microsoft::WRL::ComPtr<ID3D12Devic
 
     // InverseBindPoseMatrixの保存領域を作成
     skinCluster.inverseBindPoseMatrices.resize(skeleton.joints.size());
+    skinCluster.lastPaletteMatrices.resize(skeleton.joints.size());
     // 範囲ベースforループで1つずつ単位行列を代入
-    for (auto& matrix : skinCluster.inverseBindPoseMatrices) {
-        matrix = MakeIdentity4x4();
+    for (size_t i = 0; i < skeleton.joints.size(); ++i) {
+        skinCluster.inverseBindPoseMatrices[i] = MakeIdentity4x4();
+        skinCluster.lastPaletteMatrices[i] = MakeIdentity4x4();
     }
 
     // ModelDataのSkinCluster情報を解析してinfluenceの中身を埋める

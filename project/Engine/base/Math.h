@@ -163,6 +163,7 @@ struct SkinCluster {
     std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandel;
     Microsoft::WRL::ComPtr<ID3D12Resource> outputVerticesResource;
     D3D12_VERTEX_BUFFER_VIEW outputVerticesBufferView { };
+    std::vector<Matrix4x4> lastPaletteMatrices;
 };
 
 struct ModelData {
@@ -223,6 +224,8 @@ struct SpotLigth {
     float cosFalloffStart; // スポットライトの内側の角度（減衰開始の余弦）
     int32_t active;
 };
+
+bool AreMatricesEqual(const Matrix4x4& a, const Matrix4x4& b, float epsilon = 1e-5f);
 
 Vector3 CalculateValue(const std::vector<keyframeVector3>& keyframes, float time);
 
