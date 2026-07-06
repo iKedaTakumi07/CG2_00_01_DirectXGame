@@ -11,8 +11,8 @@
 #include "../3d/Object3d.h"
 #include "../3d/Object3dCommon.h"
 
-#include "../3d/ParticleEmitter.h"
-#include "../3d/ParticleManager.h"
+#include "../3d/CPUParticle/ParticleEmitter.h"
+#include "../3d/CPUParticle/CPUParticleManager.h"
 
 #include "../3d/Skybox/SkyBoxCommon.h"
 #include "../3d/Skybox/Skybox.h"
@@ -77,8 +77,8 @@ void GamePlayScene::Initialize()
     model2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d2->SetModel(model2.get());
 
-    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png", ParticleMeshType::kPlane);
-    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
 
     // 板ポリ
     Transform emitter {};
@@ -91,7 +91,7 @@ void GamePlayScene::Initialize()
     emitterPlane.translate = { 4.0f, 4.0f, 0.0f };
     emitterPlane.rotate = { 0.0f, 0.0f, 0.0f };
     emitterPlane.scale = { 1.0f, 1.0f, 1.0f };
-    particleEmitterPlane = std::make_unique<ParticleEmitter>("Plane", emitterPlane, 1.0f, 5,true);
+    particleEmitterPlane = std::make_unique<ParticleEmitter>("Plane", emitterPlane, 1.0f, 5, true);
 
     fanfare.SoundLoadFile("resources/fanfare.wav");
     clearSe.SoundLoadFile("resources/stage.mp3");
@@ -151,5 +151,5 @@ void GamePlayScene::Draw()
         sprite->Draw();
     }
 
-    ParticleManager::getInstance()->Draw();
+    CPUParticleManager::getInstance()->Draw();
 }

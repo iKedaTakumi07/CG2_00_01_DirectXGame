@@ -21,7 +21,7 @@
 #include <wrl.h>
 
 #include "../3d/ModelManager.h"
-#include "../3d/ParticleManager.h"
+#include "../3d/CPUParticle/CPUParticleManager.h"
 #include "../audio/Audio.h"
 #include "TextureManager.h"
 #include <DbgHelp.h>
@@ -96,8 +96,8 @@ void Framework::Initialize()
 
     TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     ModelManager::GetInstance()->Initialize(dxCommon.get());
-    ParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
-    ParticleManager::getInstance()->SetDefaultCamera(camera.get());
+    CPUParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
+    CPUParticleManager::getInstance()->SetDefaultCamera(camera.get());
 
     PostProcess::GetInstance()->Initialize(dxCommon.get());
     PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
@@ -161,7 +161,7 @@ void Framework::Update()
 
     LightManager::GetInstance()->Update();
 
-    ParticleManager::getInstance()->Update();
+    CPUParticleManager::getInstance()->Update();
 }
 
 void Framework::Finalize()
@@ -171,7 +171,7 @@ void Framework::Finalize()
 
     TextureManager::getInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
-    ParticleManager::getInstance()->Finalize();
+    CPUParticleManager::getInstance()->Finalize();
 
     imguiManager->Finalize();
 }

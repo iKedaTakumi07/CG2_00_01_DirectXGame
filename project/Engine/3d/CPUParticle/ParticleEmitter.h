@@ -1,6 +1,6 @@
 #pragma once
-#include "../base/Math.h"
-#include "ParticleManager.h"
+#include "../../base/Math.h"
+#include "CPUParticleManager.h"
 #include <string>
 
 class ParticleEmitter {

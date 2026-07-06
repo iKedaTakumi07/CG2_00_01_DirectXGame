@@ -1,11 +1,11 @@
 #include "LaserParticle.h"
-#include "../../Engine/3d/ParticleManager.h"
+#include "../../Engine/3d/CPUParticle/CPUParticleManager.h"
 #include "../../Engine/base/Math.h"
 
 void LaserParticle::Initialize()
 {
     // 事前に読み込ませるため多分?
-    ParticleManager::getInstance()->CreateParticleGroup("laser", "resources/laser.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("laser", "resources/laser.png", ParticleMeshType::kPlane);
 }
 
 void LaserParticle::NewTransform()
@@ -34,7 +34,7 @@ void LaserParticle::NewParticle(const Transform& emitterTransform)
         laserfireParam.SetLifeTime(0.6f);
 
         // えせトレイル
-        ParticleManager::getInstance()->Emit("laser", emitterTransform, 1, laserfireParam);
+        CPUParticleManager::getInstance()->Emit("laser", emitterTransform, 1, laserfireParam);
     }
 }
 

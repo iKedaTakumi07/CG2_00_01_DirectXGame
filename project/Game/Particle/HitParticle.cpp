@@ -1,12 +1,12 @@
 #include "HitParticle.h"
-#include "../../Engine/3d/ParticleManager.h"
+#include "../../Engine/3d/CPUParticle/CPUParticleManager.h"
 #include "../../Engine/base/Math.h"
 
 void HitParticle::Initialize()
 {
     // 事前に読み込ませるため多分?
-    ParticleManager::getInstance()->CreateParticleGroup("circle2", "resources/circle2.png", ParticleMeshType::kPlane);
-    ParticleManager::getInstance()->CreateParticleGroup("circle3", "resources/circle3.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("circle2", "resources/circle2.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("circle3", "resources/circle3.png", ParticleMeshType::kPlane);
 }
 
 void HitParticle::NewTransform()
@@ -31,7 +31,7 @@ void HitParticle::NewParticle(const Transform& emitterTransform)
     HitParticleCircle2.SetEndColor({ 1.0f, 1.0f, 1.0f, 0.0f });
     HitParticleCircle2.SetVelocity({ 0.0f, 0.0f, 0.0f });
     HitParticleCircle2.SetLifeTime(0.5f);
-    ParticleManager::getInstance()->Emit("circle2", emitterTransform, 4, HitParticleCircle2);
+    CPUParticleManager::getInstance()->Emit("circle2", emitterTransform, 4, HitParticleCircle2);
     EmitterParam HitParticleCircle3;
     HitParticleCircle3.maxRotate = { 0.0f, 0.0f, 0.0f };
     HitParticleCircle3.minRotate = { 0.0f, 0.0f, 0.0f };
@@ -41,7 +41,7 @@ void HitParticle::NewParticle(const Transform& emitterTransform)
     HitParticleCircle3.SetStartColor({ 1.0f, 1.0f, 0.0f, 1.0f });
     HitParticleCircle3.SetEndColor({ 1.0f, 1.0f, 0.0f, 0.0f });
     HitParticleCircle3.SetLifeTime(0.7f);
-    ParticleManager::getInstance()->Emit("circle3", emitterTransform, 16, HitParticleCircle3);
+    CPUParticleManager::getInstance()->Emit("circle3", emitterTransform, 16, HitParticleCircle3);
 }
 
 void HitParticle::Update()

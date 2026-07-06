@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "../2d/Sprite.h"
-#include "../3d/ParticleEmitter.h"
+#include "../3d/CPUParticle/ParticleEmitter.h"
 #include "../audio/Sound.h"
 
 class LaserParticle;

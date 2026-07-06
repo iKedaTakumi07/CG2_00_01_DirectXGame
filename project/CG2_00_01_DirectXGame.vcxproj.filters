@@ -144,10 +144,10 @@
     <ClCompile Include="Engine\3d\Object3dCommon.cpp">
       <Filter>ソース ファイル\3d</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\3d\ParticleEmitter.cpp">
+    <ClCompile Include="Engine\3d\CPUParticle\ParticleEmitter.cpp">
       <Filter>ソース ファイル\3d</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\3d\ParticleManager.cpp">
+    <ClCompile Include="Engine\3d\CPUParticle\CPUParticleManager.cpp">
       <Filter>ソース ファイル\3d</Filter>
     </ClCompile>
     <ClCompile Include="Engine\audio\Sound.cpp">
@@ -183,7 +183,7 @@
     <ClCompile Include="Engine\base\PostProcess.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\3d\IParticleMesh.cpp">
+    <ClCompile Include="Engine\3d\CPUParticle\IParticleMesh.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Engine\scene\AbstractSceneFactory.cpp">
@@ -292,10 +292,10 @@
     <ClInclude Include="Engine\base\SrvManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\3d\ParticleManager.h">
+    <ClInclude Include="Engine\3d\CPUParticle\CPUParticleManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\3d\ParticleEmitter.h">
+    <ClInclude Include="Engine\3d\CPUParticle\ParticleEmitter.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Engine\base\ImGuiManager.h">
@@ -361,7 +361,7 @@
     <ClInclude Include="Engine\base\PostProcess.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\3d\IParticleMesh.h">
+    <ClInclude Include="Engine\3d\CPUParticle\IParticleMesh.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Engine\scene\AbstractSceneFactory.h">
