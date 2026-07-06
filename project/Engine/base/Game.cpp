@@ -3,8 +3,8 @@
 #include "D3dResourceLeakChecker.h"
 
 #include "../3d/Object3dCommon.h"
-#include "../3d/ParticleEmitter.h"
-#include "../3d/ParticleManager.h"
+#include "../3d/CPUParticle/ParticleEmitter.h"
+#include "../3d/CPUParticle/CPUParticleManager.h"
 #include "../io/Input.h"
 #include "ImGuiManager.h"
 #include "Logger.h"

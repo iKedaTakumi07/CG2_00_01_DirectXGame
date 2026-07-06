@@ -1,5 +1,5 @@
 #pragma once
-#include "../base/Math.h"
+#include "../../base/Math.h"
 #include <d3d12.h>
 #include <list>
 #include <memory>
@@ -57,17 +57,17 @@ struct EmitterParam {
     void SetLifeTime(float lifeTime) { minLifeTime = maxLifeTime = lifeTime; }
 };
 
-class ParticleManager {
+class CPUParticleManager {
 public:
     // コンストラクタに渡すための鍵
     class ConstructorKey {
     private:
         ConstructorKey() = default;
-        friend class ParticleManager;
+        friend class CPUParticleManager;
     };
 
     // passkeyを受け取るコンストラクタ
-    explicit ParticleManager(ConstructorKey) { }
+    explicit CPUParticleManager(ConstructorKey) { }
 
     struct ParticleGroup {
         // 1. マテリアルデータ
@@ -92,7 +92,7 @@ public:
         ParticleMeshType meshType; // 判別用に保存しておくと便利
     };
 
-    static ParticleManager* getInstance();
+    static CPUParticleManager* getInstance();
 
     void Finalize();
 
@@ -111,12 +111,12 @@ public:
     void SetDefaultCamera(Camera* camera) { this->Camera_ = camera; }
     void SetGroupScrollSpeed(const std::string& name, const Vector2& speed);
 
-    ParticleManager(ParticleManager&) = delete;
-    ParticleManager& operator=(ParticleManager&) = delete;
+    CPUParticleManager(CPUParticleManager&) = delete;
+    CPUParticleManager& operator=(CPUParticleManager&) = delete;
 
 private:
-    friend struct std::default_delete<ParticleManager>;
-    ~ParticleManager() = default;
+    friend struct std::default_delete<CPUParticleManager>;
+    ~CPUParticleManager() = default;
 
 private:
     SrvManager* srvManager = nullptr;
@@ -127,7 +127,7 @@ private:
 
     ModelData model;
 
-    static std::unique_ptr<ParticleManager> instance;
+    static std::unique_ptr<CPUParticleManager> instance;
     const uint32_t kMaxInstanceCount = 100;
     const float kDeltaTime = 1.0f / 60.0f;
 

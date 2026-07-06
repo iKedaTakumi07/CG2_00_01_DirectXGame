@@ -1,9 +1,9 @@
-#include "ParticleManager.h"
-#include "../base/DirectXCommon.h"
-#include "../base/Logger.h"
-#include "../base/SrvManager.h"
-#include "../base/TextureManager.h"
-#include "Camera.h"
+#include "CPUParticleManager.h"
+#include "../../base/DirectXCommon.h"
+#include "../../base/Logger.h"
+#include "../../base/SrvManager.h"
+#include "../../base/TextureManager.h"
+#include "../Camera.h"
 #include "IParticleMesh.h"
 #include <cassert>
 #include <numbers>
@@ -66,21 +66,21 @@ Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate,
     return particle;
 }
 
-std::unique_ptr<ParticleManager> ParticleManager::instance = nullptr;
+std::unique_ptr<CPUParticleManager> CPUParticleManager::instance = nullptr;
 
-ParticleManager* ParticleManager::getInstance()
+CPUParticleManager* CPUParticleManager::getInstance()
 {
     if (instance == nullptr) {
-        instance = std::make_unique<ParticleManager>(ConstructorKey());
+        instance = std::make_unique<CPUParticleManager>(ConstructorKey());
     }
     return instance.get();
 }
 
-void ParticleManager::Finalize()
+void CPUParticleManager::Finalize()
 {
 }
 
-void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager)
+void CPUParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* srvManager)
 {
     dxCommon = DirectXCollision;
     this->srvManager = srvManager;
@@ -97,7 +97,7 @@ void ParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager* sr
     // 頂点データの初期化
 }
 
-void ParticleManager::Update()
+void CPUParticleManager::Update()
 {
     const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
     Matrix4x4 viewMatrix = Inverse(Camera_->GetWorldMatrix());
@@ -194,7 +194,7 @@ void ParticleManager::Update()
     }
 }
 
-void ParticleManager::Draw()
+void CPUParticleManager::Draw()
 {
 
     auto* commandList = dxCommon->GetCommandList();
@@ -233,7 +233,7 @@ void ParticleManager::Draw()
     }
 }
 
-void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
+void CPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
 {
     // RootSignature作成
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
@@ -316,7 +316,7 @@ void ParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
     assert(SUCCEEDED(hr));
 }
 
-void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
+void CPUParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
 {
     // ルートシグネチャ作成
     RootSignatureInitialize(dxcommon);
@@ -403,7 +403,7 @@ void ParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     assert(SUCCEEDED(hr));
 }
 
-void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath, ParticleMeshType meshType)
+void CPUParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath, ParticleMeshType meshType)
 {
     // 登録済みチェック
     auto it = particleGroups.find(name);
@@ -471,7 +471,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     particleGroups.emplace(name, std::move(group));
 }
 
-void ParticleManager::Emit(const std::string name, const Transform& transform, uint32_t count, const EmitterParam& param)
+void CPUParticleManager::Emit(const std::string name, const Transform& transform, uint32_t count, const EmitterParam& param)
 {
     auto it = particleGroups.find(name);
     assert(it != particleGroups.end());
@@ -484,7 +484,7 @@ void ParticleManager::Emit(const std::string name, const Transform& transform, u
     }
 }
 
-void ParticleManager::SetGroupScrollSpeed(const std::string& name, const Vector2& speed)
+void CPUParticleManager::SetGroupScrollSpeed(const std::string& name, const Vector2& speed)
 {
     auto it = particleGroups.find(name);
     if (it != particleGroups.end()) {

@@ -1,6 +1,6 @@
 #include "ParticleEmitter.h"
-#include "../scene/SceneManager.h"
-#include "ParticleManager.h"
+#include "../../scene/SceneManager.h"
+#include "CPUParticleManager.h"
 
 ParticleEmitter::ParticleEmitter(const std::string& groupName, const Transform& transform, float emitRate, uint32_t emitCount, bool isLoop)
     : groupName_(groupName)
@@ -43,5 +43,5 @@ void ParticleEmitter::Update()
 
 void ParticleEmitter::Emit()
 {
-    ParticleManager::getInstance()->Emit(groupName_, transform_, emitCount_, param_);
+    CPUParticleManager::getInstance()->Emit(groupName_, transform_, emitCount_, param_);
 }

@@ -19,8 +19,8 @@
 #include "../3d/Skybox/SkyBoxCommon.h"
 #include "../3d/Skybox/Skybox.h"
 
-#include "../3d/ParticleEmitter.h"
-#include "../3d/ParticleManager.h"
+#include "../3d/CPUParticle/ParticleEmitter.h"
+#include "../3d/CPUParticle/CPUParticleManager.h"
 
 #include "../io/Input.h"
 
@@ -71,17 +71,18 @@ void TitleScene::Initialize()
     model_2 = std::make_unique<Model>();
     model_2->Initialize("resources", "human/walk.gltf");
     object3d_2->SetScale({ 100.0f, 100.0f, 100.0f });
+    object3d_2->SetRotate({ -1.5f, 3.14f, 0.0f });
     // model_2->SetEvnTexturefilePath(skydox->GetTextureFilePath());
     object3d_2->SetModel(model_2.get()); // スケルトンもセットで構築
     object3d_2->LoadAnimation("resources", "human/walk.gltf", "walk");
     object3d_2->LoadAnimation("resources", "human/sneakWalk.gltf", "sneakWalk");
     object3d_2->PlayAnimation("sneakWalk", true);
 
-    ParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
-    ParticleManager::getInstance()->CreateParticleGroup("circle3", "resources/circle3.png", ParticleMeshType::kPlane);
-    ParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
-    ParticleManager::getInstance()->CreateParticleGroup("gradationLine", "resources/gradationLine.png", ParticleMeshType::kRing);
-    ParticleManager::getInstance()->CreateParticleGroup("Cylinder", "resources/gradationLine.png", ParticleMeshType::kCylinder);
+    CPUParticleManager::getInstance()->CreateParticleGroup("pori", "resources/circle2.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("circle3", "resources/circle3.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("gradationLine", "resources/gradationLine.png", ParticleMeshType::kRing);
+    CPUParticleManager::getInstance()->CreateParticleGroup("Cylinder", "resources/gradationLine.png", ParticleMeshType::kCylinder);
 
     // ポストエフェクトのON/OFFならこれ。
     PostProcess::GetInstance()->SetEnableBoxFilter(false);
@@ -94,16 +95,16 @@ void TitleScene::Initialize()
     emitter.scale = { 0.05f, 1.0f, 1.0f };
     EmitterParam fireParam;
 
-    particleEmitter2 = std::make_unique<ParticleEmitter>("gradationLine", emitter, 0.8f, 3, true);
-    fireParam.maxRotate = { std::numbers::pi_v<float>, std::numbers::pi_v<float>, 0.0f };
-    fireParam.minRotate = { -std::numbers::pi_v<float>, -std::numbers::pi_v<float>, 0.0f };
-    fireParam.maxScale = { 1.0f, 1.0f, 1.0f };
-    fireParam.minScale = { 1.0f, 0.4f, 1.0f };
-    fireParam.SetStartColor({ 1.0f, 1.0f, 0.5f, 1.0f });
-    fireParam.SetEndColor({ 1.0f, 1.0f, 1.0f, 0.0f });
-    fireParam.SetVelocity({ 0.0f, 0.0f, 0.0f });
-    fireParam.SetLifeTime(1.2f);
-    particleEmitter2->SetParam(fireParam);
+    // particleEmitter2 = std::make_unique<ParticleEmitter>("gradationLine", emitter, 0.8f, 3, true);
+    // fireParam.maxRotate = { std::numbers::pi_v<float>, std::numbers::pi_v<float>, 0.0f };
+    // fireParam.minRotate = { -std::numbers::pi_v<float>, -std::numbers::pi_v<float>, 0.0f };
+    // fireParam.maxScale = { 1.0f, 1.0f, 1.0f };
+    // fireParam.minScale = { 1.0f, 0.4f, 1.0f };
+    // fireParam.SetStartColor({ 1.0f, 1.0f, 0.5f, 1.0f });
+    // fireParam.SetEndColor({ 1.0f, 1.0f, 1.0f, 0.0f });
+    // fireParam.SetVelocity({ 0.0f, 0.0f, 0.0f });
+    // fireParam.SetLifeTime(1.2f);
+    // particleEmitter2->SetParam(fireParam);
 
     // [アップデート予定]パーティクルPS閾値をCBuffer経由で設定できるようにする
     /*emitter.translate = { 0.0f, 0.0f, 0.0f };
@@ -148,8 +149,8 @@ void TitleScene::Update()
     object3d->Update();
     object3d_2->Update();
 
-    particleEmitter2->Update();
-    /*particleEmitter4->Update();*/
+    // particleEmitter2->Update();
+    // particleEmitter4->Update();
 
     // 5秒ごとに生成(軽いテストなう)
     if (testTimer >= 5.0f) {
@@ -185,5 +186,5 @@ void TitleScene::Draw()
 
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
 
-    ParticleManager::getInstance()->Draw();
+    CPUParticleManager::getInstance()->Draw();
 }
