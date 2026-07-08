@@ -19,8 +19,9 @@
 #include "../3d/Skybox/SkyBoxCommon.h"
 #include "../3d/Skybox/Skybox.h"
 
-#include "../3d/CPUParticle/ParticleEmitter.h"
 #include "../3d/CPUParticle/CPUParticleManager.h"
+#include "../3d/CPUParticle/ParticleEmitter.h"
+#include "../3d/GPUParticleManager.h"
 
 #include "../io/Input.h"
 
@@ -187,4 +188,6 @@ void TitleScene::Draw()
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
 
     CPUParticleManager::getInstance()->Draw();
+
+    GPUParticleManager::getInstance()->Draw();
 }

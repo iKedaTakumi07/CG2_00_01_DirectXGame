@@ -3,7 +3,7 @@
 #include <cmath>
 #include <numbers>
 
-// 補助関数: バッファリソース生成用（既存のdxCommon->CreateBufferResource相当の処理）
+// バッファリソース生成用
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBuffer(ID3D12Device* device, size_t size)
 {
     Microsoft::WRL::ComPtr<ID3D12Resource> resource;

@@ -186,7 +186,7 @@ struct AccelerationField {
     Vector3 acceleration;
     AABB area;
 };
-struct Particle {
+struct CPUParticle {
     Transform transform;
     Vector3 velocity;
     Vector4 startColor;
@@ -195,6 +195,18 @@ struct Particle {
     float lifeTime;
     float currentTime;
     bool isInfinite;
+};
+struct Particle {
+    Vector3 translate;
+    Vector3 scale;
+    float lifeTime;
+    Vector3 velocity;
+    float currentTime;
+    Vector4 color;
+};
+struct PerView {
+    Matrix4x4 viewProjection;
+    Matrix4x4 billboardMatrix;
 };
 enum BlendMode {
     kBlendModeNone, // ブレンドなし

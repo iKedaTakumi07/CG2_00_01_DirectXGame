@@ -39,15 +39,15 @@ struct EmitterParam {
     // 色の最小・最大(グラデーション)
     Vector4 minStartColor = { 1.0f, 1.0f, 1.0f, 1.0f };
     Vector4 maxStartColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-    Vector4 minEndColor = { 1.0f, 1.0f, 1.0f, 1.0f }; 
-    Vector4 maxEndColor = { 1.0f, 1.0f, 1.0f, 1.0f }; 
+    Vector4 minEndColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    Vector4 maxEndColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
     // 寿命の最小・最大
     float minLifeTime = 1.0f;
     float maxLifeTime = 2.0f;
 
     bool isInfinite = false; // パーティクル自体を消滅させないかどうか?
-    
+
     // 固定値で運用可能にするため
     void SetScale(const Vector3& scale) { minScale = maxScale = scale; }
     void SetRotate(const Vector3& rotate) { minRotate = maxRotate = rotate; }
@@ -73,7 +73,7 @@ public:
         // 1. マテリアルデータ
         MaterialData material;
         // 2. パーティクルリスト
-        std::list<Particle> particles;
+        std::list<CPUParticle> particles;
         // 3. テクスチャ用 SRV インデックス
         uint32_t textureSrvIndex = 0;
         // 4. インスタンシング用リソース
@@ -139,7 +139,7 @@ private:
     void MaterialResourceInitialize();
 
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView {};
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView { };
     VertexData* vertexData = nullptr;
 
     std::unordered_map<std::string, ParticleGroup> particleGroups;
