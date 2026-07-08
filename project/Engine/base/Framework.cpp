@@ -20,8 +20,9 @@
 
 #include <wrl.h>
 
-#include "../3d/ModelManager.h"
 #include "../3d/CPUParticle/CPUParticleManager.h"
+#include "../3d/GPUParticleManager.h"
+#include "../3d/ModelManager.h"
 #include "../audio/Audio.h"
 #include "TextureManager.h"
 #include <DbgHelp.h>
@@ -96,8 +97,12 @@ void Framework::Initialize()
 
     TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     ModelManager::GetInstance()->Initialize(dxCommon.get());
+
     CPUParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     CPUParticleManager::getInstance()->SetDefaultCamera(camera.get());
+
+    GPUParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
+    GPUParticleManager::getInstance()->SetDefaultCamera(camera.get());
 
     PostProcess::GetInstance()->Initialize(dxCommon.get());
     PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
@@ -162,6 +167,8 @@ void Framework::Update()
     LightManager::GetInstance()->Update();
 
     CPUParticleManager::getInstance()->Update();
+
+    GPUParticleManager::getInstance()->Update();
 }
 
 void Framework::Finalize()

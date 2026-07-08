@@ -8,7 +8,7 @@
 #include <cassert>
 #include <numbers>
 
-Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate, const EmitterParam& param)
+CPUParticle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate, const EmitterParam& param)
 {
     // [後日]emitter側に細かい指定を保存させて、任意で入力できるようにする。。
 
@@ -17,7 +17,7 @@ Particle MakeNewParticle(std::mt19937& randomEngine, const Transform& translate,
         return dist(randomEngine);
     };
 
-    Particle particle;
+    CPUParticle particle;
 
     // サイズ
     particle.transform.scale = {
@@ -143,7 +143,7 @@ void CPUParticleManager::Update()
         for (auto it = group.particles.begin();
             it != group.particles.end();) {
 
-            Particle& particle = *it;
+            CPUParticle& particle = *it;
 
             // 寿命判定
             if (!particle.isInfinite && particle.currentTime >= particle.lifeTime) {
@@ -362,10 +362,10 @@ void CPUParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
     // Shaderをコンパイルする
-    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/Particle.VS.hlsl", L"vs_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxcommon->CompileShader(L"resources/shaders/CPUParticle.VS.hlsl", L"vs_6_0");
     assert(vertexShaderBlob != nullptr);
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = dxcommon->CompileShader(L"resources/shaders/Particle.PS.hlsl", L"ps_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = dxcommon->CompileShader(L"resources/shaders/CPUParticle.PS.hlsl", L"ps_6_0");
     assert(pixeShaderBlob != nullptr);
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
@@ -479,7 +479,7 @@ void CPUParticleManager::Emit(const std::string name, const Transform& transform
     ParticleGroup& group = it->second;
 
     for (uint32_t i = 0; i < count; ++i) {
-        Particle particle = MakeNewParticle(randomEngine, transform, param);
+        CPUParticle particle = MakeNewParticle(randomEngine, transform, param);
         group.particles.push_back(particle);
     }
 }
