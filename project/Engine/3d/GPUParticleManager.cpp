@@ -34,14 +34,6 @@ void GPUParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager*
 
     PrepareCSObjectDraw();
     CSInitialize();
-    // 重要: CSでの書き込み完了を待機するUAVバリアを発行
-    D3D12_RESOURCE_BARRIER barrier = { };
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    // UAVとして書き込んだリソースを指定
-    auto* commandList = dxCommon->GetCommandList();
-    barrier.UAV.pResource = particleResource_.Get();
-    commandList->ResourceBarrier(1, &barrier);
 }
 
 void GPUParticleManager::Update()
@@ -50,9 +42,6 @@ void GPUParticleManager::Update()
         return;
     }
 
-    // ==========================================
-    // カメラ行列の計算 (CPUParticleManager から流用)
-    // ==========================================
     const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
 
     // ビルボード行列の計算
@@ -63,9 +52,6 @@ void GPUParticleManager::Update()
     billboardMatrix.m[3][1] = 0.0f;
     billboardMatrix.m[3][2] = 0.0f;
 
-    // ==========================================
-    // GPU上の定数バッファへ転送
-    // ==========================================
     PerView* perViewData = nullptr;
     perViewResource->Map(0, nullptr, reinterpret_cast<void**>(&perViewData));
 
@@ -73,6 +59,9 @@ void GPUParticleManager::Update()
     perViewData->billboardMatrix = billboardMatrix;
 
     perViewResource->Unmap(0, nullptr);
+
+    PrepareCSObjectDraw();
+    CSUpdate();
 }
 
 void GPUParticleManager::Draw()
@@ -102,7 +91,7 @@ void GPUParticleManager::Draw()
     srvManager->SetGraphicsRootDescriptorTable(3, textureSrvIndex);
 
     // お試し1024
-    commandList->DrawInstanced(6, 1024, 0, 0);
+    commandList->DrawInstanced(6, kMaxParticles, 0, 0);
 }
 
 void GPUParticleManager::PrepareCSObjectDraw()
@@ -120,6 +109,33 @@ void GPUParticleManager::CSInitialize()
 
     // とりあえずお試し1024
     cmdList->Dispatch(1, 1, 1);
+
+    // バリア張る
+    D3D12_RESOURCE_BARRIER barrier = { };
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    // UAVとして書き込んだリソースを指定
+    auto* commandList = dxCommon->GetCommandList();
+    barrier.UAV.pResource = particleResource_.Get();
+    commandList->ResourceBarrier(1, &barrier);
+}
+
+void GPUParticleManager::CSUpdate()
+{
+    auto* cmdList = dxCommon->GetCommandList();
+
+    // パーティクルリソースをセット
+    cmdList->SetComputeRootUnorderedAccessView(0, particleResource_->GetGPUVirtualAddress());
+
+    // 実行
+    cmdList->Dispatch(1, 1, 1);
+
+    // 書き込み終わるまで待つバリア
+    D3D12_RESOURCE_BARRIER barrier = { };
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrier.UAV.pResource = particleResource_.Get();
+    cmdList->ResourceBarrier(1, &barrier);
 }
 
 void GPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)

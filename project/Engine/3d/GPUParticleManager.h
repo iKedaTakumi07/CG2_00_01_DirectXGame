@@ -1,4 +1,5 @@
 #pragma once
+#include "../base/Math.h"
 #include <d3d12.h>
 #include <list>
 #include <memory>
@@ -6,7 +7,6 @@
 #include <string>
 #include <unordered_map>
 #include <wrl.h>
-#include "../base/Math.h"
 
 class DirectXCommon;
 class SrvManager;
@@ -40,6 +40,7 @@ public:
     // CS
     void PrepareCSObjectDraw();
     void CSInitialize();
+    void CSUpdate();
 
     GPUParticleManager(GPUParticleManager&) = delete;
     GPUParticleManager& operator=(GPUParticleManager&) = delete;
@@ -68,6 +69,7 @@ private:
     // 各リソース
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
     Microsoft::WRL::ComPtr<ID3D12Resource> perViewResource;
+
     uint32_t instancingSrvIndex = 0;
     uint32_t textureSrvIndex = 0;
 
@@ -84,5 +86,5 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> particleResource_;
 
     static std::unique_ptr<GPUParticleManager> instance;
-    const int kMaxParticles = 1024;
+    int kMaxParticles = 1024;
 };
