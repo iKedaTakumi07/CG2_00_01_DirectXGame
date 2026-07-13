@@ -37,9 +37,12 @@ public:
     // set
     void SetDefaultCamera(Camera* camera) { this->Camera_ = camera; }
 
-    // CS
-    void PrepareCSObjectDraw();
+    // CSInitialize
+    void PrepareCSInitialize();
     void CSInitialize();
+
+    // CSUpdate
+    void PrepareCSUpdate();
     void CSUpdate();
 
     GPUParticleManager(GPUParticleManager&) = delete;
@@ -53,9 +56,13 @@ private:
     void RootSignatureInitialize(DirectXCommon* dxcommon);
     void graphicsPipelineInitialize(DirectXCommon* dxcommon);
 
-    // Cs用パイプライン
+    // CS初期化用パイプライン
     void CSRootSignatureInitialize(DirectXCommon* dxcommon);
     void CSPipelineInitialize(DirectXCommon* dxcommon);
+
+    // CS更新用パイプライン
+    void CSUpdateRootSignatureInitialize(DirectXCommon* dxcommon);
+    void CSUpdatePipelineInitialize(DirectXCommon* dxcommon);
 
     void ResourceInitialize();
 
@@ -78,12 +85,31 @@ private:
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView { };
     VertexData* vertexData = nullptr;
 
+    // Sphere
+    Microsoft::WRL::ComPtr<ID3D12Resource> SphereResource;
+    EmitterSphere* eitterSphere = nullptr;
+
+    // VS/PS
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> csRootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> csPipelineState;
+    // 初期化用CS
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> csInitRootSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> csInitPipelineState;
+
+    // 更新用CS
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> csUpdateRootSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> csUpdatePipelineState;
+
+    // 
     Microsoft::WRL::ComPtr<ID3D12Resource> particleResource_;
+
+    // カウンター
+    Microsoft::WRL::ComPtr<ID3D12Resource> freeCounterResource;
+
+    // random
+    Microsoft::WRL::ComPtr<ID3D12Resource> randomResource;
+    PreFrame* PreFrameData_ = nullptr;
 
     static std::unique_ptr<GPUParticleManager> instance;
     int kMaxParticles = 1024;
