@@ -101,7 +101,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> csUpdateRootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> csUpdatePipelineState;
 
-    // 
+    //  パーティクル構造体
     Microsoft::WRL::ComPtr<ID3D12Resource> particleResource_;
 
     // カウンター
