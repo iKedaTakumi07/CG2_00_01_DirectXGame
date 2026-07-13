@@ -236,6 +236,18 @@ struct SpotLigth {
     float cosFalloffStart; // スポットライトの内側の角度（減衰開始の余弦）
     int32_t active;
 };
+struct EmitterSphere {
+    Vector3 translate; // 位置
+    float radius; // 射出半径
+    uint32_t count; // 数
+    float frequency; // 射出時間
+    float frequemcyTime; // 射出間隔調整用時間
+    uint32_t emit; // 射出許可
+};
+struct PreFrame {
+    float time;
+    float deltaTime;
+};
 
 bool AreMatricesEqual(const Matrix4x4& a, const Matrix4x4& b, float epsilon = 1e-5f);
 

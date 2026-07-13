@@ -6,6 +6,7 @@
 #include "../base/SrvManager.h"
 #include "../base/TextureManager.h"
 #include "../base/WinApp.h"
+#include "../scene/SceneManager.h"
 
 #include <memory>
 #include <numbers>
@@ -29,10 +30,11 @@ void GPUParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager*
 
     graphicsPipelineInitialize(dxCommon);
     CSPipelineInitialize(dxCommon);
+    CSUpdatePipelineInitialize(dxCommon);
 
     ResourceInitialize();
 
-    PrepareCSObjectDraw();
+    PrepareCSInitialize();
     CSInitialize();
 }
 
@@ -40,6 +42,19 @@ void GPUParticleManager::Update()
 {
     if (!Camera_) {
         return;
+    }
+
+    float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+    eitterSphere->frequemcyTime += deltaTime;
+
+    PreFrameData_->deltaTime = deltaTime;
+    PreFrameData_->time += deltaTime;
+
+    if (eitterSphere->frequency <= eitterSphere->frequemcyTime) {
+        eitterSphere->frequemcyTime -= eitterSphere->frequency;
+        eitterSphere->emit = 1;
+    } else {
+        eitterSphere->emit = 0;
     }
 
     const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
@@ -60,7 +75,7 @@ void GPUParticleManager::Update()
 
     perViewResource->Unmap(0, nullptr);
 
-    PrepareCSObjectDraw();
+    PrepareCSUpdate();
     CSUpdate();
 }
 
@@ -94,10 +109,10 @@ void GPUParticleManager::Draw()
     commandList->DrawInstanced(6, kMaxParticles, 0, 0);
 }
 
-void GPUParticleManager::PrepareCSObjectDraw()
+void GPUParticleManager::PrepareCSInitialize()
 {
-    dxCommon->GetCommandList()->SetComputeRootSignature(csRootSignature.Get());
-    dxCommon->GetCommandList()->SetPipelineState(csPipelineState.Get());
+    dxCommon->GetCommandList()->SetComputeRootSignature(csInitRootSignature.Get());
+    dxCommon->GetCommandList()->SetPipelineState(csInitPipelineState.Get());
 }
 
 void GPUParticleManager::CSInitialize()
@@ -106,6 +121,9 @@ void GPUParticleManager::CSInitialize()
 
     // u0
     cmdList->SetComputeRootUnorderedAccessView(0, particleResource_->GetGPUVirtualAddress());
+
+    // u1
+    cmdList->SetComputeRootUnorderedAccessView(1, freeCounterResource->GetGPUVirtualAddress());
 
     // とりあえずお試し1024
     cmdList->Dispatch(1, 1, 1);
@@ -120,22 +138,52 @@ void GPUParticleManager::CSInitialize()
     commandList->ResourceBarrier(1, &barrier);
 }
 
+void GPUParticleManager::PrepareCSUpdate()
+{
+    dxCommon->GetCommandList()->SetComputeRootSignature(csUpdateRootSignature.Get());
+    dxCommon->GetCommandList()->SetPipelineState(csUpdatePipelineState.Get());
+}
+
 void GPUParticleManager::CSUpdate()
 {
     auto* cmdList = dxCommon->GetCommandList();
 
-    // パーティクルリソースをセット
+    D3D12_RESOURCE_BARRIER barrier = { };
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = particleResource_.Get();
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    cmdList->ResourceBarrier(1, &barrier);
+
+    // u0
     cmdList->SetComputeRootUnorderedAccessView(0, particleResource_->GetGPUVirtualAddress());
 
-    // 実行
+    // u1
+    cmdList->SetComputeRootUnorderedAccessView(1, freeCounterResource->GetGPUVirtualAddress());
+
+    // b0
+    cmdList->SetComputeRootConstantBufferView(2, SphereResource->GetGPUVirtualAddress());
+
+    // b1
+    cmdList->SetComputeRootConstantBufferView(3, randomResource->GetGPUVirtualAddress());
+
+    // とりあえずお試し1024
     cmdList->Dispatch(1, 1, 1);
 
-    // 書き込み終わるまで待つバリア
-    D3D12_RESOURCE_BARRIER barrier = { };
+    // バリア張る
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     barrier.UAV.pResource = particleResource_.Get();
     cmdList->ResourceBarrier(1, &barrier);
+
+    // ステート
+    D3D12_RESOURCE_BARRIER transitionBarrier = { };
+    transitionBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    transitionBarrier.Transition.pResource = particleResource_.Get();
+    transitionBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    transitionBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE; // VSでの読み込み用
+    transitionBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    cmdList->ResourceBarrier(1, &transitionBarrier);
 }
 
 void GPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
@@ -156,7 +204,7 @@ void GPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[5] = { };
+    D3D12_ROOT_PARAMETER rootParameters[4] = { };
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -174,12 +222,6 @@ void GPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[3].DescriptorTable.pDescriptorRanges = descriptorRange;
     rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-
-    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[4].Descriptor.ShaderRegister = 1;
-
-    // [後日]U,V,M,個別で設定できるようにしたい。(可能なら)
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = { };
     // [0] WRAP用 (主にPlane用) -> register(s0)
@@ -317,12 +359,17 @@ void GPUParticleManager::CSRootSignatureInitialize(DirectXCommon* dxcommon)
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
 
-    D3D12_ROOT_PARAMETER rootParameters[1] = { };
+    D3D12_ROOT_PARAMETER rootParameters[2] = { };
 
     // u0: gOutputVertices (UAV)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
     rootParameters[0].Descriptor.ShaderRegister = 0;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // u1
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[1].Descriptor.ShaderRegister = 1;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -336,8 +383,8 @@ void GPUParticleManager::CSRootSignatureInitialize(DirectXCommon* dxcommon)
         assert(false);
     }
 
-    csRootSignature = nullptr;
-    hr = dxcommon->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&csRootSignature));
+    csInitRootSignature = nullptr;
+    hr = dxcommon->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&csInitRootSignature));
 }
 
 void GPUParticleManager::CSPipelineInitialize(DirectXCommon* dxcommon)
@@ -355,10 +402,74 @@ void GPUParticleManager::CSPipelineInitialize(DirectXCommon* dxcommon)
         .pShaderBytecode = computeShaderBlob->GetBufferPointer(),
         .BytecodeLength = computeShaderBlob->GetBufferSize()
     };
-    computePipelineStateDesc.pRootSignature = csRootSignature.Get();
+    computePipelineStateDesc.pRootSignature = csInitRootSignature.Get();
 
-    csPipelineState = nullptr;
-    hr = dxcommon->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&csPipelineState));
+    csInitPipelineState = nullptr;
+    hr = dxcommon->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&csInitPipelineState));
+}
+
+void GPUParticleManager::CSUpdateRootSignatureInitialize(DirectXCommon* dxcommon)
+{
+    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
+    descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
+
+    D3D12_ROOT_PARAMETER rootParameters[4] = { };
+
+    // u0: gOutputVertices (UAV)
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[0].Descriptor.ShaderRegister = 0;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // u1
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[1].Descriptor.ShaderRegister = 1;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // b0
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[2].Descriptor.ShaderRegister = 0;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // b1
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[3].Descriptor.ShaderRegister = 1;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    descriptionRootSignature.pParameters = rootParameters;
+    descriptionRootSignature.NumParameters = _countof(rootParameters);
+
+    HRESULT hr;
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+    hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+    if (FAILED(hr)) {
+        Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        assert(false);
+    }
+
+    csUpdateRootSignature = nullptr;
+    hr = dxcommon->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&csUpdateRootSignature));
+}
+
+void GPUParticleManager::CSUpdatePipelineInitialize(DirectXCommon* dxcommon)
+{
+    CSUpdateRootSignatureInitialize(dxcommon);
+
+    HRESULT hr;
+
+    // CSをコンパイル
+    Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob = dxcommon->CompileShader(L"resources/shaders/EmitParticle.CS.hlsl", L"cs_6_0");
+    assert(computeShaderBlob != nullptr);
+    // PSOの設定
+    D3D12_COMPUTE_PIPELINE_STATE_DESC computePipelineStateDesc { };
+    computePipelineStateDesc.CS = {
+        .pShaderBytecode = computeShaderBlob->GetBufferPointer(),
+        .BytecodeLength = computeShaderBlob->GetBufferSize()
+    };
+    computePipelineStateDesc.pRootSignature = csUpdateRootSignature.Get();
+
+    csUpdatePipelineState = nullptr;
+    hr = dxcommon->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&csUpdatePipelineState));
 }
 
 void GPUParticleManager::ResourceInitialize()
@@ -389,6 +500,16 @@ void GPUParticleManager::ResourceInitialize()
     mappedVertexData[5] = { { -1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } };
     vertexResource->Unmap(0, nullptr);
 
+    // エミッタデータ
+    SphereResource = dxCommon->CreateBufferResource(sizeof(EmitterSphere));
+    SphereResource->Map(0, nullptr, reinterpret_cast<void**>(&eitterSphere));
+    eitterSphere->count = 10;
+    eitterSphere->frequency = 0.5f;
+    eitterSphere->frequemcyTime = 0.0f;
+    eitterSphere->translate = Vector3(0.0f, 0.0f, 0.0f);
+    eitterSphere->radius = 1.0f;
+    eitterSphere->emit = 0;
+
     // マテリある
     materialResource = dxCommon->CreateBufferResource(sizeof(ParticleMaterial));
     ParticleMaterial* materialData = nullptr;
@@ -402,7 +523,12 @@ void GPUParticleManager::ResourceInitialize()
     // カメラ
     perViewResource = dxCommon->CreateBufferResource(sizeof(PerView));
 
-    // パーチ来る構造化生成
+    randomResource = dxCommon->CreateBufferResource(sizeof(PreFrame));
+    randomResource->Map(0, nullptr, reinterpret_cast<void**>(&PreFrameData_));
+    PreFrameData_->time = 0;
+    PreFrameData_->deltaTime = 0;
+
+    // パーティクル構造化バッファ生成
     size_t particleBufferSize = sizeof(Particle) * kMaxParticles;
 
     D3D12_HEAP_PROPERTIES heapProps { };
@@ -422,6 +548,27 @@ void GPUParticleManager::ResourceInitialize()
     device->CreateCommittedResource(
         &heapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&particleResource_));
+
+    // カウンター用バッフア
+    size_t counterBufferSize = sizeof(int32_t);
+
+    D3D12_HEAP_PROPERTIES counterHeapProps { };
+    counterHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    D3D12_RESOURCE_DESC counterResDesc { };
+    counterResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    counterResDesc.Width = particleBufferSize;
+    counterResDesc.Height = 1;
+    counterResDesc.DepthOrArraySize = 1;
+    counterResDesc.MipLevels = 1;
+    counterResDesc.Format = DXGI_FORMAT_UNKNOWN;
+    counterResDesc.SampleDesc.Count = 1;
+    counterResDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    counterResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    device->CreateCommittedResource(
+        &heapProps, D3D12_HEAP_FLAG_NONE, &counterResDesc,
+        D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&freeCounterResource));
 
     instancingSrvIndex = srvManager->Allocate();
     srvManager->CreateSRVforStructuredBuffer(instancingSrvIndex, particleResource_.Get(), kMaxParticles, sizeof(Particle));
