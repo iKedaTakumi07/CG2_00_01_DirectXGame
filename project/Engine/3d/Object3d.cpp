@@ -234,7 +234,7 @@ void Object3d::Draw()
         // CSを実行（頂点バッファを書き換える）
         model->CSDraw(animator_->GetSkinCluster());
 
-        // 重要: CSでの書き込み完了を待機するUAVバリアを発行
+        // CSでの書き込み完了を待機するUAVバリアを発行
         D3D12_RESOURCE_BARRIER barrier = { };
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
         barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
