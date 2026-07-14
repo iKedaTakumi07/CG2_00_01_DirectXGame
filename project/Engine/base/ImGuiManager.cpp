@@ -44,6 +44,9 @@ void ImGuiManager::Initialize([[maybe_unused]] DirectXCommon* dxCommon, [[maybe_
     // SRV解放用関数の設定
     initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo* info, D3D12_CPU_DESCRIPTOR_HANDLE out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE out_gpu_handle) {
         // SrvMnagerに解放機能を作っていないため、ここでは何もしない。
+        (void)info;
+        (void)out_cpu_handle;
+        (void)out_gpu_handle;
     };
 
     // 初期化実行

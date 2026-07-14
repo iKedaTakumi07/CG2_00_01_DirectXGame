@@ -123,9 +123,7 @@ void Framework::Run()
 
     while (true) {
 
-        imguiManager->Begin();
         Update();
-        imguiManager->End();
 
         if (IsEndRequst()) {
             break;

@@ -2,9 +2,9 @@
 
 #include "D3dResourceLeakChecker.h"
 
-#include "../3d/Object3dCommon.h"
-#include "../3d/CPUParticle/ParticleEmitter.h"
 #include "../3d/CPUParticle/CPUParticleManager.h"
+#include "../3d/CPUParticle/ParticleEmitter.h"
+#include "../3d/Object3dCommon.h"
 #include "../io/Input.h"
 #include "ImGuiManager.h"
 #include "Logger.h"
@@ -36,11 +36,15 @@ void Game::Initialize()
 
 void Game::Update()
 {
+    Framework::GetImGuiManager()->Begin();
+
     // update/更新処理
     Framework::Update();
 
     SceneManager::GetInstance()->Update();
     PostProcess::GetInstance()->Update();
+
+    Framework::GetImGuiManager()->End();
 }
 
 void Game::Draw()
