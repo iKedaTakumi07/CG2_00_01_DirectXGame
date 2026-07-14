@@ -51,6 +51,7 @@ public:
         return device.Get();
     };
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+    ID3D12CommandQueue* GetCommandQueue() const { return commandQueue.Get(); }
     HANDLE GetfenceEvent() { return fenceEvent; }
     ID3D12Resource* GetDepthStencilResource() { return depthStencilResource.Get(); }
 

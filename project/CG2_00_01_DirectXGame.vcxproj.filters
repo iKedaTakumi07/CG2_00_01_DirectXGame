@@ -394,6 +394,9 @@
     <ClInclude Include="Engine\3d\GPUParticleManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="resources\json.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\Object3d.hlsli">
