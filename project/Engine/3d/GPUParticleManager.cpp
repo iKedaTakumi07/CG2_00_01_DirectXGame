@@ -45,13 +45,13 @@ void GPUParticleManager::Update()
     }
 
     float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
-    eitterSphere->frequemcyTime += deltaTime;
+    eitterSphere->frequencyTime += deltaTime;
 
     PreFrameData_->deltaTime = deltaTime;
     PreFrameData_->time += deltaTime;
 
-    if (eitterSphere->frequency <= eitterSphere->frequemcyTime) {
-        eitterSphere->frequemcyTime -= eitterSphere->frequency;
+    if (eitterSphere->frequency <= eitterSphere->frequencyTime) {
+        eitterSphere->frequencyTime -= eitterSphere->frequency;
         eitterSphere->emit = 1;
     } else {
         eitterSphere->emit = 0;
@@ -505,7 +505,7 @@ void GPUParticleManager::ResourceInitialize()
     SphereResource->Map(0, nullptr, reinterpret_cast<void**>(&eitterSphere));
     eitterSphere->count = 10;
     eitterSphere->frequency = 0.5f;
-    eitterSphere->frequemcyTime = 0.0f;
+    eitterSphere->frequencyTime = 0.0f;
     eitterSphere->translate = Vector3(0.0f, 0.0f, 0.0f);
     eitterSphere->radius = 1.0f;
     eitterSphere->emit = 0;
