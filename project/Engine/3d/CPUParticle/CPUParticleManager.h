@@ -129,7 +129,6 @@ private:
 
     static std::unique_ptr<CPUParticleManager> instance;
     const uint32_t kMaxInstanceCount = 100;
-    const float kDeltaTime = 1.0f / 60.0f;
 
     bool useBillboard = false;
 

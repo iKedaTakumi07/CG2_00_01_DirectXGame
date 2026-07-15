@@ -4,6 +4,7 @@
 #include "../../base/SrvManager.h"
 #include "../../base/TextureManager.h"
 #include "../Camera.h"
+#include "../../scene/SceneManager.h"
 #include "IParticleMesh.h"
 #include <cassert>
 #include <numbers>
@@ -102,6 +103,8 @@ void CPUParticleManager::Update()
     const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
     Matrix4x4 viewMatrix = Inverse(Camera_->GetWorldMatrix());
 
+  const float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+
     Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
     Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, Camera_->GetWorldMatrix());
     billboardMatrix.m[3][0] = 0.0f;
@@ -112,8 +115,8 @@ void CPUParticleManager::Update()
     for (auto& [name, group] : particleGroups) {
 
         // スクロールの計算
-        group.uvOffset.x += group.uvScrollSpeed.x * kDeltaTime;
-        group.uvOffset.y += group.uvScrollSpeed.y * kDeltaTime;
+        group.uvOffset.x += group.uvScrollSpeed.x * deltaTime;
+        group.uvOffset.y += group.uvScrollSpeed.y * deltaTime;
 
         // UV行列を送り込む
         ParticleMaterial* materialData = nullptr;
@@ -152,7 +155,7 @@ void CPUParticleManager::Update()
             }
 
             // 移動
-            particle.transform.translate += particle.velocity * kDeltaTime;
+            particle.transform.translate += particle.velocity * deltaTime;
 
             // グラデーション(有限寿命の場合)
             Vector4 finalColor = particle.startColor;
@@ -171,7 +174,7 @@ void CPUParticleManager::Update()
             }
 
             // 経過時間加算
-            particle.currentTime += kDeltaTime;
+            particle.currentTime += deltaTime;
 
             // ワールド行列
             Matrix4x4 worldMatrix = MakeAffineMatrix(particle.transform.scale, particle.transform.rotate, particle.transform.translate);
@@ -236,22 +239,22 @@ void CPUParticleManager::Draw()
 void CPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
 {
     // RootSignature作成
-    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature {};
+    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
+    D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = { };
     descriptorRangeForInstancing[0].BaseShaderRegister = 0;
     descriptorRangeForInstancing[0].NumDescriptors = 1;
     descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = { };
     descriptorRange[0].BaseShaderRegister = 0;
     descriptorRange[0].NumDescriptors = 1;
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+    D3D12_ROOT_PARAMETER rootParameters[4] = { };
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -272,7 +275,7 @@ void CPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
 
     // [後日]U,V,M,個別で設定できるようにしたい。(可能なら)
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = {};
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = { };
     // [0] WRAP用 (主にPlane用) -> register(s0)
     staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -322,7 +325,7 @@ void CPUParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     RootSignatureInitialize(dxcommon);
 
     // InputLayout
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = { };
     inputElementDescs[0].SemanticName = "POSITION";
     inputElementDescs[0].SemanticIndex = 0;
     inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -338,12 +341,12 @@ void CPUParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc {};
+    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc { };
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
     inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
     // BlendStateの設定
-    D3D12_BLEND_DESC blendDesc {};
+    D3D12_BLEND_DESC blendDesc { };
     // 全ての色要素を書き込む
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
     blendDesc.RenderTarget[0].BlendEnable = true;
@@ -355,7 +358,7 @@ void CPUParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
     // RasterizerStateの設定
-    D3D12_RASTERIZER_DESC rasterizerDesc {};
+    D3D12_RASTERIZER_DESC rasterizerDesc { };
     // 裏面(時計回り)を表示しない
     rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
     // 三角形の中を塗りつぶす
@@ -368,7 +371,7 @@ void CPUParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     Microsoft::WRL::ComPtr<IDxcBlob> pixeShaderBlob = dxcommon->CompileShader(L"resources/shaders/CPUParticle.PS.hlsl", L"ps_6_0");
     assert(pixeShaderBlob != nullptr);
 
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc {};
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc { };
     graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
@@ -385,7 +388,7 @@ void CPUParticleManager::graphicsPipelineInitialize(DirectXCommon* dxcommon)
     graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
     // depthStencilStateの設定
-    D3D12_DEPTH_STENCIL_DESC depthStencilDesc {};
+    D3D12_DEPTH_STENCIL_DESC depthStencilDesc { };
     // depthを有効化
     depthStencilDesc.DepthEnable = true;
     // 書き込み
@@ -412,7 +415,7 @@ void CPUParticleManager::CreateParticleGroup(const std::string name, const std::
     }
 
     //  空のグループを作成＆登録
-    ParticleGroup group {};
+    ParticleGroup group { };
 
     group.meshType = meshType;
     // 形状タイプに応じて個別クラスを生成

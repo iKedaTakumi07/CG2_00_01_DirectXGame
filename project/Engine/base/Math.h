@@ -241,7 +241,7 @@ struct EmitterSphere {
     float radius; // 射出半径
     uint32_t count; // 数
     float frequency; // 射出時間
-    float frequemcyTime; // 射出間隔調整用時間
+    float frequencyTime; // 射出間隔調整用時間
     uint32_t emit; // 射出許可
 };
 struct PreFrame {
