@@ -214,6 +214,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\3d\LightManager.cpp" />
     <ClCompile Include="Game\Particle\HitParticle.cpp" />
     <ClCompile Include="Engine\3d\GPUParticleManager.cpp" />
+    <ClCompile Include="Engine\base\LevelLoader.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -576,7 +577,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Game\Particle\HitParticle.h" />
     <ClInclude Include="Game\Player\Player.h" />
     <ClInclude Include="Engine\3d\GPUParticleManager.h" />
-    <ClInclude Include="resources\json.hpp">
+    <ClInclude Include="Engine\base\LevelLoader.h" />
+    <ClInclude Include="resources\nlohmann\json.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
