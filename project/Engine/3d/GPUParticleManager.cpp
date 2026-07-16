@@ -29,7 +29,9 @@ void GPUParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager*
     this->winApp_ = WinApp::GetInstance();
 
     graphicsPipelineInitialize(dxCommon);
+
     CSPipelineInitialize(dxCommon);
+    CSEmitPipelineInitialize(dxCommon);
     CSUpdatePipelineInitialize(dxCommon);
 
     ResourceInitialize();
@@ -75,6 +77,11 @@ void GPUParticleManager::Update()
 
     perViewResource->Unmap(0, nullptr);
 
+    // 射出CS
+    PrepareCSEmit();
+    CSEmit();
+
+    // 更新CS
     PrepareCSUpdate();
     CSUpdate();
 }
@@ -138,13 +145,13 @@ void GPUParticleManager::CSInitialize()
     commandList->ResourceBarrier(1, &barrier);
 }
 
-void GPUParticleManager::PrepareCSUpdate()
+void GPUParticleManager::PrepareCSEmit()
 {
-    dxCommon->GetCommandList()->SetComputeRootSignature(csUpdateRootSignature.Get());
-    dxCommon->GetCommandList()->SetPipelineState(csUpdatePipelineState.Get());
+    dxCommon->GetCommandList()->SetComputeRootSignature(csEmitRootSignature.Get());
+    dxCommon->GetCommandList()->SetPipelineState(csEmitPipelineState.Get());
 }
 
-void GPUParticleManager::CSUpdate()
+void GPUParticleManager::CSEmit()
 {
     auto* cmdList = dxCommon->GetCommandList();
 
@@ -171,19 +178,39 @@ void GPUParticleManager::CSUpdate()
     // とりあえずお試し1024
     cmdList->Dispatch(1, 1, 1);
 
-    // バリア張る
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-    barrier.UAV.pResource = particleResource_.Get();
-    cmdList->ResourceBarrier(1, &barrier);
+    D3D12_RESOURCE_BARRIER uavBarrier = { };
+    uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+    uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    uavBarrier.UAV.pResource = particleResource_.Get();
+    cmdList->ResourceBarrier(1, &uavBarrier);
+}
 
-    // ステート
-    D3D12_RESOURCE_BARRIER transitionBarrier = { };
-    transitionBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    transitionBarrier.Transition.pResource = particleResource_.Get();
-    transitionBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    transitionBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE; // VSでの読み込み用
-    transitionBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    cmdList->ResourceBarrier(1, &transitionBarrier);
+void GPUParticleManager::PrepareCSUpdate()
+{
+    dxCommon->GetCommandList()->SetComputeRootSignature(csUpdateRootSignature.Get());
+    dxCommon->GetCommandList()->SetPipelineState(csUpdatePipelineState.Get());
+}
+
+void GPUParticleManager::CSUpdate()
+{
+    auto* cmdList = dxCommon->GetCommandList();
+
+    // u0
+    cmdList->SetComputeRootUnorderedAccessView(0, particleResource_->GetGPUVirtualAddress());
+
+    // b0
+    cmdList->SetComputeRootConstantBufferView(1, randomResource->GetGPUVirtualAddress());
+
+    // とりあえずお試し1024
+    cmdList->Dispatch(1, 1, 1);
+
+    D3D12_RESOURCE_BARRIER transitionToSRV = { };
+    transitionToSRV.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    transitionToSRV.Transition.pResource = particleResource_.Get();
+    transitionToSRV.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    transitionToSRV.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+    transitionToSRV.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    cmdList->ResourceBarrier(1, &transitionToSRV);
 }
 
 void GPUParticleManager::RootSignatureInitialize(DirectXCommon* dxcommon)
@@ -408,7 +435,7 @@ void GPUParticleManager::CSPipelineInitialize(DirectXCommon* dxcommon)
     hr = dxcommon->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&csInitPipelineState));
 }
 
-void GPUParticleManager::CSUpdateRootSignatureInitialize(DirectXCommon* dxcommon)
+void GPUParticleManager::CSEmitRootSignatureInitialize(DirectXCommon* dxcommon)
 {
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
@@ -447,6 +474,60 @@ void GPUParticleManager::CSUpdateRootSignatureInitialize(DirectXCommon* dxcommon
         assert(false);
     }
 
+    csEmitRootSignature = nullptr;
+    hr = dxcommon->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&csEmitRootSignature));
+}
+
+void GPUParticleManager::CSEmitPipelineInitialize(DirectXCommon* dxcommon)
+{
+    CSEmitRootSignatureInitialize(dxcommon);
+
+    HRESULT hr;
+
+    // CSをコンパイル
+    Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob = dxcommon->CompileShader(L"resources/shaders/EmitParticle.CS.hlsl", L"cs_6_0");
+    assert(computeShaderBlob != nullptr);
+    // PSOの設定
+    D3D12_COMPUTE_PIPELINE_STATE_DESC computePipelineStateDesc { };
+    computePipelineStateDesc.CS = {
+        .pShaderBytecode = computeShaderBlob->GetBufferPointer(),
+        .BytecodeLength = computeShaderBlob->GetBufferSize()
+    };
+    computePipelineStateDesc.pRootSignature = csEmitRootSignature.Get();
+
+    csEmitPipelineState = nullptr;
+    hr = dxcommon->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&csEmitPipelineState));
+}
+
+void GPUParticleManager::CSUpdateRootSignatureInitialize(DirectXCommon* dxcommon)
+{
+    D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
+    descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
+
+    D3D12_ROOT_PARAMETER rootParameters[2] = { };
+
+    // u0: gOutputVertices (UAV)
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[0].Descriptor.ShaderRegister = 0;
+    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // b0 PerFrame
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[1].Descriptor.ShaderRegister = 0;
+    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    descriptionRootSignature.pParameters = rootParameters;
+    descriptionRootSignature.NumParameters = _countof(rootParameters);
+
+    HRESULT hr;
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+    hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+    if (FAILED(hr)) {
+        Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        assert(false);
+    }
+
     csUpdateRootSignature = nullptr;
     hr = dxcommon->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&csUpdateRootSignature));
 }
@@ -458,7 +539,7 @@ void GPUParticleManager::CSUpdatePipelineInitialize(DirectXCommon* dxcommon)
     HRESULT hr;
 
     // CSをコンパイル
-    Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob = dxcommon->CompileShader(L"resources/shaders/EmitParticle.CS.hlsl", L"cs_6_0");
+    Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob = dxcommon->CompileShader(L"resources/shaders/UpdateParticle.CS.hlsl", L"cs_6_0");
     assert(computeShaderBlob != nullptr);
     // PSOの設定
     D3D12_COMPUTE_PIPELINE_STATE_DESC computePipelineStateDesc { };
