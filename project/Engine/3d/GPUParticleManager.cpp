@@ -28,14 +28,18 @@ void GPUParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager*
     this->srvManager = srvManager;
     this->winApp_ = WinApp::GetInstance();
 
+    // VS/PS初期化
     graphicsPipelineInitialize(dxCommon);
 
+    // CS初期化
     CSPipelineInitialize(dxCommon);
     CSEmitPipelineInitialize(dxCommon);
     CSUpdatePipelineInitialize(dxCommon);
 
+    // リソース類初期化
     ResourceInitialize();
 
+    // CSInit実行
     PrepareCSInitialize();
     CSInitialize();
 }
@@ -132,6 +136,9 @@ void GPUParticleManager::CSInitialize()
     // u1
     cmdList->SetComputeRootUnorderedAccessView(1, freeCounterResource->GetGPUVirtualAddress());
 
+    // u2
+    cmdList->SetComputeRootUnorderedAccessView(2, freeListResource->GetGPUVirtualAddress());
+
     // とりあえずお試し1024
     cmdList->Dispatch(1, 1, 1);
 
@@ -140,9 +147,8 @@ void GPUParticleManager::CSInitialize()
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     // UAVとして書き込んだリソースを指定
-    auto* commandList = dxCommon->GetCommandList();
     barrier.UAV.pResource = particleResource_.Get();
-    commandList->ResourceBarrier(1, &barrier);
+    cmdList->ResourceBarrier(1, &barrier);
 }
 
 void GPUParticleManager::PrepareCSEmit()
@@ -169,11 +175,14 @@ void GPUParticleManager::CSEmit()
     // u1
     cmdList->SetComputeRootUnorderedAccessView(1, freeCounterResource->GetGPUVirtualAddress());
 
+    // u2
+    cmdList->SetComputeRootUnorderedAccessView(2, freeListResource->GetGPUVirtualAddress());
+
     // b0
-    cmdList->SetComputeRootConstantBufferView(2, SphereResource->GetGPUVirtualAddress());
+    cmdList->SetComputeRootConstantBufferView(3, SphereResource->GetGPUVirtualAddress());
 
     // b1
-    cmdList->SetComputeRootConstantBufferView(3, randomResource->GetGPUVirtualAddress());
+    cmdList->SetComputeRootConstantBufferView(4, randomResource->GetGPUVirtualAddress());
 
     // とりあえずお試し1024
     cmdList->Dispatch(1, 1, 1);
@@ -198,8 +207,14 @@ void GPUParticleManager::CSUpdate()
     // u0
     cmdList->SetComputeRootUnorderedAccessView(0, particleResource_->GetGPUVirtualAddress());
 
+    // u1
+    cmdList->SetComputeRootUnorderedAccessView(1, freeCounterResource->GetGPUVirtualAddress());
+
+    // u2
+    cmdList->SetComputeRootUnorderedAccessView(2, freeListResource->GetGPUVirtualAddress());
+
     // b0
-    cmdList->SetComputeRootConstantBufferView(1, randomResource->GetGPUVirtualAddress());
+    cmdList->SetComputeRootConstantBufferView(3, randomResource->GetGPUVirtualAddress());
 
     // とりあえずお試し1024
     cmdList->Dispatch(1, 1, 1);
@@ -386,7 +401,7 @@ void GPUParticleManager::CSRootSignatureInitialize(DirectXCommon* dxcommon)
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
 
-    D3D12_ROOT_PARAMETER rootParameters[2] = { };
+    D3D12_ROOT_PARAMETER rootParameters[3] = { };
 
     // u0: gOutputVertices (UAV)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
@@ -397,6 +412,11 @@ void GPUParticleManager::CSRootSignatureInitialize(DirectXCommon* dxcommon)
     rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
     rootParameters[1].Descriptor.ShaderRegister = 1;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // u2
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[2].Descriptor.ShaderRegister = 2;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -440,7 +460,7 @@ void GPUParticleManager::CSEmitRootSignatureInitialize(DirectXCommon* dxcommon)
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
 
-    D3D12_ROOT_PARAMETER rootParameters[4] = { };
+    D3D12_ROOT_PARAMETER rootParameters[5] = { };
 
     // u0: gOutputVertices (UAV)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
@@ -452,15 +472,20 @@ void GPUParticleManager::CSEmitRootSignatureInitialize(DirectXCommon* dxcommon)
     rootParameters[1].Descriptor.ShaderRegister = 1;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    // b0
-    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[2].Descriptor.ShaderRegister = 0;
+    // u2
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[2].Descriptor.ShaderRegister = 2;
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    // b1
+    // b0
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[3].Descriptor.ShaderRegister = 1;
+    rootParameters[3].Descriptor.ShaderRegister = 0;
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // b1
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[4].Descriptor.ShaderRegister = 1;
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -504,17 +529,27 @@ void GPUParticleManager::CSUpdateRootSignatureInitialize(DirectXCommon* dxcommon
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature { };
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE; // CS用はインプットアセンブラ不要
 
-    D3D12_ROOT_PARAMETER rootParameters[2] = { };
+    D3D12_ROOT_PARAMETER rootParameters[4] = { };
 
     // u0: gOutputVertices (UAV)
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
     rootParameters[0].Descriptor.ShaderRegister = 0;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    // b0 PerFrame
-    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[1].Descriptor.ShaderRegister = 0;
+    // u1
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[1].Descriptor.ShaderRegister = 1;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // u2
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    rootParameters[2].Descriptor.ShaderRegister = 2;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    // b0 PerFrame
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[3].Descriptor.ShaderRegister = 0;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -630,6 +665,9 @@ void GPUParticleManager::ResourceInitialize()
         &heapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&particleResource_));
 
+    instancingSrvIndex = srvManager->Allocate();
+    srvManager->CreateSRVforStructuredBuffer(instancingSrvIndex, particleResource_.Get(), kMaxParticles, sizeof(Particle));
+
     // カウンター用バッフア
     size_t counterBufferSize = sizeof(int32_t);
 
@@ -638,7 +676,7 @@ void GPUParticleManager::ResourceInitialize()
 
     D3D12_RESOURCE_DESC counterResDesc { };
     counterResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    counterResDesc.Width = particleBufferSize;
+    counterResDesc.Width = counterBufferSize;
     counterResDesc.Height = 1;
     counterResDesc.DepthOrArraySize = 1;
     counterResDesc.MipLevels = 1;
@@ -648,9 +686,27 @@ void GPUParticleManager::ResourceInitialize()
     counterResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
     device->CreateCommittedResource(
-        &heapProps, D3D12_HEAP_FLAG_NONE, &counterResDesc,
+        &counterHeapProps, D3D12_HEAP_FLAG_NONE, &counterResDesc,
         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&freeCounterResource));
 
-    instancingSrvIndex = srvManager->Allocate();
-    srvManager->CreateSRVforStructuredBuffer(instancingSrvIndex, particleResource_.Get(), kMaxParticles, sizeof(Particle));
+    // List用(サイズは最大数)
+    size_t ListBufferSize = sizeof(int32_t) * kMaxParticles;
+
+    D3D12_HEAP_PROPERTIES ListHeapProps { };
+    ListHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    D3D12_RESOURCE_DESC ListResDesc { };
+    ListResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    ListResDesc.Width = ListBufferSize;
+    ListResDesc.Height = 1;
+    ListResDesc.DepthOrArraySize = 1;
+    ListResDesc.MipLevels = 1;
+    ListResDesc.Format = DXGI_FORMAT_UNKNOWN;
+    ListResDesc.SampleDesc.Count = 1;
+    ListResDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    ListResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    device->CreateCommittedResource(
+        &ListHeapProps, D3D12_HEAP_FLAG_NONE, &ListResDesc,
+        D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&freeListResource));
 }

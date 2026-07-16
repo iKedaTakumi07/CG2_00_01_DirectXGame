@@ -62,7 +62,8 @@ static const uint32_t kMaxParticles = 1024;
 ConstantBuffer<EmitterSphere> gEimtter : register(b0);
 ConstantBuffer<PerFrame> gPerFrame : register(b1);
 RWStructuredBuffer<Particle> gParticles : register(u0);
-RWStructuredBuffer<int32_t> gFreeCounter : register(u1);
+RWStructuredBuffer<int32_t> gFreeListIndex : register(u1);
+RWStructuredBuffer<int32_t> gFreeList : register(u2);
 
 [numthreads(1, 1, 1)]
 void main(uint32_t3 DTid : SV_DispatchThreadID)
@@ -73,22 +74,29 @@ void main(uint32_t3 DTid : SV_DispatchThreadID)
     {
         for (uint32_t countIndex = 0; countIndex < gEimtter.count; ++countIndex)
         {
-            int ParticleIndex;
-            InterlockedAdd(gFreeCounter[0], 1, ParticleIndex);
-            // 最大数よりもParticleの数が少なければ射出可能
-            if (ParticleIndex < kMaxParticles)
+            int freeListIndex;
+            // FreeListのindexを1っ前に設定し、現在のindexを取得する
+            InterlockedAdd(gFreeListIndex[0], -1, freeListIndex);
+            if (0 <= freeListIndex && freeListIndex < kMaxParticles)
             {
-                // カウント分Particleを射出する
-                gParticles[ParticleIndex].scale = generator.Generate3d();
-                gParticles[ParticleIndex].translate = generator.Generate3d();
-                gParticles[ParticleIndex].color.rgb = generator.Generate3d();
-                gParticles[ParticleIndex].color.a = 1.0f;
-                gParticles[ParticleIndex].currentTime = 0.01f;
-                gParticles[ParticleIndex].velocity = generator.Generate3d();
-                gParticles[ParticleIndex].lifeTime = 2.0f;
+                uint32_t particleIndex = gFreeList[freeListIndex];
+                
+                float3 velDir = generator.Generate3d() * 2.0f - 1.0f;
+                
+                gParticles[particleIndex].scale = generator.Generate3d();
+                gParticles[particleIndex].translate = generator.Generate3d();
+                gParticles[particleIndex].color.rgb = generator.Generate3d();
+                gParticles[particleIndex].color.a = 1.0f;
+                gParticles[particleIndex].currentTime = 0.01f;
+                gParticles[particleIndex].velocity = normalize(velDir) * 0.05f;
+                gParticles[particleIndex].lifeTime = 2.0f;
             }
-           
+            else
+            {
+               // 発生させられなかったので減らしてしまった分もとに戻す。
+                InterlockedAdd(gFreeListIndex[0], 1);
+                break;
+            }
         }
-
     }
 }

@@ -119,6 +119,9 @@ private:
     // カウンター
     Microsoft::WRL::ComPtr<ID3D12Resource> freeCounterResource;
 
+    // リスト
+    Microsoft::WRL::ComPtr<ID3D12Resource> freeListResource;
+
     // random
     Microsoft::WRL::ComPtr<ID3D12Resource> randomResource;
     PreFrame* PreFrameData_ = nullptr;
