@@ -41,6 +41,10 @@ public:
     void PrepareCSInitialize();
     void CSInitialize();
 
+    // CSEmit
+    void PrepareCSEmit();
+    void CSEmit();
+
     // CSUpdate
     void PrepareCSUpdate();
     void CSUpdate();
@@ -59,6 +63,10 @@ private:
     // CS初期化用パイプライン
     void CSRootSignatureInitialize(DirectXCommon* dxcommon);
     void CSPipelineInitialize(DirectXCommon* dxcommon);
+
+    // CS射出用パイプライン
+    void CSEmitRootSignatureInitialize(DirectXCommon* dxcommon);
+    void CSEmitPipelineInitialize(DirectXCommon* dxcommon);
 
     // CS更新用パイプライン
     void CSUpdateRootSignatureInitialize(DirectXCommon* dxcommon);
@@ -97,11 +105,15 @@ private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> csInitRootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> csInitPipelineState;
 
+    // 射出用CS
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> csEmitRootSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> csEmitPipelineState;
+
     // 更新用CS
     Microsoft::WRL::ComPtr<ID3D12RootSignature> csUpdateRootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> csUpdatePipelineState;
 
-    //  パーティクル構造体
+    // パーティクル構造体
     Microsoft::WRL::ComPtr<ID3D12Resource> particleResource_;
 
     // カウンター
