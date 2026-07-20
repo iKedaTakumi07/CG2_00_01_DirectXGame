@@ -93,7 +93,7 @@ void main(uint32_t3 DTid : SV_DispatchThreadID)
             }
             else
             {
-               // 発生させられなかったので減らしてしまった分もとに戻す。
+                // 発生させられなかったので減らしてしまった分もとに戻す。
                 InterlockedAdd(gFreeListIndex[0], 1);
                 break;
             }

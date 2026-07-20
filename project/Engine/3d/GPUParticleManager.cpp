@@ -92,7 +92,6 @@ void GPUParticleManager::Update()
 
 void GPUParticleManager::Draw()
 {
-
     auto* commandList = dxCommon->GetCommandList();
 
     // ルートシグネチャ設定

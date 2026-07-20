@@ -37,16 +37,39 @@ public:
     void SetRotation(float rotation) { this->rotation = rotation; }
     void SetColor(const Vector4& color) { materialData->color = color; }
     void SetSize(const Vector2& size) { this->size = size; }
-    void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint = anchorPoint; }
-    void SetisFlipX_(float isFlipX_) { this->isFlipX_ = isFlipX_; }
-    void SetisFlipY_(float isFlipY_) { this->isFlipY_ = isFlipY_; }
-    void SettextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
-    void SettextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
+    void SetAnchorPoint(const Vector2& anchorPoint)
+    {
+        this->anchorPoint = anchorPoint;
+        TransferVertices();
+    }
+    void SetisFlipX_(bool isFlipX_)
+    {
+        this->isFlipX_ = isFlipX_;
+        TransferVertices();
+    }
+    void SetisFlipY_(bool isFlipY_)
+    {
+        this->isFlipY_ = isFlipY_;
+        TransferVertices();
+    }
+    void SettextureLeftTop(const Vector2& textureLeftTop)
+    {
+        this->textureLeftTop = textureLeftTop;
+        TransferVertices();
+    }
+    void SettextureSize(const Vector2& textureSize)
+    {
+        this->textureSize = textureSize;
+        TransferVertices();
+    }
 
 private:
     void VertexResourceInitialize();
     void MaterialResourceInitialize();
     void TransMatrixResourceInitialize();
+    void IndexResourceInitialize();
+
+    void TransferVertices();
 
     // Sprite用の頂点リソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
@@ -56,8 +79,8 @@ private:
     uint32_t* indexData = nullptr;
 
     // 頂点バッファビューを作る
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView {};
-    D3D12_INDEX_BUFFER_VIEW indexBufferView {};
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView { };
+    D3D12_INDEX_BUFFER_VIEW indexBufferView { };
 
     // Sprite用のマテリアルリソースを作る
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
