@@ -1,23 +1,26 @@
 #include "Sprite.h"
-#include "SpriteCommon.h"
 #include "../base/TextureManager.h"
+#include "SpriteCommon.h"
 #ifdef USE_IMGUI
 #include "../externals/imgui/imgui.h"
 #endif // USE_IMGUI
 
-void Sprite::Initialize( std::string texturefilePath)
+void Sprite::Initialize(std::string texturefilePath)
 {
+    texturefilePath_ = texturefilePath;
+
     VertexResourceInitialize();
     MaterialResourceInitialize();
     TransMatrixResourceInitialize();
+    IndexResourceInitialize();
 
-    texturefilePath_ = texturefilePath;
     AdjustTextureSize(texturefilePath_);
+
+    TransferVertices();
 }
 
 void Sprite::VertexResourceInitialize()
 {
-
     vertexResource = SpriteCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(VertexData) * 4);
     // リソースの先端のアドレスから使う
     vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
@@ -27,15 +30,6 @@ void Sprite::VertexResourceInitialize()
     vertexBufferView.StrideInBytes = sizeof(VertexData);
 
     vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-
-    // インデックスリソースにデータを書き込む
-    indexResource = SpriteCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
-    // リソースの先頭のアドレスから使う
-    indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
-    // 使用するリソースのサイズはインデックス6つ分のサイズ
-    indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
-    // インデックスはuint32_Tとする
-    indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
 void Sprite::MaterialResourceInitialize()
@@ -64,24 +58,30 @@ void Sprite::TransMatrixResourceInitialize()
     transformationMatrixData->world = MakeIdentity4x4();
 }
 
-void Sprite::AdjustTextureSize(std::string texturefilePath)
+void Sprite::IndexResourceInitialize()
 {
-    // テクスチャメタデータを取得
-    const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(texturefilePath);
 
-    textureSize.x = static_cast<float>(metadata.width);
-    textureSize.y = static_cast<float>(metadata.height);
-    // 画像サイズをテクスチャサイズに合わせる
-    size = textureSize;
+    // インデックスリソースにデータを書き込む
+    indexResource = SpriteCommon::GetInstance()->GetDxCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
+    // リソースの先頭のアドレスから使う
+    indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+    // 使用するリソースのサイズはインデックス6つ分のサイズ
+    indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+    // インデックスはuint32_Tとする
+    indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+    // インデックスリソースにデータを書きこむ
+    indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+    indexData[0] = 0;
+    indexData[1] = 1;
+    indexData[2] = 2;
+    indexData[3] = 1;
+    indexData[4] = 3;
+    indexData[5] = 2;
 }
 
-void Sprite::Update()
+void Sprite::TransferVertices()
 {
-
-#ifdef USE_IMGUI
-    ImGui::SliderFloat2("pos", &position.x, 0.0f, 1280.0f, "%06.1f");
-#endif // USE_IMGUI
-
     float left = 0.0f - anchorPoint.x;
     float rigth = 1.0f - anchorPoint.x;
     float top = 0.0f - anchorPoint.y;
@@ -116,14 +116,24 @@ void Sprite::Update()
     vertexData[3].position = { rigth, top, 0.0f, 1.0f };
     vertexData[3].texcoord = { tex_right, tex_top };
     vertexData[3].normal = { 0.0f, 0.0f, -1.0f };
-    // インデックスリソースにデータを書きこむ
-    indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-    indexData[0] = 0;
-    indexData[1] = 1;
-    indexData[2] = 2;
-    indexData[3] = 1;
-    indexData[4] = 3;
-    indexData[5] = 2;
+}
+
+void Sprite::AdjustTextureSize(std::string texturefilePath)
+{
+    // テクスチャメタデータを取得
+    const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(texturefilePath);
+
+    textureSize.x = static_cast<float>(metadata.width);
+    textureSize.y = static_cast<float>(metadata.height);
+    // 画像サイズをテクスチャサイズに合わせる
+    size = textureSize;
+}
+
+void Sprite::Update()
+{
+#ifdef USE_IMGUI
+    ImGui::SliderFloat2("pos", &position.x, 0.0f, 1280.0f, "%06.1f");
+#endif // USE_IMGUI
 
     // sprite用
     transform.translate = { position.x, position.y, 0.0f };
