@@ -1,8 +1,16 @@
 #include "Input.h"
 #include <cassert>
+#include <memory>
 
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
+
+Input* Input::getInstance()
+{
+    static std::unique_ptr<Input> instance = std::make_unique<Input>(ConstructorKey());
+
+    return instance.get();
+}
 
 void Input::Initialize()
 {

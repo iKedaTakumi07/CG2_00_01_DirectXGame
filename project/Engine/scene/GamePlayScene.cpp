@@ -11,8 +11,8 @@
 #include "../3d/Object3d.h"
 #include "../3d/Object3dCommon.h"
 
-#include "../3d/CPUParticle/ParticleEmitter.h"
 #include "../3d/CPUParticle/CPUParticleManager.h"
+#include "../3d/CPUParticle/ParticleEmitter.h"
 
 #include "../3d/Skybox/SkyBoxCommon.h"
 #include "../3d/Skybox/Skybox.h"
@@ -81,13 +81,13 @@ void GamePlayScene::Initialize()
     CPUParticleManager::getInstance()->CreateParticleGroup("Plane", "resources/uvChecker.png", ParticleMeshType::kPlane);
 
     // 板ポリ
-    Transform emitter {};
+    Transform emitter { };
     emitter.translate = { 0.0f, 0.0f, 0.0f };
     emitter.rotate = { 0.0f, 0.0f, 0.0f };
     emitter.scale = { 1.0f, 1.0f, 1.0f };
     // particleEmitter = std::make_unique<ParticleEmitter>("pori", emitter, 1.0f, 3,true);
 
-    Transform emitterPlane {};
+    Transform emitterPlane { };
     emitterPlane.translate = { 4.0f, 4.0f, 0.0f };
     emitterPlane.rotate = { 0.0f, 0.0f, 0.0f };
     emitterPlane.scale = { 1.0f, 1.0f, 1.0f };
@@ -103,7 +103,7 @@ void GamePlayScene::Initialize()
 
 void GamePlayScene::Update()
 {
-    Input* input = GetInput();
+    auto* input = Input::getInstance();
     Camera* camera = GetCamera();
 
     if (input->TriggerKey(DIK_F1)) {

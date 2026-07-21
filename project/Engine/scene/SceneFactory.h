@@ -6,7 +6,7 @@ class Camera;
 
 class SceneFactory : public AbstractSceneFactory {
 public:
-    SceneFactory(Input* input, Camera* camera);
+    SceneFactory(Camera* camera);
 
     /// <summary>
     /// シーン生成。

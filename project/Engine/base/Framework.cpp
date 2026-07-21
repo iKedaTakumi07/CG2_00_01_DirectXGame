@@ -64,8 +64,7 @@ void Framework::Initialize()
     dxCommon = std::make_unique<DirectXCommon>();
     dxCommon->Initialize();
 
-    input = std::make_unique<Input>();
-    input->Initialize();
+    Input::getInstance()->Initialize();
 
     srvManager = std::make_unique<SrvManager>();
     srvManager->Initialize(dxCommon.get());
@@ -111,7 +110,7 @@ void Framework::Initialize()
 
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
 
-    sceneFactory_ = std::make_unique<SceneFactory>(input.get(), camera.get());
+    sceneFactory_ = std::make_unique<SceneFactory>(camera.get());
     SceneManager::GetInstance()->SetSceneFactory(std::move(sceneFactory_));
 
     Audio::GetInstance()->Initialize();
@@ -141,7 +140,7 @@ void Framework::Update()
         endRequst_ = true;
     }
 
-    input->Update();
+    Input::getInstance()->Update();
 
     Vector3 cameraPos = camera->GetTranslate();
     Vector3 cameraRot = camera->GetRotate();
