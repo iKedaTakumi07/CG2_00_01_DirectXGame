@@ -27,6 +27,7 @@
 
 #include "../../Game/Particle/HitParticle.h"
 #include "../../Game/Particle/LaserParticle.h"
+#include "../../Game/Player/Player.h"
 #include "math.h"
 
 TitleScene::TitleScene()
@@ -120,6 +121,9 @@ void TitleScene::Initialize()
     particleEmitter4->SetParam(fireParam);
     ParticleManager::getInstance()->SetGroupScrollSpeed("Cylinder", { 0.2f, 0.0f });*/
 
+    player_ = std::make_unique<Player>();
+    player_->Initialize(BaseScene::GetCamera());
+
     laserTest = std::make_unique<LaserParticle>();
     laserTest->Initialize();
     laserTest->NewTransform();
@@ -136,7 +140,7 @@ void TitleScene::Finalize()
 void TitleScene::Update()
 {
 
-    Input* input = GetInput();
+    auto* input = Input::getInstance();
     Camera* camera = GetCamera();
 
     // skydox->SetCamera(camera);
@@ -149,6 +153,8 @@ void TitleScene::Update()
 
     object3d->Update();
     object3d_2->Update();
+
+    player_->Update();
 
     // particleEmitter2->Update();
     // particleEmitter4->Update();
@@ -174,11 +180,13 @@ void TitleScene::Draw()
     //
     // モデルデータ
     //
+    Object3dCommon::GetInstance()->PreLineObjectDraw();
+
     object3d->Draw();
     object3d_2->Draw();
+    player_->Draw();
 
 #ifdef USE_IMGUI
-    Object3dCommon::GetInstance()->PreLineObjectDraw();
     object3d_2->DrawSkeleton();
 #endif // USE_IMGUI
 

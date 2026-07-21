@@ -41,7 +41,6 @@ public:
     BaseScene* GetBaseScene() { return baseScene.get(); }
     DirectXCommon* GetDirectXCommon() { return dxCommon.get(); }
     SrvManager* GetSrvManager() { return srvManager.get(); }
-    Input* GetInput() { return input.get(); }
     ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
     OffscreenSurface* GetOffScreenSurface() { return offscreenSurface.get(); } // そのほか
     OffscreenSurface* GetOffScreenSurfaceB() { return offscreenSurfaceB.get(); } // 分離フィルターの中間バッフア
@@ -55,8 +54,6 @@ private:
     std::unique_ptr<DirectXCommon> dxCommon = nullptr;
     // srvマネージャー
     std::unique_ptr<SrvManager> srvManager = nullptr;
-    // input
-    std::unique_ptr<Input> input = nullptr;
     // IMGUIマネージャー
     std::unique_ptr<ImGuiManager> imguiManager = nullptr;
     // カメラ

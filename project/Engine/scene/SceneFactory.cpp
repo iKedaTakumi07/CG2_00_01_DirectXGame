@@ -4,9 +4,8 @@
 #include "GamePlayScene.h"
 #include "TitleScene.h"
 
-SceneFactory::SceneFactory(Input* input, Camera* camera)
-    : input_(input)
-    , camera_(camera)
+SceneFactory::SceneFactory(Camera* camera)
+    : camera_(camera)
 {
 }
 
@@ -23,7 +22,6 @@ std::unique_ptr<BaseScene> SceneFactory::CreateScene(const std::string& sceneNam
     }
 
     if (newScene) {
-        newScene->SetInput(input_);
         newScene->SetCamera(camera_);
     }
 
