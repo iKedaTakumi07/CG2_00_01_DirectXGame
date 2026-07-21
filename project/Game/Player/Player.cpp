@@ -70,11 +70,22 @@ void Player::MoveUpdate()
         move.y -= 1.0f;
     }
 
+    // 高速旋回
+    bool isShift = Input::getInstance()->PushKey(DIK_LSHIFT);
+
+    float roll = rollFactor;
+    Vector3 speed = Vector3(kCharacterSpeed, kCharacterSpeed, 0.0f);
+
+    if (isShift) {
+        roll = shiftRollFactor; // 旋回
+        speed.x = kCharacterSpeed * 1.5f; // 速度上昇
+    }
+
     // 正規化
     float length = std::sqrt(move.x * move.x + move.y * move.y);
     if (length > 0.0f) {
-        move.x = (move.x / length) * kCharacterSpeed;
-        move.y = (move.y / length) * kCharacterSpeed;
+        move.x = (move.x / length) * speed.x;
+        move.y = (move.y / length) * speed.y;
     }
 
     transform_.translate += move;
@@ -82,8 +93,14 @@ void Player::MoveUpdate()
     transform_.translate.x = std::clamp(transform_.translate.x, -kMoveLimitX, kMoveLimitX);
     transform_.translate.y = std::clamp(transform_.translate.y, -kMoveLimitY, kMoveLimitY);
 
-    const float kTargetRoll = -move.x * 0.3f;
-    transform_.rotate.z += (kTargetRoll - transform_.rotate.z) * 0.1f;
+    const float kTargetRoll = -move.x * roll;
+    const float kTargetYRoll = -move.y * rollFactor; // 固定y
+
+    // 高速旋回しているか?
+    float lerpRate = isShift ? 0.2f : 0.1f;
+
+    transform_.rotate.z += (kTargetRoll - transform_.rotate.z) * lerpRate;
+    transform_.rotate.x += (kTargetYRoll - transform_.rotate.x) * 0.1f;
 }
 
 void Player::BulletUpdate()
@@ -93,7 +110,7 @@ void Player::BulletUpdate()
     if (coolTime <= 0.0f) {
         if (Input::getInstance()->PushKey(DIK_SPACE)) {
             auto playerbullet = std::make_unique<PlayerBullet>();
-            playerbullet->Initialize(camera_, transform_.translate);
+            playerbullet->Initialize(camera_, transform_.translate, transform_.rotate);
 
             // リストに挿入
             playerBullets_.push_back(std::move(playerbullet));

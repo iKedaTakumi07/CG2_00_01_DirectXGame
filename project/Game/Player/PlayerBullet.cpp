@@ -7,7 +7,7 @@
 #include "../../Engine/base/TextureManager.h"
 #include "../../Engine/io/Input.h"
 
-void PlayerBullet::Initialize(Camera* camera, const Vector3& position)
+void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vector3& rotation)
 {
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
     ModelManager::GetInstance()->LoadModel("test/test.obj");
@@ -23,12 +23,22 @@ void PlayerBullet::Initialize(Camera* camera, const Vector3& position)
 
     // 座標セット
     transform_.translate = position;
+    transform_.rotate = rotation;
+
+    velocity_.x = -std::sin(transform_.rotate.z) * speed_;
+    velocity_.y = -std::sin(transform_.rotate.x) * speed_;
+    velocity_.z = std::cos(transform_.rotate.z) * speed_;
+
     object3d->SetTranslate(transform_.translate);
+    object3d->SetRotate(transform_.rotate);
 }
 
 void PlayerBullet::Update(float deltaTime)
 {
-    transform_.translate.z += vectorZ * deltaTime;
+    // 弾の移動
+    transform_.translate.x += velocity_.x * deltaTime;
+    transform_.translate.y += velocity_.y * deltaTime;
+    transform_.translate.z += velocity_.z * deltaTime;
 
     deathTimer_ -= deltaTime;
     if (deathTimer_ <= 0.0f) {
@@ -36,6 +46,7 @@ void PlayerBullet::Update(float deltaTime)
     }
 
     object3d->SetTranslate(transform_.translate);
+    object3d->SetRotate(transform_.rotate);
     object3d->Update();
 }
 

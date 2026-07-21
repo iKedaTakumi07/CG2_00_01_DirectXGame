@@ -30,6 +30,10 @@ private:
     // 移動限界座標
     const float kMoveLimitX = 10.0f;
     const float kMoveLimitY = 7.5f;
+    // 機体の傾き
+    float rollFactor = 0.3f;
+    float shiftRollFactor = 0.8f;
+
     // 弾の詳細設定(チャージショット一連の操作、チュートリアルを作成後作成)
     const float kCoolTime = 0.20f;
     float coolTime = 0.0f;

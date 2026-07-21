@@ -7,7 +7,7 @@
 class Camera;
 class PlayerBullet {
 public:
-    void Initialize(Camera* camera, const Vector3& position);
+    void Initialize(Camera* camera, const Vector3& position, const Vector3& rotation);
 
     void Update(float deltaTime);
 
@@ -20,7 +20,8 @@ public:
 private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
 
-    float vectorZ = 10.0f;
+    Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };// 移動ベクトル
+    float speed_ = 10.0f; // 弾速
     float deathTimer_ = 3.0f; // 弾の寿命（秒）
     bool isDead_ = false;
 
