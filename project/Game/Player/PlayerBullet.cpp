@@ -31,6 +31,9 @@ void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vec
 
     object3d->SetTranslate(transform_.translate);
     object3d->SetRotate(transform_.rotate);
+
+    laserParticle_ = std::make_unique<LaserParticle>();
+    laserParticle_->Initialize();
 }
 
 void PlayerBullet::Update(float deltaTime)
@@ -48,6 +51,8 @@ void PlayerBullet::Update(float deltaTime)
     object3d->SetTranslate(transform_.translate);
     object3d->SetRotate(transform_.rotate);
     object3d->Update();
+
+    laserParticle_->NewParticle(transform_);
 }
 
 void PlayerBullet::Draw()

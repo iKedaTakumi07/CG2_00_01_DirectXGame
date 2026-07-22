@@ -128,7 +128,7 @@ private:
     ModelData model;
 
     static std::unique_ptr<CPUParticleManager> instance;
-    const uint32_t kMaxInstanceCount = 100;
+    const uint32_t kMaxInstanceCount = 10000;
 
     bool useBillboard = false;
 

@@ -8,17 +8,6 @@ void LaserParticle::Initialize()
     CPUParticleManager::getInstance()->CreateParticleGroup("laser", "resources/laser.png", ParticleMeshType::kPlane);
 }
 
-void LaserParticle::NewTransform()
-{
-    Transform pos;
-    // ゲーム作り始めたら削除(弾完成後)
-    pos.scale = { 1.0f, 1.0f, 1.0f };
-    pos.rotate = { 0.0f, 0.0f, 0.0f };
-    pos.translate = { 0.0f, 2.0f, -2.0f };
-
-    Pos.push_back(pos);
-}
-
 void LaserParticle::NewParticle(const Transform& emitterTransform)
 {
     EmitterParam laserfireParam;
@@ -40,16 +29,6 @@ void LaserParticle::NewParticle(const Transform& emitterTransform)
 
 void LaserParticle::Update()
 {
-    // 試験的用(プレイヤー弾作成後削除)
-    float speed = 30.0f;
-    for (auto& pos_ : Pos) {
-        pos_.translate.z += speed * (1.0f / 60.0f);
-        NewParticle(pos_);
-    }
-
-    std::erase_if(Pos, [](const Transform& pos_) {
-        return pos_.translate.z >= 50.0f;
-    });
 }
 
 void LaserParticle::Draw()

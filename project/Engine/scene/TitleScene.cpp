@@ -124,10 +124,6 @@ void TitleScene::Initialize()
     player_ = std::make_unique<Player>();
     player_->Initialize(BaseScene::GetCamera());
 
-    laserTest = std::make_unique<LaserParticle>();
-    laserTest->Initialize();
-    laserTest->NewTransform();
-
     hitParticle = std::make_unique<HitParticle>();
     hitParticle->Initialize();
     hitParticle->NewTransform();
@@ -160,10 +156,6 @@ void TitleScene::Update()
     // particleEmitter4->Update();
 
     // 5秒ごとに生成(軽いテストなう)
-    if (testTimer >= 5.0f) {
-        testTimer = 0.0f;
-        laserTest->NewTransform();
-    }
     float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     testTimer += deltaTime;
 
