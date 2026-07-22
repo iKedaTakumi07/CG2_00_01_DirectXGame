@@ -145,6 +145,71 @@ void TitleScene::Update()
         SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
     }
 
+    if (input->TriggerKey(DIK_1)) {
+        grayfilter = !grayfilter;
+        PostProcess::GetInstance()->SetEnableGrayscale(grayfilter);
+    }
+    if (input->TriggerKey(DIK_2)) {
+        vignetfilter = !vignetfilter;
+        PostProcess::GetInstance()->SetEnableVignette(vignetfilter);
+    }
+    if (input->TriggerKey(DIK_3)) {
+        smoothingfilter = !smoothingfilter;
+        PostProcess::GetInstance()->SetEnableBoxFilter(smoothingfilter);
+    }
+    if (smoothingfilter) {
+        if (input->TriggerKey(DIK_UPARROW)) {
+            if (smoothing < 30) {
+                smoothing += 2;
+            }
+            PostProcess::GetInstance()->SetKernelSizeBoxFilter(smoothing);
+        }
+        if (input->TriggerKey(DIK_DOWNARROW)) {
+            if (smoothing > 4) {
+                smoothing -= 2;
+            }
+            PostProcess::GetInstance()->SetKernelSizeBoxFilter(smoothing);
+        }
+    }
+    if (input->TriggerKey(DIK_4)) {
+        gaussianfilter = !gaussianfilter;
+        PostProcess::GetInstance()->SetEnableGaussianFilter(gaussianfilter);
+    }
+    if (gaussianfilter) {
+        if (input->TriggerKey(DIK_UPARROW)) {
+            if (gaussian < 30) {
+                gaussian += 2;
+            }
+            PostProcess::GetInstance()->SetKernelSizeGaussianFilter(gaussian);
+        }
+        if (input->TriggerKey(DIK_DOWNARROW)) {
+            if (gaussian > 4) {
+                gaussian -= 2;
+            }
+            PostProcess::GetInstance()->SetKernelSizeGaussianFilter(gaussian);
+        }
+    }
+    if (input->TriggerKey(DIK_5)) {
+        outlinefilter = !outlinefilter;
+        PostProcess::GetInstance()->SetEnableLuminanceOutLine(outlinefilter);
+    }
+    if (input->TriggerKey(DIK_6)) {
+        depthOutlinefilter = !depthOutlinefilter;
+        PostProcess::GetInstance()->SetDepthOutLine(depthOutlinefilter);
+    }
+    if (input->TriggerKey(DIK_7)) {
+        radialBulrfilter = !radialBulrfilter;
+        PostProcess::GetInstance()->SetRadialBlur(radialBulrfilter);
+    }
+    if (input->TriggerKey(DIK_8)) {
+        dissolvefilter = !dissolvefilter;
+        PostProcess::GetInstance()->SetDissolve(dissolvefilter);
+    }
+    if (input->TriggerKey(DIK_9)) {
+        randomfilter = !randomfilter;
+        PostProcess::GetInstance()->SetRandom(randomfilter);
+    }
+
     // skydox->Update();
 
     object3d->Update();

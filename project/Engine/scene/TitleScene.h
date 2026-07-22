@@ -53,4 +53,19 @@ private:
     std::unique_ptr<LaserParticle> laserTest;
     std::unique_ptr<HitParticle> hitParticle;
     float testTimer = 0.0f;
+
+    // CG5用
+    bool grayfilter = true;
+    bool vignetfilter = false;
+    bool smoothingfilter = false;
+    bool gaussianfilter = false;
+    bool outlinefilter = false;
+    bool depthOutlinefilter = false;
+    bool radialBulrfilter = false;
+    bool dissolvefilter = false;
+    bool randomfilter = false;
+
+    // フィルタの大きさ
+    int smoothing = 3;
+    int gaussian = 3;
 };
