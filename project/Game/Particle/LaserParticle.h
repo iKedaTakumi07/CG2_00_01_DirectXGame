@@ -7,9 +7,6 @@ public:
     // 初期化
     void Initialize();
 
-    // 一時的なテスト用vectorで弾の再現
-    void NewTransform();
-
     // 生成
     void NewParticle(const Transform& emitterTransform);
 
