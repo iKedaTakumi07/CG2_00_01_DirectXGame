@@ -7,10 +7,12 @@
 #include "../2d/Sprite.h"
 #include "../3d/CPUParticle/ParticleEmitter.h"
 #include "../audio/Sound.h"
+
 class Model;
 class Object3d;
 class Skybox;
 class Player;
+class EnemyManager;
 
 class GamePlayScene : public BaseScene {
 public:
@@ -33,8 +35,10 @@ public:
 private:
     std::unique_ptr<Skybox> skydox;
 
-    // 3dモデル
+    // プレイヤー
     std::unique_ptr<Player> player_;
+    // 敵
+    std::unique_ptr<EnemyManager> enemyManager_;
 
     // 音声データ
     Sound fanfare;

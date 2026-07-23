@@ -91,8 +91,8 @@ void Framework::Initialize()
     SkyBoxCommon::GetInstance()->Initialize(dxCommon.get());
 
     camera = std::make_unique<Camera>();
-    camera->SetTranslate({ 0.0f, 4.0f, -10.0f });
-    camera->SetRotate({ 0.3f, 0.0f, 0.0f });
+    camera->SetTranslate({ 0.0f, 4.0f, -15.0f });
+    camera->SetRotate({ 0.0f, 0.0f, 0.0f });
 
     TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     ModelManager::GetInstance()->Initialize(dxCommon.get());

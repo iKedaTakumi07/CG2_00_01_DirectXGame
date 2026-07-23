@@ -7,6 +7,8 @@
 #include "../../Engine/base/TextureManager.h"
 #include "../../Engine/io/Input.h"
 
+#include "../Particle/LaserParticle.h"
+
 void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vector3& rotation)
 {
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");

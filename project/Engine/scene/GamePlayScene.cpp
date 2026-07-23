@@ -19,6 +19,7 @@
 
 #include "../io/Input.h"
 
+#include "../../Game/Enemy/EnemyManager.h"
 #include "../../Game/Player/Player.h"
 
 #include "math.h"
@@ -54,6 +55,9 @@ void GamePlayScene::Initialize()
     player_ = std::make_unique<Player>();
     player_->Initialize(BaseScene::GetCamera());
 
+    enemyManager_ = std::make_unique<EnemyManager>();
+    enemyManager_->Initialize(BaseScene::GetCamera());
+
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
     // Audio::GetInstance()->Play(clearSe);
@@ -69,6 +73,7 @@ void GamePlayScene::Update()
     }
 
     player_->Update();
+    enemyManager_->Update();
 }
 
 void GamePlayScene::Draw()
@@ -80,6 +85,7 @@ void GamePlayScene::Draw()
     // モデルデータ
     //
     player_->Draw();
+    enemyManager_->Draw();
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
     // skydox->Draw();
