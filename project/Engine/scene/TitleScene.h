@@ -66,6 +66,7 @@ private:
     bool randomfilter = false;
 
     // フィルタの大きさ
+    bool sepiaON = false;
     int smoothing = 3;
     int gaussian = 3;
 };

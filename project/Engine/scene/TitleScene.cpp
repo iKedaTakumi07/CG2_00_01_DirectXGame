@@ -150,10 +150,14 @@ void TitleScene::Update()
         PostProcess::GetInstance()->SetEnableGrayscale(grayfilter);
     }
     if (input->TriggerKey(DIK_2)) {
+        sepiaON = !sepiaON;
+        PostProcess::GetInstance()->SetEnableSepiascale(sepiaON);
+    }
+    if (input->TriggerKey(DIK_3)) {
         vignetfilter = !vignetfilter;
         PostProcess::GetInstance()->SetEnableVignette(vignetfilter);
     }
-    if (input->TriggerKey(DIK_3)) {
+    if (input->TriggerKey(DIK_4)) {
         smoothingfilter = !smoothingfilter;
         PostProcess::GetInstance()->SetEnableBoxFilter(smoothingfilter);
     }
@@ -171,41 +175,41 @@ void TitleScene::Update()
             PostProcess::GetInstance()->SetKernelSizeBoxFilter(smoothing);
         }
     }
-    if (input->TriggerKey(DIK_4)) {
+    if (input->TriggerKey(DIK_5)) {
         gaussianfilter = !gaussianfilter;
         PostProcess::GetInstance()->SetEnableGaussianFilter(gaussianfilter);
     }
     if (gaussianfilter) {
-        if (input->TriggerKey(DIK_UPARROW)) {
+        if (input->TriggerKey(DIK_RIGHTARROW)) {
             if (gaussian < 30) {
                 gaussian += 2;
             }
             PostProcess::GetInstance()->SetKernelSizeGaussianFilter(gaussian);
         }
-        if (input->TriggerKey(DIK_DOWNARROW)) {
+        if (input->TriggerKey(DIK_LEFT)) {
             if (gaussian > 4) {
                 gaussian -= 2;
             }
             PostProcess::GetInstance()->SetKernelSizeGaussianFilter(gaussian);
         }
     }
-    if (input->TriggerKey(DIK_5)) {
+    if (input->TriggerKey(DIK_6)) {
         outlinefilter = !outlinefilter;
         PostProcess::GetInstance()->SetEnableLuminanceOutLine(outlinefilter);
     }
-    if (input->TriggerKey(DIK_6)) {
+    if (input->TriggerKey(DIK_7)) {
         depthOutlinefilter = !depthOutlinefilter;
         PostProcess::GetInstance()->SetDepthOutLine(depthOutlinefilter);
     }
-    if (input->TriggerKey(DIK_7)) {
+    if (input->TriggerKey(DIK_8)) {
         radialBulrfilter = !radialBulrfilter;
         PostProcess::GetInstance()->SetRadialBlur(radialBulrfilter);
     }
-    if (input->TriggerKey(DIK_8)) {
+    if (input->TriggerKey(DIK_9)) {
         dissolvefilter = !dissolvefilter;
         PostProcess::GetInstance()->SetDissolve(dissolvefilter);
     }
-    if (input->TriggerKey(DIK_9)) {
+    if (input->TriggerKey(DIK_0)) {
         randomfilter = !randomfilter;
         PostProcess::GetInstance()->SetRandom(randomfilter);
     }
