@@ -160,7 +160,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Game\Enemy\baseEnemy.cpp" />
+    <ClCompile Include="Game\Enemy\EnemyManager.cpp" />
+    <ClCompile Include="Game\Enemy\base\baseEnemyBullet.cpp" />
+    <ClCompile Include="Game\Enemy\base\baseEnemy.cpp" />
     <ClCompile Include="Engine\3d\Animator.cpp" />
     <ClCompile Include="Engine\scene\AbstractSceneFactory.cpp" />
     <ClCompile Include="Engine\base\PostProcess.cpp" />
@@ -251,6 +253,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\scene\SceneFactory.cpp" />
     <ClCompile Include="Game\Player\Player.cpp" />
     <ClCompile Include="Game\Player\PlayerBullet.cpp" />
+    <ClCompile Include="Game\Enemy\Normal\TargetEnemy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\EmitParticle.CS.hlsl">
@@ -501,7 +504,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Game\Enemy\baseEnemy.h" />
+    <ClInclude Include="Game\Enemy\EnemyManager.h" />
+    <ClInclude Include="Game\Enemy\base\baseEnemyBullet.h" />
+    <ClInclude Include="Game\Enemy\base\baseEnemy.h" />
     <ClInclude Include="Engine\3d\Animator.h" />
     <ClInclude Include="Engine\scene\AbstractSceneFactory.h" />
     <ClInclude Include="Engine\base\PostProcess.h" />
@@ -598,6 +603,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Game\Enemy\Normal\TargetEnemy.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

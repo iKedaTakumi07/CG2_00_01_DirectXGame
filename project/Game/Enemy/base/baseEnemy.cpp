@@ -1,6 +1,6 @@
 #include "baseEnemy.h"
 
-void baseEnemy::Initialize()
+void baseEnemy::Initialize(Camera* camera, Vector3 pos)
 {
 }
 
