@@ -237,7 +237,7 @@ void TitleScene::Draw()
     //
     // モデルデータ
     //
-    Object3dCommon::GetInstance()->PreLineObjectDraw();
+    Object3dCommon::GetInstance()->PrepareObjectDraw();
 
     object3d->Draw();
     object3d_2->Draw();
