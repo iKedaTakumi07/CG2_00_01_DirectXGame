@@ -54,53 +54,88 @@ void Player::Draw()
 
 void Player::MoveUpdate()
 {
-    Vector3 move = { 0, 0, 0 };
+    float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+    idleTimer_ += deltaTime;
+
+    Vector3 inputDir = { 0, 0, 0 };
 
     // 押した方向でベクトル変更
     if (Input::getInstance()->PushKey(DIK_A)) {
-        move.x -= 1.0f;
+        inputDir.x -= 1.0f;
     }
     if (Input::getInstance()->PushKey(DIK_D)) {
-        move.x += 1.0f;
+        inputDir.x += 1.0f;
     }
     if (Input::getInstance()->PushKey(DIK_W)) {
-        move.y += 1.0f;
+        inputDir.y += 1.0f;
     }
     if (Input::getInstance()->PushKey(DIK_S)) {
-        move.y -= 1.0f;
-    }
-
-    // 高速旋回
-    bool isShift = Input::getInstance()->PushKey(DIK_LSHIFT);
-
-    float roll = rollFactor;
-    Vector3 speed = Vector3(kCharacterSpeed, kCharacterSpeed, 0.0f);
-
-    if (isShift) {
-        roll = shiftRollFactor; // 旋回
-        speed.x = kCharacterSpeed * 1.5f; // 速度上昇
+        inputDir.y -= 1.0f;
     }
 
     // 正規化
-    float length = std::sqrt(move.x * move.x + move.y * move.y);
+    float length = std::sqrt(inputDir.x * inputDir.x + inputDir.y * inputDir.y);
     if (length > 0.0f) {
-        move.x = (move.x / length) * speed.x;
-        move.y = (move.y / length) * speed.y;
+        inputDir.x /= length;
+        inputDir.y /= length;
     }
 
-    transform_.translate += move;
+    // 高速旋回
+    bool isShift = Input::getInstance()->PushKey(DIK_LSHIFT) || Input::getInstance()->PushKey(DIK_RSHIFT);
 
-    transform_.translate.x = std::clamp(transform_.translate.x, -kMoveLimitX, kMoveLimitX);
-    transform_.translate.y = std::clamp(transform_.translate.y, -kMoveLimitY, kMoveLimitY);
+    float currentAccel = isShift ? kAcceleration * shiftUpSpeed : kAcceleration; // 加速度
+    float currentMaxSpeed = isShift ? kCharacterSpeed * shiftUpSpeed : kCharacterSpeed; // 速度
 
-    const float kTargetRoll = -move.x * roll;
-    const float kTargetYRoll = -move.y * rollFactor; // 固定y
+    // 指定方向に加速
+    velocity_.x += inputDir.x * currentAccel;
+    velocity_.y += inputDir.y * currentAccel;
+
+    // 摩擦による減速
+    velocity_.x *= kFriction;
+    velocity_.y *= kFriction;
+
+    // 最高速の制限
+    float speed = velocity_.x * velocity_.x + velocity_.y * velocity_.y;
+    if (speed > currentMaxSpeed * currentMaxSpeed) {
+        float currentSpeed = std::sqrt(speed);
+        velocity_.x = (velocity_.x / currentSpeed) * currentMaxSpeed;
+        velocity_.y = (velocity_.y / currentSpeed) * currentMaxSpeed;
+    }
+
+    // 座標に代入
+    basetransform_.translate.x += velocity_.x;
+    basetransform_.translate.y += velocity_.y;
+
+    basetransform_.translate.x = std::clamp(basetransform_.translate.x, -kMoveLimitX, kMoveLimitX);
+    basetransform_.translate.y = std::clamp(basetransform_.translate.y, -kMoveLimitY, kMoveLimitY);
 
     // 高速旋回しているか?
-    float lerpRate = isShift ? 0.2f : 0.1f;
+    float lerpRate = isShift ? shiftRollFactor : rollFactor;
 
-    transform_.rotate.z += (kTargetRoll - transform_.rotate.z) * lerpRate;
-    transform_.rotate.x += (kTargetYRoll - transform_.rotate.x) * 0.1f;
+    // 揺れを含まない回転角
+    const float kTargetRoll = -inputDir.x * shiftRollFactor;
+    const float kTargetYRoll = -inputDir.y * shiftRollFactor;
+
+    basetransform_.rotate.y -= (kTargetRoll + basetransform_.rotate.y) * lerpRate;
+    basetransform_.rotate.x += (kTargetYRoll - basetransform_.rotate.x) * lerpRate;
+
+    // 揺れの計算
+    HoverUpdate();
+}
+
+void Player::HoverUpdate()
+{
+    // 揺れを含む座標系
+    float hoverY = std::sin(idleTimer_ * kHoverSpeed) * kHoverAmount;
+    transform_.translate = basetransform_.translate;
+    transform_.translate.y += hoverY;
+
+    // 揺れ込みの回転角
+    float swayZ = std::sin(idleTimer_ * kSwaySpeed) * kSwayAmountZ;
+    float swayX = std::cos(idleTimer_ * kSwaySpeed * 0.7f) * kSwayAmountX;
+
+    transform_.rotate.y = basetransform_.rotate.y + swayZ;
+    transform_.rotate.x = basetransform_.rotate.x + swayX;
 }
 
 void Player::BulletUpdate()
@@ -110,7 +145,7 @@ void Player::BulletUpdate()
     if (coolTime <= 0.0f) {
         if (Input::getInstance()->PushKey(DIK_SPACE)) {
             auto playerbullet = std::make_unique<PlayerBullet>();
-            playerbullet->Initialize(camera_, transform_.translate, transform_.rotate);
+            playerbullet->Initialize(camera_, basetransform_.translate, basetransform_.rotate);
 
             // リストに挿入
             playerBullets_.push_back(std::move(playerbullet));

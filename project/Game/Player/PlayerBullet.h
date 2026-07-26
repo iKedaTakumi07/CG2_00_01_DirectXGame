@@ -22,7 +22,7 @@ private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
 
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 移動ベクトル
-    float speed_ = 10.0f; // 弾速
+    float speed_ = 50.0f; // 弾速
     float deathTimer_ = 3.0f; // 弾の寿命（秒）
     bool isDead_ = false;
 
