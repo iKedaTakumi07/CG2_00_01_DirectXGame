@@ -22,9 +22,12 @@ private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
 
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 移動ベクトル
-    float speed_ = 10.0f; // 弾速
+    float speed_ = 50.0f; // 弾速
     float deathTimer_ = 3.0f; // 弾の寿命（秒）
     bool isDead_ = false;
+
+    float particleTimer_ = 0.0f; // 経過時間タイマー
+    const float kParticleInterval_ = 0.025f; // パーティクル発生間隔
 
     // 3dモデル
     std::unique_ptr<Model> model;

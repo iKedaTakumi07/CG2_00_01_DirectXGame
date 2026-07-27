@@ -254,6 +254,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Game\Player\Player.cpp" />
     <ClCompile Include="Game\Player\PlayerBullet.cpp" />
     <ClCompile Include="Game\Enemy\Normal\TargetEnemy.cpp" />
+    <ClCompile Include="Game\Enemy\Bullet\TargetBullet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\EmitParticle.CS.hlsl">
@@ -604,6 +605,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Game\Enemy\Normal\TargetEnemy.h" />
+    <ClInclude Include="Game\Enemy\Bullet\TargetBullet.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

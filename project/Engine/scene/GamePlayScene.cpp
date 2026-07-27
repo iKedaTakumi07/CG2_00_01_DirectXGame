@@ -56,7 +56,7 @@ void GamePlayScene::Initialize()
     player_->Initialize(BaseScene::GetCamera());
 
     enemyManager_ = std::make_unique<EnemyManager>();
-    enemyManager_->Initialize(BaseScene::GetCamera());
+    enemyManager_->Initialize(player_.get(), BaseScene::GetCamera());
 
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);

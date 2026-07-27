@@ -54,10 +54,16 @@ void PlayerBullet::Update(float deltaTime)
     object3d->SetRotate(transform_.rotate);
     object3d->Update();
 
-    laserParticle_->NewParticle(transform_);
+    particleTimer_ += deltaTime;
 }
 
 void PlayerBullet::Draw()
 {
     object3d->Draw();
+
+    if (particleTimer_ >= kParticleInterval_) {
+        // リセット
+        particleTimer_ = 0.0f;
+        laserParticle_->NewParticle(transform_);
+    }
 }

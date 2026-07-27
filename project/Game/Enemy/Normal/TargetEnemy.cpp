@@ -5,6 +5,10 @@
 
 #include "../../../Engine/base/TextureManager.h"
 
+#include "../../../Engine/scene/SceneManager.h"
+
+#include "../Bullet/TargetBullet.h"
+
 void TargetEnemy::Initialize(Camera* camera, Vector3 pos)
 {
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
@@ -34,6 +38,8 @@ void TargetEnemy::Update()
         move = -move;
     }
 
+    BulletUpdate();
+
     object3d->SetTranslate(transform_.translate);
     object3d->SetRotate(transform_.rotate);
     object3d->Update();
@@ -42,4 +48,34 @@ void TargetEnemy::Update()
 void TargetEnemy::Draw()
 {
     object3d->Draw();
+
+    for (auto& bullet : enemyBullet_) {
+        bullet->Draw();
+    }
+}
+
+void TargetEnemy::BulletUpdate()
+{
+    interval -= SceneManager::GetInstance()->GetDeltaTime();
+
+    if (interval <= 0.0f) {
+        // 弾の生成
+        std::unique_ptr<TargetBullet> newBulletEnemy = std::make_unique<TargetBullet>();
+        newBulletEnemy->Initialize(camera_, transform_.translate, transform_.rotate);
+        newBulletEnemy->SetTargetPosition(player_->GetTranslate());
+
+        enemyBullet_.push_back(std::move(newBulletEnemy));
+        interval = maxInterval;
+    }
+
+    float currentDeltaTime = SceneManager::GetInstance()->GetDeltaTime();
+    // 更新処理
+    for (auto& bullet : enemyBullet_) {
+        bullet->Update(currentDeltaTime);
+    }
+
+    // 弾の削除
+    std::erase_if(enemyBullet_, [](const std::unique_ptr<baseEnemyBullet>& bullet) {
+        return bullet->GetIsDead(); // GetIsDead が true なら削除
+    });
 }
