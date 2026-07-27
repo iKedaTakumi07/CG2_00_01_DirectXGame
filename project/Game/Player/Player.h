@@ -15,7 +15,12 @@ public:
 
     void Draw();
 
+public:
+    // Get関数
+    Vector3 GetTranslate() const { return basetransform_.translate; }
+
     // set
+
 private:
     // 更新系列
     void MoveUpdate();
@@ -35,7 +40,7 @@ private:
     const float kAcceleration = 0.02f; // 加速度
     const float shiftUpSpeed = 1.25f; // シフト(高速旋回)乗算倍率
     const float kFriction = 0.87f; // 摩擦抵抗
-    
+
     // 移動限界座標
     const float kMoveLimitX = 8.0f;
     const float kMoveLimitY = 7.0f;

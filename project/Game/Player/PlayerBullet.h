@@ -26,6 +26,9 @@ private:
     float deathTimer_ = 3.0f; // 弾の寿命（秒）
     bool isDead_ = false;
 
+    float particleTimer_ = 0.0f; // 経過時間タイマー
+    const float kParticleInterval_ = 0.025f; // パーティクル発生間隔
+
     // 3dモデル
     std::unique_ptr<Model> model;
     std::unique_ptr<Object3d> object3d;

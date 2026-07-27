@@ -113,11 +113,15 @@ void Player::MoveUpdate()
     float lerpRate = isShift ? shiftRollFactor : rollFactor;
 
     // 揺れを含まない回転角
-    const float kTargetRoll = -inputDir.x * shiftRollFactor;
-    const float kTargetYRoll = -inputDir.y * shiftRollFactor;
+    const float kTargetRoll = -(velocity_.x / currentMaxSpeed) * lerpRate;
+    const float kTargetYRoll = -(velocity_.y / currentMaxSpeed) * lerpRate;
 
-    basetransform_.rotate.y -= (kTargetRoll + basetransform_.rotate.y) * lerpRate;
-    basetransform_.rotate.x += (kTargetYRoll - basetransform_.rotate.x) * lerpRate;
+    // 補間の速度
+    float lerpSpeed = isShift ? 15.0f : 8.0f;
+    float t = 1.0f - std::exp(-lerpSpeed * deltaTime);
+
+    basetransform_.rotate.y -= (kTargetRoll + basetransform_.rotate.y) * t;
+    basetransform_.rotate.x += (kTargetYRoll - basetransform_.rotate.x) * t;
 
     // 揺れの計算
     HoverUpdate();
