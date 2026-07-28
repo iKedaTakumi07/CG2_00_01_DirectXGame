@@ -22,8 +22,8 @@
 #include "../3d/ModelManager.h"
 #include "../3d/Object3d.h"
 
-#include "../scene/BaseScene.h"
-#include "../scene/SceneFactory.h"
+#include "../scene/base/BaseScene.h"
+#include "../scene/base/SceneFactory.h"
 #include "../scene/SceneManager.h"
 
 void Game::Initialize()

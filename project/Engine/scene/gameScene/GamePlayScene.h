@@ -1,12 +1,12 @@
 #pragma once
-#include "BaseScene.h"
+#include "../base/BaseScene.h"
 #include <list>
 #include <memory>
 #include <vector>
 
-#include "../2d/Sprite.h"
-#include "../3d/CPUParticle/ParticleEmitter.h"
-#include "../audio/Sound.h"
+#include "../../2d/Sprite.h"
+#include "../../3d/CPUParticle/ParticleEmitter.h"
+#include "../../audio/Sound.h"
 
 class Model;
 class Object3d;

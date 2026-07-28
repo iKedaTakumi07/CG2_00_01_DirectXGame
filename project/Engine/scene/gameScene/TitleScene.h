@@ -1,10 +1,10 @@
 #pragma once
-#include "BaseScene.h"
+#include "../base/BaseScene.h"
 #include <memory>
 
-#include "../2d/Sprite.h"
-#include "../3d/CPUParticle/ParticleEmitter.h"
-#include "../audio/Sound.h"
+#include "../../2d/Sprite.h"
+#include "../../3d/CPUParticle/ParticleEmitter.h"
+#include "../../audio/Sound.h"
 class Player;
 
 class LaserParticle;

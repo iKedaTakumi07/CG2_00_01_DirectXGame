@@ -156,16 +156,16 @@
     <ClCompile Include="Engine\audio\Audio.cpp">
       <Filter>ソース ファイル\audio</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\scene\BaseScene.cpp">
+    <ClCompile Include="Engine\scene\base\BaseScene.cpp">
       <Filter>ソース ファイル\scene</Filter>
     </ClCompile>
     <ClCompile Include="Engine\base\Math.cpp">
       <Filter>ソース ファイル\math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\scene\TitleScene.cpp">
+    <ClCompile Include="Engine\scene\gameScene\TitleScene.cpp">
       <Filter>ソース ファイル\scene</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\scene\GamePlayScene.cpp">
+    <ClCompile Include="Engine\scene\gameScene\GamePlayScene.cpp">
       <Filter>ソース ファイル\scene</Filter>
     </ClCompile>
     <ClCompile Include="Engine\scene\SceneManager.cpp">
@@ -186,10 +186,10 @@
     <ClCompile Include="Engine\3d\CPUParticle\IParticleMesh.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\scene\AbstractSceneFactory.cpp">
+    <ClCompile Include="Engine\scene\base\AbstractSceneFactory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\scene\SceneFactory.cpp">
+    <ClCompile Include="Engine\scene\base\SceneFactory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Game\Particle\LaserParticle.cpp">
@@ -235,6 +235,12 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Game\OnCollison\CollisionManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\scene\gameScene\SelectScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\scene\gameScene\resultScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -371,13 +377,13 @@
     <ClInclude Include="Engine\base\Framework.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\scene\GamePlayScene.h">
+    <ClInclude Include="Engine\scene\gameScene\GamePlayScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\scene\BaseScene.h">
+    <ClInclude Include="Engine\scene\base\BaseScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\scene\TitleScene.h">
+    <ClInclude Include="Engine\scene\gameScene\TitleScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Engine\scene\SceneManager.h">
@@ -398,10 +404,10 @@
     <ClInclude Include="Engine\3d\CPUParticle\IParticleMesh.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\scene\AbstractSceneFactory.h">
+    <ClInclude Include="Engine\scene\base\AbstractSceneFactory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\scene\SceneFactory.h">
+    <ClInclude Include="Engine\scene\base\SceneFactory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Game\Particle\LaserParticle.h">
@@ -450,6 +456,12 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Game\OnCollison\CollisionManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\scene\gameScene\SelectScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\scene\gameScene\resultScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
