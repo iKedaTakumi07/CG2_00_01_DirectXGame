@@ -7,7 +7,7 @@
 #include "../3d/Object3dCommon.h"
 #include "../3d/Skybox/SkyBoxCommon.h"
 #include "../io/Input.h"
-#include "../scene/SceneFactory.h"
+#include "../scene/base/SceneFactory.h"
 #include "../scene/SceneManager.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"

@@ -165,10 +165,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Game\Enemy\base\baseEnemyBullet.cpp" />
     <ClCompile Include="Game\Enemy\base\baseEnemy.cpp" />
     <ClCompile Include="Engine\3d\Animator.cpp" />
-    <ClCompile Include="Engine\scene\AbstractSceneFactory.cpp" />
+    <ClCompile Include="Engine\scene\base\AbstractSceneFactory.cpp" />
     <ClCompile Include="Engine\base\PostProcess.cpp" />
     <ClCompile Include="Engine\audio\Audio.cpp" />
-    <ClCompile Include="Engine\scene\BaseScene.cpp" />
+    <ClCompile Include="Engine\scene\base\BaseScene.cpp" />
     <ClCompile Include="Engine\3d\Camera.cpp" />
     <ClCompile Include="Engine\base\D3dResourceLeakChecker.cpp" />
     <ClCompile Include="Engine\base\DirectXCommon.cpp" />
@@ -209,7 +209,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClCompile>
     <ClCompile Include="Engine\base\Framework.cpp" />
     <ClCompile Include="Engine\base\Game.cpp" />
-    <ClCompile Include="Engine\scene\GamePlayScene.cpp" />
+    <ClCompile Include="Engine\scene\gameScene\GamePlayScene.cpp" />
     <ClCompile Include="Engine\base\ImGuiManager.cpp" />
     <ClCompile Include="Engine\io\Input.cpp" />
     <ClCompile Include="Engine\base\Logger.cpp" />
@@ -238,7 +238,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\base\SrvManager.cpp" />
     <ClCompile Include="Engine\base\StringUtility.cpp" />
     <ClCompile Include="Engine\base\TextureManager.cpp" />
-    <ClCompile Include="Engine\scene\TitleScene.cpp" />
+    <ClCompile Include="Engine\scene\gameScene\TitleScene.cpp" />
     <ClCompile Include="Engine\base\WinApp.cpp" />
     <ClCompile Include="Engine\3d\Skybox\Skybox.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">false</ExcludedFromBuild>
@@ -251,12 +251,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Engine\base\OffscreenSurface.cpp" />
-    <ClCompile Include="Engine\scene\SceneFactory.cpp" />
+    <ClCompile Include="Engine\scene\base\SceneFactory.cpp" />
     <ClCompile Include="Game\Player\Player.cpp" />
     <ClCompile Include="Game\Player\PlayerBullet.cpp" />
     <ClCompile Include="Game\Enemy\Normal\TargetEnemy.cpp" />
     <ClCompile Include="Game\Enemy\Bullet\TargetBullet.cpp" />
     <ClCompile Include="Game\OnCollison\Collider.cpp" />
+    <ClCompile Include="Engine\scene\gameScene\SelectScene.cpp" />
+    <ClCompile Include="Engine\scene\gameScene\resultScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\EmitParticle.CS.hlsl">
@@ -512,10 +514,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Game\Enemy\base\baseEnemyBullet.h" />
     <ClInclude Include="Game\Enemy\base\baseEnemy.h" />
     <ClInclude Include="Engine\3d\Animator.h" />
-    <ClInclude Include="Engine\scene\AbstractSceneFactory.h" />
+    <ClInclude Include="Engine\scene\base\AbstractSceneFactory.h" />
     <ClInclude Include="Engine\base\PostProcess.h" />
     <ClInclude Include="Engine\audio\Audio.h" />
-    <ClInclude Include="Engine\scene\BaseScene.h" />
+    <ClInclude Include="Engine\scene\base\BaseScene.h" />
     <ClInclude Include="Engine\3d\Camera.h" />
     <ClInclude Include="Engine\base\D3dResourceLeakChecker.h" />
     <ClInclude Include="Engine\base\DirectXCommon.h" />
@@ -561,7 +563,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClInclude>
     <ClInclude Include="Engine\base\Framework.h" />
     <ClInclude Include="Engine\base\Game.h" />
-    <ClInclude Include="Engine\scene\GamePlayScene.h" />
+    <ClInclude Include="Engine\scene\gameScene\GamePlayScene.h" />
     <ClInclude Include="Engine\base\ImGuiManager.h" />
     <ClInclude Include="Engine\io\Input.h" />
     <ClInclude Include="Engine\base\Logger.h" />
@@ -580,7 +582,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\base\SrvManager.h" />
     <ClInclude Include="Engine\base\StringUtility.h" />
     <ClInclude Include="Engine\base\TextureManager.h" />
-    <ClInclude Include="Engine\scene\TitleScene.h" />
+    <ClInclude Include="Engine\scene\gameScene\TitleScene.h" />
     <ClInclude Include="Engine\base\WinApp.h" />
     <ClInclude Include="Engine\3d\Skybox\Skybox.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">false</ExcludedFromBuild>
@@ -594,7 +596,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClInclude>
     <ClInclude Include="Engine\base\OffscreenSurface.h" />
     <ClInclude Include="Engine\3d\CPUParticle\IParticleMesh.h" />
-    <ClInclude Include="Engine\scene\SceneFactory.h" />
+    <ClInclude Include="Engine\scene\base\SceneFactory.h" />
     <ClInclude Include="Game\Particle\LaserParticle.h" />
     <ClInclude Include="Engine\3d\LightManager.h" />
     <ClInclude Include="Game\Particle\HitParticle.h" />
@@ -610,6 +612,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClInclude>
     <ClInclude Include="Game\Enemy\Normal\TargetEnemy.h" />
     <ClInclude Include="Game\Enemy\Bullet\TargetBullet.h" />
+    <ClInclude Include="Engine\scene\gameScene\SelectScene.h" />
+    <ClInclude Include="Engine\scene\gameScene\resultScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

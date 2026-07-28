@@ -1,5 +1,5 @@
 #include "SceneManager.h"
-#include "BaseScene.h"
+#include "base/BaseScene.h"
 #include <assert.h>
 
 SceneManager::SceneManager(ConstructorKey)

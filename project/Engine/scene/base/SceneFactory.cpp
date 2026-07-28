@@ -1,8 +1,10 @@
 #include "SceneFactory.h"
 #include <memory>
 
-#include "GamePlayScene.h"
-#include "TitleScene.h"
+#include "../gameScene/GamePlayScene.h"
+#include "../gameScene/SelectScene.h"
+#include "../gameScene/TitleScene.h"
+#include "../gameScene/resultScene.h"
 
 SceneFactory::SceneFactory(Camera* camera)
     : camera_(camera)
@@ -19,6 +21,10 @@ std::unique_ptr<BaseScene> SceneFactory::CreateScene(const std::string& sceneNam
 
     } else if (sceneName == "GAMEPLAY") {
         newScene = std::make_unique<GamePlayScene>();
+    } else if (sceneName == "SELECT") {
+        newScene = std::make_unique<SelectScene>();
+    } else if (sceneName == "RESULT") {
+        newScene = std::make_unique<resultScene>();
     }
 
     if (newScene) {
