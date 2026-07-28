@@ -6,8 +6,11 @@
 #include <list>
 #include <memory>
 
+#include "../OnCollison/Collider.h"
+
 #include "PlayerBullet.h"
-class Player {
+
+class Player : public Collider {
 public:
     void Initialize(Camera* camera);
 
@@ -17,7 +20,14 @@ public:
 
 public:
     // Get関数
-    Vector3 GetTranslate() const { return basetransform_.translate; }
+    Vector3 GetTranslate() const { return basetransform_.translate; } // 座標の取得
+    Transform GetTransform() const { return basetransform_; } // 回転角含む
+    const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const { return playerBullets_; } // 弾の入手
+
+    AABB GetAABB() const override;
+    CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kPlayer; }
+    void OnCollision(Collider* other) override;
+    int GetDamage() const override { return dameg_; }
 
     // set
 
@@ -35,6 +45,13 @@ private:
     // 移動速度
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
 
+    // 当たり判定
+    float size = 2.0f; // OBBに移植後は知らん。
+
+    // 体力
+    int hp_ = 100; // 現体力
+    int Maxhp_ = 100; // 最大体力
+
     // 移動系パラメータ
     const float kCharacterSpeed = 0.4f; // 最高速度
     const float kAcceleration = 0.02f; // 加速度
@@ -46,8 +63,8 @@ private:
     const float kMoveLimitY = 7.0f;
 
     // 機体の傾き
-    float rollFactor = 0.4f;
-    float shiftRollFactor = 0.8f;
+    float rollFactor = 0.8f;
+    float shiftRollFactor = 1.4f;
 
     // 静止時の揺れ
     const float kHoverSpeed = 2.5f; // 浮遊の速さ（周波数）
@@ -60,6 +77,8 @@ private:
     // 弾の詳細設定(チャージショット一連の操作、チュートリアルを作成後作成)
     const float kCoolTime = 0.20f;
     float coolTime = 0.0f;
+    int dameg_ = 10;
+    int chargeDameg_ = 15;
 
     // 3dモデル
     std::unique_ptr<Model> model;

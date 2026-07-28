@@ -40,6 +40,11 @@ struct Transform {
     Vector3 rotate;
     Vector3 translate;
 };
+struct OBB {
+    Vector3 center; // OBBの中心座標 (ワールド座標)
+    Vector3 orientations[3]; // ローカルのX, Y, Z軸の方向ベクトル (正規化済み)
+    Vector3 size; // 各ローカル軸方向の半径 (幅/2, 高さ/2, 奥行き/2)
+};
 struct QuaternionTransform {
     Vector3 scale;
     Vector4 rotate;
@@ -292,6 +297,8 @@ Matrix4x4 MakePrespectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 
 bool IsCollision(const AABB& aabb, const Vector3& point);
+float Dot(const Vector3& v1, const Vector3& v2);
+Vector3 Cross(const Vector3& v1, const Vector3& v2);
 
 // --- Matrix4x4 ---
 // 行列の掛け算

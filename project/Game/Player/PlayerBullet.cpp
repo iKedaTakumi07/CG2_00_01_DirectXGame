@@ -67,3 +67,23 @@ void PlayerBullet::Draw()
         laserParticle_->NewParticle(transform_);
     }
 }
+
+AABB PlayerBullet::GetAABB() const
+{
+    AABB aabb;
+
+    aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
+    aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
+    return aabb;
+}
+
+void PlayerBullet::OnCollision(Collider* other)
+{
+    // 当たったもの次第で分岐
+    if (other->GetCollisionGroup() == CollisionGroup::kEnemyBullet || other->GetCollisionGroup() == CollisionGroup::kEnenmy) {
+        // 消滅
+        isDead_ = true;
+
+        // チャージショット実装するなら消滅しない例外が必要かも
+    }
+}

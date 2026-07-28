@@ -16,9 +16,14 @@ public:
 
     void Draw();
 
+public:
+    // Get関数
+    const std::list<std::unique_ptr<baseEnemy>>& GetEnemyes() const { return enemies_; } // 弾の入手
+
+
 private:
     Camera* camera_ = nullptr; // カメラポインタ
     Player* player_ = nullptr; // ターゲット用のプレイヤーポインタ
 
-    std::list<std::shared_ptr<baseEnemy>> enemies_; // 生きている敵のリスト
+    std::list<std::unique_ptr<baseEnemy>> enemies_; // 生きている敵のリスト
 };

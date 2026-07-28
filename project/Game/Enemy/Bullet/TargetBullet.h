@@ -6,6 +6,8 @@
 #include "../base/baseEnemyBullet.h"
 #include <memory>
 
+#include "../../Player/Player.h"
+
 class TargetBullet : public baseEnemyBullet {
 public:
     void Initialize(Camera* camera, Vector3 pos, const Vector3& rotation) override;
@@ -18,11 +20,24 @@ public:
     // Get関数
     bool GetIsDead() const override { return isDead_; };
 
+    AABB GetAABB() const override;
+    CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kEnemyBullet; }
+    void OnCollision(Collider* other) override;
+    int GetDamage() const override { return dameg_; }
+
     // Set関数
     void SetTargetPosition(Vector3 Pos);
+    void SetIsDead(bool num) { isDead_ = num; }
+
+private:
+    void MoveUpdate();
+    void RoateUpdate();
 
 private:
     Transform transform_;
+
+    // 当たり判定
+    float size = 2.0f; // OBBに移植後は知らん。
 
     Vector3 acceleration_; // 弾の速さ(個別で設定)
     float accelerationScalar = 0.15f; // 加速度の強さ
@@ -33,6 +48,8 @@ private:
 
     float particleTimer_ = 0.0f; // 経過時間タイマー
     const float kParticleInterval_ = 0.025f; // パーティクル発生間隔
+
+    int dameg_ = 2;
 
     Vector3 targetPos_; // 追跡対象、または狙う場所
 

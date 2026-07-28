@@ -160,6 +160,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Game\OnCollison\CollisionManager.cpp" />
     <ClCompile Include="Game\Enemy\EnemyManager.cpp" />
     <ClCompile Include="Game\Enemy\base\baseEnemyBullet.cpp" />
     <ClCompile Include="Game\Enemy\base\baseEnemy.cpp" />
@@ -255,6 +256,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Game\Player\PlayerBullet.cpp" />
     <ClCompile Include="Game\Enemy\Normal\TargetEnemy.cpp" />
     <ClCompile Include="Game\Enemy\Bullet\TargetBullet.cpp" />
+    <ClCompile Include="Game\OnCollison\Collider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\EmitParticle.CS.hlsl">
@@ -505,6 +507,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Game\OnCollison\CollisionManager.h" />
     <ClInclude Include="Game\Enemy\EnemyManager.h" />
     <ClInclude Include="Game\Enemy\base\baseEnemyBullet.h" />
     <ClInclude Include="Game\Enemy\base\baseEnemy.h" />
@@ -599,6 +602,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\3d\GPUParticleManager.h" />
     <ClInclude Include="Engine\base\LevelLoader.h" />
     <ClInclude Include="Game\Player\PlayerBullet.h" />
+    <ClInclude Include="Game\OnCollison\Collider.h" />
     <ClInclude Include="resources\nlohmann\json.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

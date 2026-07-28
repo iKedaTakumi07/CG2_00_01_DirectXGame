@@ -20,6 +20,8 @@
 #include "../io/Input.h"
 
 #include "../../Game/Enemy/EnemyManager.h"
+#include "../../Game/Enemy/base/baseEnemy.h"
+#include "../../Game/OnCollison/CollisionManager.h"
 #include "../../Game/Player/Player.h"
 
 #include "math.h"
@@ -58,6 +60,8 @@ void GamePlayScene::Initialize()
     enemyManager_ = std::make_unique<EnemyManager>();
     enemyManager_->Initialize(player_.get(), BaseScene::GetCamera());
 
+    collisionManager_ = std::make_unique<CollisionManager>();
+
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
     // Audio::GetInstance()->Play(clearSe);
@@ -74,6 +78,20 @@ void GamePlayScene::Update()
 
     player_->Update();
     enemyManager_->Update();
+
+    collisionManager_->Clear();
+    collisionManager_->AddCollider(player_.get());
+    for (auto& bullet : player_->GetBullets()) {
+        collisionManager_->AddCollider(bullet.get());
+    }
+    for (auto& enemy : enemyManager_->GetEnemyes()) {
+        collisionManager_->AddCollider(enemy.get());
+        for (auto& enemyBullet : enemy->GetBullets()) {
+            collisionManager_->AddCollider(enemyBullet.get());
+        }
+    }
+
+    collisionManager_->CheckAllCollisions();
 }
 
 void GamePlayScene::Draw()

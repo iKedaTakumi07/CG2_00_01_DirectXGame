@@ -11,7 +11,9 @@
 #include "../../Engine/io/Input.h"
 #include "../../Engine/scene/SceneManager.h"
 
+#include "../Enemy/base/baseEnemyBullet.h"
 #include "PlayerBullet.h"
+
 #include <utility>
 
 void Player::Initialize(Camera* camera)
@@ -50,6 +52,26 @@ void Player::Draw()
     }
 
     object3d->Draw();
+}
+
+AABB Player::GetAABB() const
+{
+    AABB aabb;
+
+    aabb.min = { basetransform_.translate.x - size, basetransform_.translate.y - size, basetransform_.translate.z - size };
+    aabb.max = { basetransform_.translate.x + size, basetransform_.translate.y + size, basetransform_.translate.z + size };
+    return aabb;
+}
+
+void Player::OnCollision(Collider* other)
+{
+    // 当たったもの次第で分岐
+    if (other->GetCollisionGroup() == CollisionGroup::kEnemyBullet || other->GetCollisionGroup() == CollisionGroup::kEnenmy) {
+        int damege = other->GetDamage();
+        hp_ -= damege;
+
+        // 無敵時間のフラグ実行
+    }
 }
 
 void Player::MoveUpdate()
@@ -120,7 +142,7 @@ void Player::MoveUpdate()
     float lerpSpeed = isShift ? 15.0f : 8.0f;
     float t = 1.0f - std::exp(-lerpSpeed * deltaTime);
 
-    basetransform_.rotate.y -= (kTargetRoll + basetransform_.rotate.y) * t;
+    basetransform_.rotate.z += (kTargetRoll - basetransform_.rotate.z) * t;
     basetransform_.rotate.x += (kTargetYRoll - basetransform_.rotate.x) * t;
 
     // 揺れの計算
@@ -138,8 +160,10 @@ void Player::HoverUpdate()
     float swayZ = std::sin(idleTimer_ * kSwaySpeed) * kSwayAmountZ;
     float swayX = std::cos(idleTimer_ * kSwaySpeed * 0.7f) * kSwayAmountX;
 
-    transform_.rotate.y = basetransform_.rotate.y + swayZ;
+    transform_.rotate.z = basetransform_.rotate.z + swayZ;
     transform_.rotate.x = basetransform_.rotate.x + swayX;
+
+    transform_.rotate.y = basetransform_.rotate.y;
 }
 
 void Player::BulletUpdate()

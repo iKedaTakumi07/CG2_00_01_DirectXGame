@@ -2,7 +2,9 @@
 #include "../../../Engine/base/Math.h"
 class Camera;
 
-class baseEnemyBullet {
+#include "../../OnCollison/Collider.h"
+
+class baseEnemyBullet : public Collider {
 public:
     virtual void Initialize(Camera* camera, Vector3 pos, const Vector3& rotation);
 
