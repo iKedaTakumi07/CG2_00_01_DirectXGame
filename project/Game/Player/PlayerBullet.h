@@ -5,8 +5,10 @@
 #include "../Particle/LaserParticle.h"
 #include <memory>
 
+#include "../OnCollison/Collider.h"
+
 class Camera;
-class PlayerBullet {
+class PlayerBullet : public Collider {
 public:
     void Initialize(Camera* camera, const Vector3& position, const Vector3& rotation);
 
@@ -14,12 +16,21 @@ public:
 
     void Draw();
 
-    // set
-
+public:
+    // Get関数
     bool IsDead() const { return isDead_; }
+
+    AABB GetAABB() const override;
+    CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kPlayerBullet; }
+    void OnCollision(Collider* other) override;
+
+    // set
 
 private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
+
+    // 当たり判定
+    float size = 2.0f; // OBBに移植後は知らん。
 
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 移動ベクトル
     float speed_ = 50.0f; // 弾速

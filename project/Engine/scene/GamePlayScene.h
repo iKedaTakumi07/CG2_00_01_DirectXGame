@@ -13,6 +13,7 @@ class Object3d;
 class Skybox;
 class Player;
 class EnemyManager;
+class CollisionManager;
 
 class GamePlayScene : public BaseScene {
 public:
@@ -39,6 +40,9 @@ private:
     std::unique_ptr<Player> player_;
     // 敵
     std::unique_ptr<EnemyManager> enemyManager_;
+
+    // 当たり半テオ
+    std::unique_ptr<CollisionManager> collisionManager_;
 
     // 音声データ
     Sound fanfare;

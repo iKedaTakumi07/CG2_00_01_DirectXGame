@@ -36,20 +36,8 @@ void TargetBullet::Initialize(Camera* camera, Vector3 pos, const Vector3& rotati
 
 void TargetBullet::Update(float deltaTime)
 {
-    // 弾の移動
-    velocity_ += acceleration_;
 
-    float currentSpeed = sqrtf(velocity_.x * velocity_.x + velocity_.y * velocity_.y + velocity_.z * velocity_.z);
-
-    // 弾の速さが最高速度を超えていたら、最高速度に制限する
-    float totalMaxSpeed = maxSpeed; // 合計の限界値を出す
-    if (currentSpeed >= totalMaxSpeed) {
-        // 現在の進行方向（長さ1）を計算し、それに最高速度を掛ける
-        Vector3 currentDir = Normalize(velocity_);
-        velocity_ = currentDir * totalMaxSpeed;
-    }
-
-    transform_.translate += velocity_;
+    MoveUpdate();
 
     deathTimer_ -= deltaTime;
     if (deathTimer_ <= 0.0f) {
@@ -74,6 +62,26 @@ void TargetBullet::Draw()
     }
 }
 
+AABB TargetBullet::GetAABB() const
+{
+    AABB aabb;
+    aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
+    aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
+    return aabb;
+}
+
+void TargetBullet::OnCollision(Collider* other)
+{
+    // 当たったもの次第で分岐
+    if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
+        // お互い抹消
+        isDead_ = true;
+    } else if (other->GetCollisionGroup() == CollisionGroup::kPlayer) {
+        // 弾削除
+        isDead_ = true;
+    }
+}
+
 void TargetBullet::SetTargetPosition(Vector3 Pos)
 {
     // 狙う場所を設定
@@ -92,4 +100,35 @@ void TargetBullet::SetTargetPosition(Vector3 Pos)
 
     // 加速度の「大きさ」を決め、それにターゲットの方向を掛け合わせる
     acceleration_ = direction * accelerationScalar;
+}
+
+void TargetBullet::MoveUpdate()
+{
+    // 弾の移動
+    velocity_ += acceleration_;
+
+    float currentSpeed = sqrtf(velocity_.x * velocity_.x + velocity_.y * velocity_.y + velocity_.z * velocity_.z);
+
+    // 弾の速さが最高速度を超えていたら、最高速度に制限する
+    float totalMaxSpeed = maxSpeed; // 合計の限界値を出す
+    if (currentSpeed >= totalMaxSpeed) {
+        // 現在の進行方向（長さ1）を計算し、それに最高速度を掛ける
+        Vector3 currentDir = Normalize(velocity_);
+        velocity_ = currentDir * totalMaxSpeed;
+    }
+
+    transform_.translate += velocity_;
+
+    RoateUpdate();
+}
+
+void TargetBullet::RoateUpdate()
+{
+    Vector3 rotate;
+    rotate.y = atan2(velocity_.x, velocity_.z);
+    // 横軸方向の長さを求める
+    float hypotXZ = std::hypot(velocity_.x, velocity_.z);
+    rotate.x = atan2(-velocity_.y, hypotXZ);
+    rotate.z = 0.0f;
+    transform_.rotate = rotate;
 }

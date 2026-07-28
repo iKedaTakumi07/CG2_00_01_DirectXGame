@@ -54,6 +54,26 @@ void TargetEnemy::Draw()
     }
 }
 
+AABB TargetEnemy::GetAABB() const
+{
+    AABB aabb;
+    aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
+    aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
+    return aabb;
+}
+
+void TargetEnemy::OnCollision(Collider* other)
+{
+    // 当たったもの次第で分岐
+    if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
+        // ダメージ処理
+
+        // プレイヤーの弾消去
+    } else if (other->GetCollisionGroup() == CollisionGroup::kPlayer) {
+        // お互いダメージ処理
+    }
+}
+
 void TargetEnemy::BulletUpdate()
 {
     interval -= SceneManager::GetInstance()->GetDeltaTime();

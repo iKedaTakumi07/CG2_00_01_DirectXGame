@@ -6,7 +6,9 @@
 class Camera;
 class Player;
 
-class baseEnemy {
+#include "../../OnCollison/Collider.h"
+
+class baseEnemy : public Collider {
 public:
     virtual void Initialize(Camera* camera, Vector3 pos);
 
@@ -15,7 +17,10 @@ public:
     virtual void Draw();
 
     /* Set関数 */
-    virtual void SetTargetPlayer(Player* target) { };
+    virtual void SetTargetPlayer(Player* target) { }; // 対象に向かわせる
+
+    /* Get関数 */
+    const std::vector<std::unique_ptr<baseEnemyBullet>>& GetBullets() const { return enemyBullet_; }
 
 protected:
     // 弾
