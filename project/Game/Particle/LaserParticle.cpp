@@ -5,7 +5,10 @@
 void LaserParticle::Initialize()
 {
     // 事前に読み込ませるため多分?
-    CPUParticleManager::getInstance()->CreateParticleGroup("laser", "resources/laser.png", ParticleMeshType::kPlane);
+    CPUParticleManager::getInstance()->CreateParticleGroup("laser", "resources/playerLaser.png", ParticleMeshType::kPlane);
+
+    StartColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    EndColor = Vector4(1.0f, 1.0f, 1.0f, 0.0f);
 }
 
 void LaserParticle::NewParticle(const Transform& emitterTransform)
@@ -17,8 +20,8 @@ void LaserParticle::NewParticle(const Transform& emitterTransform)
 
         laserfireParam.SetRotate({ 0.0f, rotY, rotZ });
         laserfireParam.SetScale({ 1.0f, 0.5f, 1.0f });
-        laserfireParam.SetStartColor({ 1.0f, 1.0f, 1.0f, 1.0f });
-        laserfireParam.SetEndColor({ 1.0f, 1.0f, 1.0f, 0.0f });
+        laserfireParam.SetStartColor({ StartColor });
+        laserfireParam.SetEndColor({ EndColor });
         laserfireParam.SetVelocity({ 0.0f, 0.0f, 0.0f }); // 残像なのでその場に固定
         laserfireParam.SetLifeTime(0.6f);
 

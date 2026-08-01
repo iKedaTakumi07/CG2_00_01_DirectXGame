@@ -18,6 +18,8 @@ public:
 
     void Draw();
 
+    void SpritDraw();
+
 public:
     // Get関数
     Vector3 GetTranslate() const { return basetransform_.translate; } // 座標の取得
@@ -35,18 +37,20 @@ private:
     // 更新系列
     void MoveUpdate();
     void HoverUpdate();
+    void ReticleUpdate();
+
     // 弾の制御
     void BulletUpdate();
 
 private:
     Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }; // 座標
-    Transform basetransform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }; // 揺れ成分を含まない座標他
+    Transform basetransform_ = { { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }; // 揺れ成分を含まない座標他
 
     // 移動速度
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
 
     // 当たり判定
-    float size = 2.0f; // OBBに移植後は知らん。
+    float size = 1.0f; // OBBに移植後は知らん。
 
     // 体力
     int hp_ = 100; // 現体力
@@ -58,7 +62,7 @@ private:
     const float shiftUpSpeed = 1.25f; // シフト(高速旋回)乗算倍率
     const float kFriction = 0.87f; // 摩擦抵抗
 
-    // 移動限界座標
+    // 移動限界座標(仮定)
     const float kMoveLimitX = 8.0f;
     const float kMoveLimitY = 7.0f;
 
@@ -80,9 +84,19 @@ private:
     int dameg_ = 10;
     int chargeDameg_ = 15;
 
+    // 3d照準の距離
+    const float kLongDistancePlayerTo3DReticle = 50.0f; // 最長射程
+    const float kShortDistancePlayerTo3DReticle = 25.0f; // 半分ぐらいの距離
+
     // 3dモデル
-    std::unique_ptr<Model> model;
-    std::unique_ptr<Object3d> object3d;
+    std::unique_ptr<Model> playerModel;
+    std::unique_ptr<Object3d> playerObject3d;
+
+    std::unique_ptr<Model> ShortReticleModel;
+    std::unique_ptr<Object3d> ShortReticleObject3d;
+
+    std::unique_ptr<Model> LongReticleModel;
+    std::unique_ptr<Object3d> LongReticleObject3d;
 
     // カメラ
     Camera* camera_;

@@ -20,29 +20,49 @@ void Player::Initialize(Camera* camera)
 {
     TextureManager::getInstance()->LoadTexture("resources/player/1x1white.png");
     ModelManager::GetInstance()->LoadModel("player/Player.obj");
+    TextureManager::getInstance()->LoadTexture("resources/playerReticle.png");
+    ModelManager::GetInstance()->LoadModel("playerReticle.obj");
 
     camera_ = camera;
 
-    object3d = std::make_unique<Object3d>();
-    object3d->Initialize();
-    object3d->SetCamera(camera);
+    playerObject3d = std::make_unique<Object3d>();
+    playerObject3d->Initialize();
+    playerObject3d->SetCamera(camera);
 
-    model = std::make_unique<Model>();
-    model->Initialize("resources/player", "Player.obj");
+    playerModel = std::make_unique<Model>();
+    playerModel->Initialize("resources/player", "Player.obj");
+    playerObject3d->SetModel(playerModel.get());
+    playerObject3d->SetScale(basetransform_.scale);
     // model->SetEvnTexturefilePath(skydox->GetTextureFilePath()); // 反射が必要なら
-    object3d->SetModel(model.get());
+
+    ShortReticleObject3d = std::make_unique<Object3d>();
+    ShortReticleObject3d->Initialize();
+    ShortReticleObject3d->SetCamera(camera);
+
+    ShortReticleModel = std::make_unique<Model>();
+    ShortReticleModel->Initialize("resources", "playerReticle.obj");
+    ShortReticleObject3d->SetModel(ShortReticleModel.get());
+
+    LongReticleObject3d = std::make_unique<Object3d>();
+    LongReticleObject3d->Initialize();
+    LongReticleObject3d->SetCamera(camera);
+
+    LongReticleModel = std::make_unique<Model>();
+    LongReticleModel->Initialize("resources", "playerReticle.obj");
+    LongReticleObject3d->SetModel(LongReticleModel.get());
 }
 
 void Player::Update()
 {
     MoveUpdate();
     BulletUpdate();
+    ReticleUpdate();
 
-    object3d->SetTranslate(transform_.translate);
-    object3d->SetRotate(transform_.rotate);
+    playerObject3d->SetTranslate(transform_.translate);
+    playerObject3d->SetRotate(transform_.rotate);
 
-    object3d->Update();
-    object3d->DrawImGui("Player");
+    playerObject3d->Update();
+    playerObject3d->DrawImGui("Player");
 }
 
 void Player::Draw()
@@ -51,7 +71,14 @@ void Player::Draw()
         bullet_->Draw();
     }
 
-    object3d->Draw();
+    playerObject3d->Draw();
+
+    ShortReticleObject3d->Draw();
+    LongReticleObject3d->Draw();
+}
+
+void Player::SpritDraw()
+{
 }
 
 AABB Player::GetAABB() const
@@ -164,6 +191,32 @@ void Player::HoverUpdate()
     transform_.rotate.x = basetransform_.rotate.x + swayX;
 
     transform_.rotate.y = basetransform_.rotate.y;
+}
+
+void Player::ReticleUpdate()
+{
+    Vector3 forwardDir;
+    forwardDir.x = -std::sin(basetransform_.rotate.z);
+    forwardDir.y = -std::sin(basetransform_.rotate.x);
+    forwardDir.z = std::cos(basetransform_.rotate.z);
+
+    Vector3 shortPos;
+    shortPos.x = basetransform_.translate.x + (forwardDir.x * kShortDistancePlayerTo3DReticle);
+    shortPos.y = basetransform_.translate.y + (forwardDir.y * kShortDistancePlayerTo3DReticle);
+    shortPos.z = basetransform_.translate.z + (forwardDir.z * kShortDistancePlayerTo3DReticle);
+
+    ShortReticleObject3d->SetTranslate(shortPos);
+    ShortReticleObject3d->SetRotate(basetransform_.rotate);
+    ShortReticleObject3d->Update();
+
+    Vector3 longPos;
+    longPos.x = basetransform_.translate.x + (forwardDir.x * kLongDistancePlayerTo3DReticle);
+    longPos.y = basetransform_.translate.y + (forwardDir.y * kLongDistancePlayerTo3DReticle);
+    longPos.z = basetransform_.translate.z + (forwardDir.z * kLongDistancePlayerTo3DReticle);
+
+    LongReticleObject3d->SetTranslate(longPos);
+    LongReticleObject3d->SetRotate(basetransform_.rotate);
+    LongReticleObject3d->Update();
 }
 
 void Player::BulletUpdate()
