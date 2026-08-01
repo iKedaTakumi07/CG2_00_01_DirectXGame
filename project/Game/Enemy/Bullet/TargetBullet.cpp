@@ -32,6 +32,8 @@ void TargetBullet::Initialize(Camera* camera, Vector3 pos, const Vector3& rotati
 
     laserParticle_ = std::make_unique<LaserParticle>();
     laserParticle_->Initialize();
+    laserParticle_->SetStartColor(Vector4(1.0f, 0.2f, 0.2f, 1.0f));
+    laserParticle_->SetEndColor(Vector4(1.0f, 0.2f, 0.2f, 0.0f));
 }
 
 void TargetBullet::Update(float deltaTime)

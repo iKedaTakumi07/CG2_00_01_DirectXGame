@@ -37,7 +37,7 @@ private:
     Transform transform_;
 
     // 当たり判定
-    float size = 2.0f; // OBBに移植後は知らん。
+    float size = 0.5f; // OBBに移植後は知らん。
 
     Vector3 acceleration_; // 弾の速さ(個別で設定)
     float accelerationScalar = 0.15f; // 加速度の強さ

@@ -30,7 +30,7 @@ private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
 
     // 当たり判定
-    float size = 2.0f; // OBBに移植後は知らん。
+    float size = 0.5f; // OBBに移植後は知らん。
 
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 移動ベクトル
     float speed_ = 50.0f; // 弾速

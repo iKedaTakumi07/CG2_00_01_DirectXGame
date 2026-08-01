@@ -31,11 +31,22 @@ void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vec
     velocity_.y = -std::sin(transform_.rotate.x) * speed_;
     velocity_.z = std::cos(transform_.rotate.z) * speed_;
 
+    // 進行方向ベクトルからモデルの向きを計算
+    transform_.rotate.y = std::atan2(velocity_.x, velocity_.z);
+    float hypotXZ = std::hypot(velocity_.x, velocity_.z);
+    transform_.rotate.x = std::atan2(-velocity_.y, hypotXZ);
+    transform_.rotate.z = rotation.z;
+
+    Vector3 renderRotate = transform_.rotate;
+    renderRotate.x *= -1.0f;
+
     object3d->SetTranslate(transform_.translate);
-    object3d->SetRotate(transform_.rotate);
+    object3d->SetRotate(renderRotate);
 
     laserParticle_ = std::make_unique<LaserParticle>();
     laserParticle_->Initialize();
+    laserParticle_->SetStartColor(Vector4(0.5f, 1.0f, 0.5f, 1.0f));
+    laserParticle_->SetEndColor(Vector4(0.5f, 1.0f, 0.5f, 0.0f));
 }
 
 void PlayerBullet::Update(float deltaTime)
@@ -49,6 +60,10 @@ void PlayerBullet::Update(float deltaTime)
     if (deathTimer_ <= 0.0f) {
         isDead_ = true;
     }
+
+    transform_.rotate.y = std::atan2(velocity_.x, velocity_.z);
+    float hypotXZ = std::hypot(velocity_.x, velocity_.z);
+    transform_.rotate.x = std::atan2(-velocity_.y, hypotXZ);
 
     object3d->SetTranslate(transform_.translate);
     object3d->SetRotate(transform_.rotate);

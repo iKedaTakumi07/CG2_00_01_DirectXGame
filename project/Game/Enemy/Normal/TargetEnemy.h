@@ -40,7 +40,7 @@ private:
     std::unique_ptr<Object3d> object3d;
 
     // 当たり判定
-    float size = 2.0f; // OBBに移植後は知らん。
+    float size = 1.0f; // OBBに移植後は知らん。
 
     Transform transform_; // 座標系
 

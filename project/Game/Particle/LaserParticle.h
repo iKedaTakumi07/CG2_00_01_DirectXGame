@@ -16,7 +16,12 @@ public:
     // 描画
     void Draw();
 
+public:
+    void SetStartColor(Vector4 color) { StartColor = color; }
+    void SetEndColor(Vector4 color) { EndColor = color; }
+
 private:
-    // 弾の座標を取得できない(エンジン作成がある程度完成するまでは)ため代理の座標
-    std::vector<Transform> Pos;
+    // ステータス設定。
+    Vector4 StartColor;
+    Vector4 EndColor;
 };
