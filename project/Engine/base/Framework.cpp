@@ -7,8 +7,8 @@
 #include "../3d/Object3dCommon.h"
 #include "../3d/Skybox/SkyBoxCommon.h"
 #include "../io/Input.h"
-#include "../scene/base/SceneFactory.h"
 #include "../scene/SceneManager.h"
+#include "../scene/base/SceneFactory.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "WinApp.h"
@@ -90,27 +90,25 @@ void Framework::Initialize()
 
     SkyBoxCommon::GetInstance()->Initialize(dxCommon.get());
 
-    camera = std::make_unique<Camera>();
-    camera->SetTranslate({ 0.0f, 4.0f, -15.0f });
-    camera->SetRotate({ 0.0f, 0.0f, 0.0f });
+    CameraManager::GetInstance()->CreateCamera("Default");
 
     TextureManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
     ModelManager::GetInstance()->Initialize(dxCommon.get());
 
     CPUParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
-    CPUParticleManager::getInstance()->SetDefaultCamera(camera.get());
+    CPUParticleManager::getInstance()->SetDefaultCamera(CameraManager::GetInstance()->GetActiveCamera());
 
     GPUParticleManager::getInstance()->Initialize(dxCommon.get(), srvManager.get());
-    GPUParticleManager::getInstance()->SetDefaultCamera(camera.get());
+    GPUParticleManager::getInstance()->SetDefaultCamera(CameraManager::GetInstance()->GetActiveCamera());
 
     PostProcess::GetInstance()->Initialize(dxCommon.get());
     PostProcess::GetInstance()->SetsrvHandle(offscreenSurface->GetSRVHandle());
     PostProcess::GetInstance()->SetDepthSrvHandle(offscreenSurface->GetDepthSRVHandle());
-    PostProcess::GetInstance()->SetDefaultCamera(camera.get());
+    PostProcess::GetInstance()->SetDefaultCamera(CameraManager::GetInstance()->GetActiveCamera());
 
-    Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
+    Object3dCommon::GetInstance()->SetDefaultCamera(CameraManager::GetInstance()->GetActiveCamera());
 
-    sceneFactory_ = std::make_unique<SceneFactory>(camera.get());
+    sceneFactory_ = std::make_unique<SceneFactory>(CameraManager::GetInstance()->GetActiveCamera());
     SceneManager::GetInstance()->SetSceneFactory(std::move(sceneFactory_));
 
     Audio::GetInstance()->Initialize();
@@ -142,6 +140,7 @@ void Framework::Update()
 
     Input::getInstance()->Update();
 
+    Camera* camera = CameraManager::GetInstance()->GetActiveCamera();
     Vector3 cameraPos = camera->GetTranslate();
     Vector3 cameraRot = camera->GetRotate();
 

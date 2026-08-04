@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "../../Engine/3d/CameraManager.h"
 #include "../../Engine/3d/ModelManager.h"
 #include "../../Engine/3d/Object3d.h"
 #include "../../Engine/base/Math.h"
@@ -16,18 +17,17 @@
 
 #include <utility>
 
-void Player::Initialize(Camera* camera)
+void Player::Initialize()
 {
     TextureManager::getInstance()->LoadTexture("resources/player/1x1white.png");
     ModelManager::GetInstance()->LoadModel("player/Player.obj");
-    TextureManager::getInstance()->LoadTexture("resources/playerReticle.png");
-    ModelManager::GetInstance()->LoadModel("playerReticle.obj");
+    TextureManager::getInstance()->LoadTexture("resources/player/playerReticle.png");
+    ModelManager::GetInstance()->LoadModel("player/playerReticle.obj");
 
-    camera_ = camera;
+    camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
     playerObject3d = std::make_unique<Object3d>();
     playerObject3d->Initialize();
-    playerObject3d->SetCamera(camera);
 
     playerModel = std::make_unique<Model>();
     playerModel->Initialize("resources/player", "Player.obj");
@@ -37,23 +37,23 @@ void Player::Initialize(Camera* camera)
 
     ShortReticleObject3d = std::make_unique<Object3d>();
     ShortReticleObject3d->Initialize();
-    ShortReticleObject3d->SetCamera(camera);
 
     ShortReticleModel = std::make_unique<Model>();
-    ShortReticleModel->Initialize("resources", "playerReticle.obj");
+    ShortReticleModel->Initialize("resources/player", "playerReticle.obj");
     ShortReticleObject3d->SetModel(ShortReticleModel.get());
 
     LongReticleObject3d = std::make_unique<Object3d>();
     LongReticleObject3d->Initialize();
-    LongReticleObject3d->SetCamera(camera);
 
     LongReticleModel = std::make_unique<Model>();
-    LongReticleModel->Initialize("resources", "playerReticle.obj");
+    LongReticleModel->Initialize("resources/player", "playerReticle.obj");
     LongReticleObject3d->SetModel(LongReticleModel.get());
 }
 
 void Player::Update()
 {
+    camera_ = CameraManager::GetInstance()->GetActiveCamera();
+
     MoveUpdate();
     BulletUpdate();
     ReticleUpdate();

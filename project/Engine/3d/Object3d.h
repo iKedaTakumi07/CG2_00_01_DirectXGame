@@ -50,7 +50,6 @@ public:
     void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
     void SetTranslate(const Vector3& translate) { transform.translate = translate; }
     void SetModel(const std::string& filePath);
-    void SetCamera(Camera* camera) { this->camera = camera; }
 
     void SetEnableLighting(bool enable)
     {
@@ -98,7 +97,6 @@ private:
     Object3dCommon* object3dCommon = nullptr;
     WinApp* winApp_ = nullptr;
     Model* model = nullptr;
-    Camera* camera = nullptr;
 
     // バッファリソース
     TransformationMatrix* transformationMatrixData;

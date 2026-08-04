@@ -12,7 +12,7 @@
 
 class Player : public Collider {
 public:
-    void Initialize(Camera* camera);
+    void Initialize();
 
     void Update();
 
@@ -25,6 +25,8 @@ public:
     Vector3 GetTranslate() const { return basetransform_.translate; } // 座標の取得
     Transform GetTransform() const { return basetransform_; } // 回転角含む
     const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const { return playerBullets_; } // 弾の入手
+    float GetLimitX() const { return kMoveLimitX; }
+    float GetLimitY() const { return kMoveLimitY; }
 
     AABB GetAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kPlayer; }
