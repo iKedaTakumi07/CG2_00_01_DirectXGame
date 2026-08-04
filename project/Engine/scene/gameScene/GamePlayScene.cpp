@@ -19,6 +19,9 @@
 
 #include "../../io/Input.h"
 
+#include "../../3d/CameraManager.h"
+
+#include "../../../Game/Camera/CameraController.h"
 #include "../../../Game/Enemy/EnemyManager.h"
 #include "../../../Game/Enemy/base/baseEnemy.h"
 #include "../../../Game/OnCollison/CollisionManager.h"
@@ -40,6 +43,13 @@ GamePlayScene::~GamePlayScene() = default;
 
 void GamePlayScene::Initialize()
 {
+    CameraManager::GetInstance()->Clear();
+
+    Camera* mainCamera = CameraManager::GetInstance()->CreateCamera("PlayMain");
+    mainCamera->SetTranslate({ 0.0f, 0.0f, -15.0f });
+
+    Camera* subCamera = CameraManager::GetInstance()->CreateCamera("SubView");
+    subCamera->SetTranslate({ 0.0f, 10.0f, -40.0f });
 
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
@@ -55,12 +65,15 @@ void GamePlayScene::Initialize()
     clearSe.SoundLoadFile("resources/stage.mp3");
 
     player_ = std::make_unique<Player>();
-    player_->Initialize(BaseScene::GetCamera());
+    player_->Initialize();
 
     enemyManager_ = std::make_unique<EnemyManager>();
     enemyManager_->Initialize(player_.get(), BaseScene::GetCamera());
 
     collisionManager_ = std::make_unique<CollisionManager>();
+
+    cameraController_ = std::make_unique<CameraController>();
+    cameraController_->Initialize(CameraManager::GetInstance()->GetActiveCamera(), player_.get());
 
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
@@ -72,8 +85,16 @@ void GamePlayScene::Update()
     auto* input = Input::getInstance();
     Camera* camera = GetCamera();
 
-    if (input->TriggerKey(DIK_F1)) {
+    cameraController_->Update();
+
+    if (input->TriggerKey(DIK_1)) {
         SceneManager::GetInstance()->ChangeScene("TITLE");
+    }
+    if (input->TriggerKey(DIK_9)) {
+        CameraManager::GetInstance()->SetActiveCamera("PlayMain");
+    }
+    if (input->TriggerKey(DIK_0)) {
+        CameraManager::GetInstance()->SetActiveCamera("SubView");
     }
 
     player_->Update();

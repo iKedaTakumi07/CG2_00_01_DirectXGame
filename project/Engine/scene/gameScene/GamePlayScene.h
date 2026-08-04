@@ -1,11 +1,7 @@
 #pragma once
 #include "../base/BaseScene.h"
-#include <list>
 #include <memory>
-#include <vector>
 
-#include "../../2d/Sprite.h"
-#include "../../3d/CPUParticle/ParticleEmitter.h"
 #include "../../audio/Sound.h"
 
 class Model;
@@ -14,6 +10,7 @@ class Skybox;
 class Player;
 class EnemyManager;
 class CollisionManager;
+class CameraController;
 
 class GamePlayScene : public BaseScene {
 public:
@@ -40,6 +37,9 @@ private:
     std::unique_ptr<Player> player_;
     // 敵
     std::unique_ptr<EnemyManager> enemyManager_;
+
+    // カメラ管理
+    std::unique_ptr<CameraController> cameraController_;
 
     // 当たり半テオ
     std::unique_ptr<CollisionManager> collisionManager_;

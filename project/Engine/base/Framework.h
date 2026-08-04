@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "../3d/Camera.h"
+#include "../3d/CameraManager.h"
 #include "../3d/LightManager.h"
 #include "../io/Input.h"
 #include "../scene/base/AbstractSceneFactory.h"
@@ -44,7 +45,6 @@ public:
     ImGuiManager* GetImGuiManager() { return imguiManager.get(); }
     OffscreenSurface* GetOffScreenSurface() { return offscreenSurface.get(); } // そのほか
     OffscreenSurface* GetOffScreenSurfaceB() { return offscreenSurfaceB.get(); } // 分離フィルターの中間バッフア
-    Camera* GetCamera() { return camera.get(); }
 
 private:
     // ゲーム終了クラス
@@ -56,8 +56,7 @@ private:
     std::unique_ptr<SrvManager> srvManager = nullptr;
     // IMGUIマネージャー
     std::unique_ptr<ImGuiManager> imguiManager = nullptr;
-    // カメラ
-    std::unique_ptr<Camera> camera = nullptr;
+
     // ベースシーン
     std::unique_ptr<BaseScene> baseScene = nullptr;
     // シーンファクトリー

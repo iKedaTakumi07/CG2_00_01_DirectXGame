@@ -1,0 +1,56 @@
+#pragma once
+#include "../../Engine/base/Math.h"
+
+class Camera;
+class Player;
+
+class CameraController {
+public:
+    CameraController() = default;
+    ~CameraController() = default;
+
+    /// <summary>
+    /// 初期化
+    /// </summary>
+    /// <param name="camera">制御対象のカメラ</param>
+    /// <param name="player">プレイヤーのポインタ</param>
+    void Initialize(Camera* camera, const Player* player);
+
+    /// <summary>
+    /// 毎フレームの更新処理
+    /// </summary>
+    /// <param name="deltaTime">前フレームからの経過時間</param>
+    void Update();
+
+    // Set関数
+    void SetDefaultPosition(const Vector3& pos) { defaultCameraPos_ = pos; }
+    void SetDeadZone(float x, float y)
+    {
+        baseDeadZoneX_ = x;
+        baseDeadZoneY_ = y;
+    }
+    void SetMaxShift(float x, float y)
+    {
+        maxShiftX_ = x;
+        maxShiftY_ = y;
+    }
+    void SetFollowSpeed(float speed) { followSpeed_ = speed; }
+
+private:
+    Camera* camera_ = nullptr;
+    const Player* player_ = nullptr;
+
+    // カメラ座標設定
+    Vector3 defaultCameraPos_ = { 0.0f, 0.0f, -10.0f }; // カメラの基準位置
+    float defaultOffsetZ_ = -15.0f; // プレイヤーから離す範囲
+
+    // プレイヤーが移動してもカメラが動かない範囲
+    float baseDeadZoneX_ = 4.0f;
+    float baseDeadZoneY_ = 3.5f;
+
+    // 画面端に寄った際のカメラ最大移動量
+    float maxShiftX_ = 2.5f;
+    float maxShiftY_ = 1.8f;
+
+    float followSpeed_ = 6.0f; // 移動補間
+};

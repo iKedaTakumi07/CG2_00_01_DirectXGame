@@ -4,6 +4,7 @@
 #include "../base/TextureManager.h"
 #include "../scene/SceneManager.h"
 #include "Camera.h"
+#include "CameraManager.h"
 #include "LightManager.h"
 #include "Model.h"
 #include "ModelManager.h"
@@ -129,8 +130,6 @@ void Object3d::Initialize()
 
     this->winApp_ = WinApp::GetInstance();
 
-    this->camera = object3dCommon->GetDefaultCamera();
-
     transform = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
     cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.3f, 0.0f, 0.0f }, { 0.0f, 4.0f, -10.0f } };
 
@@ -140,6 +139,8 @@ void Object3d::Initialize()
 
 void Object3d::Update()
 {
+    Camera* useCamera = CameraManager::GetInstance()->GetActiveCamera();
+
     // 1. アニメーションの更新
     if (animator_) {
         float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
@@ -161,7 +162,7 @@ void Object3d::Update()
     }
 
     // 3. WVPなどの転送用行列計算
-    Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera->GetViewProjectionMatrix());
+    Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, useCamera->GetViewProjectionMatrix());
     transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->world = worldMatrix;
     transformationMatrixData->worldInverseTranspose = Transpose(Inverse(worldMatrix));

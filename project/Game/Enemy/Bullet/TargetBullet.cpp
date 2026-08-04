@@ -16,7 +16,7 @@ void TargetBullet::Initialize(Camera* camera, Vector3 pos, const Vector3& rotati
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetCamera(camera);
+    
 
     model = std::make_unique<Model>();
     model->Initialize("resources/test", "test.obj");

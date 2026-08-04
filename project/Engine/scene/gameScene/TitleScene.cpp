@@ -28,6 +28,7 @@
 #include "../../../Game/Particle/HitParticle.h"
 #include "../../../Game/Particle/LaserParticle.h"
 #include "../../../Game/Player/Player.h"
+#include "../../3d/CameraManager.h"
 #include "math.h"
 
 TitleScene::TitleScene()
@@ -38,6 +39,14 @@ TitleScene::~TitleScene() = default;
 
 void TitleScene::Initialize()
 {
+    Camera* mainCamera = CameraManager::GetInstance()->CreateCamera("PlayMain");
+    mainCamera->SetTranslate({ 0.0f, 2.0f, -15.0f });
+
+    Camera* subCamera = CameraManager::GetInstance()->CreateCamera("SubView");
+    subCamera->SetTranslate({ 0.0f, 10.0f, -40.0f });
+
+    CameraManager::GetInstance()->SetActiveCamera("PlayMain");
+
     TextureManager::getInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/grass.png");
@@ -59,7 +68,7 @@ void TitleScene::Initialize()
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetCamera(BaseScene::GetCamera());
+   
 
     model = std::make_unique<Model>();
     model->Initialize("resources", "terrain.obj");
@@ -68,7 +77,6 @@ void TitleScene::Initialize()
 
     object3d_2 = std::make_unique<Object3d>();
     object3d_2->Initialize();
-    object3d_2->SetCamera(BaseScene::GetCamera());
 
     model_2 = std::make_unique<Model>();
     model_2->Initialize("resources", "human/walk.gltf");
@@ -122,7 +130,7 @@ void TitleScene::Initialize()
     ParticleManager::getInstance()->SetGroupScrollSpeed("Cylinder", { 0.2f, 0.0f });*/
 
     player_ = std::make_unique<Player>();
-    player_->Initialize(BaseScene::GetCamera());
+    player_->Initialize();
 
     hitParticle = std::make_unique<HitParticle>();
     hitParticle->Initialize();
@@ -141,8 +149,15 @@ void TitleScene::Update()
 
     // skydox->SetCamera(camera);
 
-    if (input->TriggerKey(DIK_F1)) {
+    if (input->TriggerKey(DIK_1)) {
         SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
+    }
+
+    if (input->TriggerKey(DIK_9)) {
+        CameraManager::GetInstance()->SetActiveCamera("PlayMain");
+    }
+    if (input->TriggerKey(DIK_0)) {
+        CameraManager::GetInstance()->SetActiveCamera("SubView");
     }
 
     // skydox->Update();
