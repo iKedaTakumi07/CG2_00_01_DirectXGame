@@ -45,8 +45,8 @@ private:
     void BulletUpdate();
 
 private:
-    Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }; // 座標
-    Transform basetransform_ = { { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }; // 揺れ成分を含まない座標他
+    Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 座標
+    Transform basetransform_ = { { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 揺れ成分を含まない座標他
 
     // 移動速度
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
@@ -66,7 +66,7 @@ private:
 
     // 移動限界座標(仮定)
     const float kMoveLimitX = 8.0f;
-    const float kMoveLimitY = 7.0f;
+    const float kMoveLimitY = 5.0f;
 
     // 機体の傾き
     float rollFactor = 0.8f;

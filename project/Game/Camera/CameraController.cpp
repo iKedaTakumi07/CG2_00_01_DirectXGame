@@ -1,15 +1,17 @@
 #include "CameraController.h"
 #include "../../Engine/3d/Camera.h"
+#include "../../Engine/3d/CameraManager.h"
 #include "../../Engine/scene/SceneManager.h"
 #include "../Player/Player.h"
 #include <algorithm>
 #include <cmath>
 
-void CameraController::Initialize(Camera* camera, const Player* player)
+void CameraController::Initialize(const Player* player)
 {
-    camera_ = camera;
+
     player_ = player;
 
+    camera_ = CameraManager::GetInstance()->GetActiveCamera();
     if (camera_) {
         defaultCameraPos_ = camera_->GetTranslate();
     }
