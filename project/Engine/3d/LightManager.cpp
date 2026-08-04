@@ -87,7 +87,7 @@ void LightManager::directionalLightInitialize()
     directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
     // 書き込み
     directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData_->direction = { 0.0f, 0.0f, -1.0f };
+    directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
     directionalLightData_->intensity = 1.0f;
     directionalLightData_->active = 1;
 }

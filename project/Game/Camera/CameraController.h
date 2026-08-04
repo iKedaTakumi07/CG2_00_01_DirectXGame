@@ -12,9 +12,8 @@ public:
     /// <summary>
     /// 初期化
     /// </summary>
-    /// <param name="camera">制御対象のカメラ</param>
     /// <param name="player">プレイヤーのポインタ</param>
-    void Initialize(Camera* camera, const Player* player);
+    void Initialize(const Player* player);
 
     /// <summary>
     /// 毎フレームの更新処理
@@ -50,7 +49,7 @@ private:
 
     // 画面端に寄った際のカメラ最大移動量
     float maxShiftX_ = 2.5f;
-    float maxShiftY_ = 1.8f;
+    float maxShiftY_ = 2.2f;
 
     float followSpeed_ = 6.0f; // 移動補間
 };

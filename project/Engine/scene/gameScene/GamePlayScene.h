@@ -2,6 +2,7 @@
 #include "../base/BaseScene.h"
 #include <memory>
 
+#include "../../3d/Camera.h"
 #include "../../audio/Sound.h"
 
 class Model;
@@ -11,6 +12,7 @@ class Player;
 class EnemyManager;
 class CollisionManager;
 class CameraController;
+class stageObject;
 
 class GamePlayScene : public BaseScene {
 public:
@@ -40,6 +42,11 @@ private:
 
     // カメラ管理
     std::unique_ptr<CameraController> cameraController_;
+    std::unique_ptr<Camera> PlayerMainCamera_; // プレイヤーのやつ
+    std::unique_ptr<Camera> BossCamera_; // ボス演出用
+
+    // ステージ置物
+    std::unique_ptr<stageObject> stageObject_;
 
     // 当たり半テオ
     std::unique_ptr<CollisionManager> collisionManager_;

@@ -26,6 +26,7 @@
 #include "../../../Game/Enemy/base/baseEnemy.h"
 #include "../../../Game/OnCollison/CollisionManager.h"
 #include "../../../Game/Player/Player.h"
+#include "../../../Game/stage/stageObject.h"
 
 #include "math.h"
 
@@ -47,9 +48,10 @@ void GamePlayScene::Initialize()
 
     Camera* mainCamera = CameraManager::GetInstance()->CreateCamera("PlayMain");
     mainCamera->SetTranslate({ 0.0f, 0.0f, -15.0f });
+    mainCamera->SetRotate({ 0.0f, 0.0f, 0.0f });
 
-    Camera* subCamera = CameraManager::GetInstance()->CreateCamera("SubView");
-    subCamera->SetTranslate({ 0.0f, 10.0f, -40.0f });
+    Camera* bossCamera = CameraManager::GetInstance()->CreateCamera("PlayBoss");
+    bossCamera->SetTranslate({ 0.0f, 10.0f, -40.0f });
 
     TextureManager::getInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::getInstance()->LoadTexture("resources/monsterBall.png");
@@ -73,7 +75,10 @@ void GamePlayScene::Initialize()
     collisionManager_ = std::make_unique<CollisionManager>();
 
     cameraController_ = std::make_unique<CameraController>();
-    cameraController_->Initialize(CameraManager::GetInstance()->GetActiveCamera(), player_.get());
+    cameraController_->Initialize(player_.get());
+
+    stageObject_ = std::make_unique<stageObject>();
+    stageObject_->Initialize();
 
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
@@ -94,11 +99,12 @@ void GamePlayScene::Update()
         CameraManager::GetInstance()->SetActiveCamera("PlayMain");
     }
     if (input->TriggerKey(DIK_0)) {
-        CameraManager::GetInstance()->SetActiveCamera("SubView");
+        CameraManager::GetInstance()->SetActiveCamera("PlayBoss");
     }
 
     player_->Update();
     enemyManager_->Update();
+    stageObject_->Update();
 
     collisionManager_->Clear();
     collisionManager_->AddCollider(player_.get());
@@ -125,6 +131,8 @@ void GamePlayScene::Draw()
     //
     player_->Draw();
     enemyManager_->Draw();
+
+    stageObject_->Draw();
 
     SkyBoxCommon::GetInstance()->PrepareObjectDraw();
     // skydox->Draw();
