@@ -3,8 +3,10 @@
 #include "../../base/Logger.h"
 #include "../../base/SrvManager.h"
 #include "../../base/TextureManager.h"
-#include "../Camera.h"
 #include "../../scene/SceneManager.h"
+#include "../Camera.h"
+#include "../CameraManager.h"
+
 #include "IParticleMesh.h"
 #include <cassert>
 #include <numbers>
@@ -100,10 +102,12 @@ void CPUParticleManager::Initialize(DirectXCommon* DirectXCollision, SrvManager*
 
 void CPUParticleManager::Update()
 {
+    Camera_ = CameraManager::GetInstance()->GetActiveCamera();
+
     const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
     Matrix4x4 viewMatrix = Inverse(Camera_->GetWorldMatrix());
 
-  const float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
+    const float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
 
     Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
     Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, Camera_->GetWorldMatrix());

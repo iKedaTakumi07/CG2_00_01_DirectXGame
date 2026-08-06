@@ -1,16 +1,16 @@
-#include "TargetEnemy.h"
+#include "HomingEnemy.h"
 
 #include "../../../Engine/3d/CameraManager.h"
 #include "../../../Engine/3d/Model.h"
 #include "../../../Engine/3d/ModelManager.h"
 
 #include "../../../Engine/base/TextureManager.h"
+#include "../../Player/Player.h"
 
 #include "../../../Engine/scene/SceneManager.h"
+#include "../Bullet/EnemyHomingBullet.h"
 
-#include "../Bullet/TargetBullet.h"
-
-void TargetEnemy::Initialize(Vector3 pos)
+void HomingEnemy::Initialize(Vector3 pos)
 {
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
     ModelManager::GetInstance()->LoadModel("test/test.obj");
@@ -28,7 +28,7 @@ void TargetEnemy::Initialize(Vector3 pos)
     transform_.translate = pos;
 }
 
-void TargetEnemy::Update()
+void HomingEnemy::Update()
 {
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
@@ -45,7 +45,7 @@ void TargetEnemy::Update()
     object3d->Update();
 }
 
-void TargetEnemy::Draw()
+void HomingEnemy::Draw()
 {
     object3d->Draw();
 
@@ -54,7 +54,7 @@ void TargetEnemy::Draw()
     }
 }
 
-AABB TargetEnemy::GetAABB() const
+AABB HomingEnemy::GetAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
@@ -62,7 +62,7 @@ AABB TargetEnemy::GetAABB() const
     return aabb;
 }
 
-void TargetEnemy::OnCollision(Collider* other)
+void HomingEnemy::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
@@ -74,13 +74,13 @@ void TargetEnemy::OnCollision(Collider* other)
     }
 }
 
-void TargetEnemy::BulletUpdate()
+void HomingEnemy::BulletUpdate()
 {
     interval -= SceneManager::GetInstance()->GetDeltaTime();
 
     if (interval <= 0.0f) {
         // 弾の生成
-        std::unique_ptr<TargetBullet> newBulletEnemy = std::make_unique<TargetBullet>();
+        std::unique_ptr<EnemyHomingBullet> newBulletEnemy = std::make_unique<EnemyHomingBullet>();
         newBulletEnemy->Initialize(transform_.translate, transform_.rotate);
         newBulletEnemy->SetTargetPosition(player_->GetTranslate());
 
@@ -91,6 +91,7 @@ void TargetEnemy::BulletUpdate()
     float currentDeltaTime = SceneManager::GetInstance()->GetDeltaTime();
     // 更新処理
     for (auto& bullet : enemyBullet_) {
+        bullet->SetPlayerPos(player_->GetTranslate());
         bullet->Update(currentDeltaTime);
     }
 

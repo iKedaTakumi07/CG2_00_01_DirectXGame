@@ -1,6 +1,6 @@
 #include "baseEnemyBullet.h"
 
-void baseEnemyBullet::Initialize(Camera* camera, Vector3 pos, const Vector3& rotation)
+void baseEnemyBullet::Initialize(Vector3 pos, const Vector3& rotation)
 {
 }
 

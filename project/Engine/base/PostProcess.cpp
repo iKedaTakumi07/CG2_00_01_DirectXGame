@@ -1,6 +1,7 @@
 #include "PostProcess.h"
 #include "../../externals/imgui/imgui.h"
 #include "../3d/Camera.h"
+#include "../3d/CameraManager.h"
 #include "../3d/Object3d.h"
 #include "../base/Logger.h"
 #include "Framework.h"
@@ -114,6 +115,8 @@ void PostProcess::Initialize(DirectXCommon* dxcommon)
 
 void PostProcess::Update()
 {
+    defaultCamera_ = CameraManager::GetInstance()->GetActiveCamera();
+
     DrawImGui();
 
     /* 反映 */

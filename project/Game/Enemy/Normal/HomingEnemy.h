@@ -5,13 +5,12 @@
 #include "../../../Engine/3d/Object3d.h"
 #include "../../../Engine/base/Math.h"
 
-#include "../../Player/Player.h"
-
+class Player;
 class Model;
 
-class TargetEnemy : public baseEnemy {
+class HomingEnemy : public baseEnemy {
 public:
-    void Initialize(Vector3 pos) override;
+    void Initialize(Vector3 posh) override;
 
     void Update() override;
 

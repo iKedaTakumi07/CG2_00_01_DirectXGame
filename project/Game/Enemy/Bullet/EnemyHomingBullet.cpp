@@ -1,6 +1,7 @@
-#include "TargetBullet.h"
+#include "EnemyHomingBullet.h"
 
 #include "../../../Engine/3d/Camera.h"
+#include "../../../Engine/3d/CameraManager.h"
 #include "../../../Engine/3d/ModelManager.h"
 #include "../../../Engine/3d/Object3d.h"
 #include "../../../Engine/base/Math.h"
@@ -8,8 +9,9 @@
 #include "../../../Engine/io/Input.h"
 
 #include "../../Particle/LaserParticle.h"
+#include "../../Player/Player.h"
 
-void TargetBullet::Initialize(Vector3 pos, const Vector3& rotation)
+void EnemyHomingBullet::Initialize(Vector3 pos, const Vector3& rotation)
 {
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
     ModelManager::GetInstance()->LoadModel("test/test.obj");
@@ -35,9 +37,8 @@ void TargetBullet::Initialize(Vector3 pos, const Vector3& rotation)
     laserParticle_->SetEndColor(Vector4(1.0f, 0.2f, 0.2f, 0.0f));
 }
 
-void TargetBullet::Update(float deltaTime)
+void EnemyHomingBullet::Update(float deltaTime)
 {
-
     MoveUpdate();
 
     deathTimer_ -= deltaTime;
@@ -52,7 +53,7 @@ void TargetBullet::Update(float deltaTime)
     particleTimer_ += deltaTime;
 }
 
-void TargetBullet::Draw()
+void EnemyHomingBullet::Draw()
 {
     object3d->Draw();
 
@@ -63,7 +64,7 @@ void TargetBullet::Draw()
     }
 }
 
-AABB TargetBullet::GetAABB() const
+AABB EnemyHomingBullet::GetAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
@@ -71,7 +72,7 @@ AABB TargetBullet::GetAABB() const
     return aabb;
 }
 
-void TargetBullet::OnCollision(Collider* other)
+void EnemyHomingBullet::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
@@ -83,7 +84,7 @@ void TargetBullet::OnCollision(Collider* other)
     }
 }
 
-void TargetBullet::SetTargetPosition(Vector3 Pos)
+void EnemyHomingBullet::SetTargetPosition(Vector3 Pos)
 {
     // 狙う場所を設定
     targetPos_ = Pos;
@@ -103,9 +104,20 @@ void TargetBullet::SetTargetPosition(Vector3 Pos)
     acceleration_ = direction * accelerationScalar;
 }
 
-void TargetBullet::MoveUpdate()
+void EnemyHomingBullet::MoveUpdate()
 {
     // 弾の移動
+
+    // 方向を検知
+    Vector3 direction;
+    direction.x = targetPos_.x - transform_.translate.x;
+    direction.y = targetPos_.y - transform_.translate.y;
+    direction.z = targetPos_.z - transform_.translate.z;
+
+    // 正規化/方向転換
+    direction = Normalize(direction);
+    acceleration_ = direction * homingPower * accelerationScalar;
+
     velocity_ += acceleration_;
 
     float currentSpeed = sqrtf(velocity_.x * velocity_.x + velocity_.y * velocity_.y + velocity_.z * velocity_.z);
@@ -123,7 +135,7 @@ void TargetBullet::MoveUpdate()
     RoateUpdate();
 }
 
-void TargetBullet::RoateUpdate()
+void EnemyHomingBullet::RoateUpdate()
 {
     Vector3 rotate;
     rotate.y = atan2(velocity_.x, velocity_.z);
@@ -132,4 +144,32 @@ void TargetBullet::RoateUpdate()
     rotate.x = atan2(-velocity_.y, hypotXZ);
     rotate.z = 0.0f;
     transform_.rotate = rotate;
+}
+
+void EnemyHomingBullet::CheckCameraCulling()
+{
+    Camera* ActiveCamera = CameraManager::GetInstance()->GetCamera("PlayMain");
+
+    Vector3 cameraPos = ActiveCamera->GetTranslate();
+
+    const Matrix4x4& worldMat = ActiveCamera->GetWorldMatrix();
+
+    Vector3 cameraForward = { worldMat.m[2][0], worldMat.m[2][1], worldMat.m[2][2] };
+
+    // 正規化
+    cameraForward = Normalize(cameraForward);
+
+    // べ黒る
+    Vector3 toBullet;
+    toBullet.x = transform_.translate.x - cameraPos.x;
+    toBullet.y = transform_.translate.y - cameraPos.y;
+    toBullet.z = transform_.translate.z - cameraPos.z;
+
+    // 内積
+    float dotProduct = cameraForward.x * toBullet.x + cameraForward.y * toBullet.y + cameraForward.z * toBullet.z;
+
+    // カメラから離れているなら(後で検証)
+    if (dotProduct < 0.0f) {
+        isDead_ = false;
+    }
 }
