@@ -151,12 +151,17 @@ void Player::MoveUpdate()
         velocity_.y = (velocity_.y / currentSpeed) * currentMaxSpeed;
     }
 
-    // 座標に代入
-    basetransform_.translate.x += velocity_.x;
-    basetransform_.translate.y += velocity_.y;
+    // 計算結果を代入
+    localPos_.x += velocity_.x;
+    localPos_.y += velocity_.y;
+    // オーバーしていたら戻す
+    localPos_.x = std::clamp(localPos_.x, -kMoveLimitX, kMoveLimitX);
+    localPos_.y = std::clamp(localPos_.y, -kMoveLimitY, kMoveLimitY);
 
-    basetransform_.translate.x = std::clamp(basetransform_.translate.x, -kMoveLimitX, kMoveLimitX);
-    basetransform_.translate.y = std::clamp(basetransform_.translate.y, -kMoveLimitY, kMoveLimitY);
+    // レール座標を加算
+    basetransform_.translate.x = railBasePos_.x + localPos_.x;
+    basetransform_.translate.y = railBasePos_.y + localPos_.y;
+    basetransform_.translate.z = railBasePos_.z;
 
     // 高速旋回しているか?
     float lerpRate = isShift ? shiftRollFactor : rollFactor;

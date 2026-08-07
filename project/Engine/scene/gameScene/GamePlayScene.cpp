@@ -26,6 +26,7 @@
 #include "../../../Game/Enemy/base/baseEnemy.h"
 #include "../../../Game/OnCollison/CollisionManager.h"
 #include "../../../Game/Player/Player.h"
+#include "../../../Game/stage/StageManager.h"
 #include "../../../Game/stage/stageObject.h"
 
 #include "math.h"
@@ -66,6 +67,9 @@ void GamePlayScene::Initialize()
     fanfare.SoundLoadFile("resources/fanfare.wav");
     clearSe.SoundLoadFile("resources/stage.mp3");
 
+    StageManager_ = std::make_unique<StageManager>();
+    StageManager_->Initialize("resources/StageData/stageData1.json");
+
     player_ = std::make_unique<Player>();
     player_->Initialize();
 
@@ -88,9 +92,6 @@ void GamePlayScene::Initialize()
 void GamePlayScene::Update()
 {
     auto* input = Input::getInstance();
-    Camera* camera = GetCamera();
-
-    cameraController_->Update();
 
     if (input->TriggerKey(DIK_1)) {
         SceneManager::GetInstance()->ChangeScene("TITLE");
@@ -102,10 +103,19 @@ void GamePlayScene::Update()
         CameraManager::GetInstance()->SetActiveCamera("PlayBoss");
     }
 
+    // ステージ振興
+    StageManager_->Update();
+    Vector3 railPos = StageManager_->CalcRailPosition(); // 現在のレーる位置を取得
+
+    player_->SetBasePosition(railPos);
     player_->Update();
+
+    cameraController_->Update(railPos);
+
     enemyManager_->Update();
     stageObject_->Update();
 
+    // 当たり判定一括
     collisionManager_->Clear();
     collisionManager_->AddCollider(player_.get());
     for (auto& bullet : player_->GetBullets()) {
@@ -117,7 +127,6 @@ void GamePlayScene::Update()
             collisionManager_->AddCollider(enemyBullet.get());
         }
     }
-
     collisionManager_->CheckAllCollisions();
 }
 

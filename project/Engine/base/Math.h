@@ -306,7 +306,10 @@ Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);
 
 Vector3 operator*(const Vector3& m1, const float& m2);
 Vector3& operator+=(Vector3& lhv, const Vector3& rhv);
+Vector3& operator-=(Vector3& lhv, const Vector3& rhv);
 
 inline Vector3 operator+(const Vector3& lhv, const Vector3& rhv);
+
+inline Vector3 operator-(const Vector3& lhv, const Vector3& rhv);
 
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
