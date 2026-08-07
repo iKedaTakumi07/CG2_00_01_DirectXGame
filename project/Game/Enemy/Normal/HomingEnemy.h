@@ -22,6 +22,7 @@ public:
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kEnenmy; }
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }
+    bool GetIsAvile_() override { return isAvile_; }
 
     // set関数
     void SetTargetPlayer(Player* target) override { player_ = target; }
@@ -39,15 +40,15 @@ private:
     std::unique_ptr<Object3d> object3d;
 
     // 当たり判定
-    float size = 1.0f; // OBBに移植後は知らん。
+    float size = 0.5f; // OBBに移植後は知らん。
 
-    Transform transform_; // 座標系
+    Transform transform_ = { 0.0f }; // 座標系
 
-    int health_; // 体力(jsonで設定予定)
-    int dameg_ = 5;
+    int health_ = 5; // 体力(jsonで設定予定)
+    int dameg_ = 3;
 
-    float interval; // 弾を発射する間隔
-    static inline const float maxInterval = 2.0f; // 間隔
+    float interval = 3.0f; // 弾を発射する間隔
+    static inline const float maxInterval = 3.0f; // 間隔
 
     // 削除予定 //
     float move = 1.0f / 60.0f;

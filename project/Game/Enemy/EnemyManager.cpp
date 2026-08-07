@@ -32,7 +32,11 @@ void EnemyManager::Update()
 {
     for (auto& enemy : enemies_) {
         enemy->Update();
+        // スコア加算
     }
+
+    // 死亡している奴ら削除
+    enemies_.remove_if([](const std::unique_ptr<baseEnemy>& enemy) { return !enemy->GetIsAvile_(); });
 }
 
 void EnemyManager::Draw()
