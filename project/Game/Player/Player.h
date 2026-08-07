@@ -34,6 +34,7 @@ public:
     int GetDamage() const override { return dameg_; }
 
     // set
+    void SetBasePosition(const Vector3& pos) { railBasePos_ = pos; }
 
 private:
     // 更新系列
@@ -45,8 +46,10 @@ private:
     void BulletUpdate();
 
 private:
-    Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 座標
+    Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // モデル座標
     Transform basetransform_ = { { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 揺れ成分を含まない座標他
+    Vector3 localPos_ = { 0.0f, 0.0f, 0.0f }; // レール中心位置からの座標
+    Vector3 railBasePos_ = { 0.0f, 0.0f, 0.0f }; // レール座標
 
     // 移動速度
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };

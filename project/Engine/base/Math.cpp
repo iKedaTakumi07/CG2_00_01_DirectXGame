@@ -373,9 +373,22 @@ Vector3& operator+=(Vector3& lhv, const Vector3& rhv)
     return lhv;
 }
 
+Vector3& operator-=(Vector3& lhv, const Vector3& rhv)
+{
+    lhv.x -= rhv.x;
+    lhv.y -= rhv.y;
+    lhv.z -= rhv.z;
+    return lhv;
+}
+
 inline Vector3 operator+(const Vector3& lhv, const Vector3& rhv)
 {
     return Vector3(lhv.x + rhv.x, lhv.y + rhv.y, lhv.z + rhv.z);
+}
+
+inline Vector3 operator-(const Vector3& lhv, const Vector3& rhv)
+{
+    return Vector3(lhv.x - rhv.x, lhv.y - rhv.y, lhv.z - rhv.z);
 }
 
 Matrix4x4 MakeScaleMatrix(const Vector3& scale)

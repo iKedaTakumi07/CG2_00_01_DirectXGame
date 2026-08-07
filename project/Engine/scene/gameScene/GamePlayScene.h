@@ -13,6 +13,7 @@ class EnemyManager;
 class CollisionManager;
 class CameraController;
 class stageObject;
+class StageManager;
 
 class GamePlayScene : public BaseScene {
 public:
@@ -47,6 +48,7 @@ private:
 
     // ステージ置物
     std::unique_ptr<stageObject> stageObject_;
+    std::unique_ptr<StageManager> StageManager_;
 
     // 当たり半テオ
     std::unique_ptr<CollisionManager> collisionManager_;

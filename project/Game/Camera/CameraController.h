@@ -18,8 +18,8 @@ public:
     /// <summary>
     /// 毎フレームの更新処理
     /// </summary>
-    /// <param name="deltaTime">前フレームからの経過時間</param>
-    void Update();
+    /// <param name="RailPos">レール位置</param>
+    void Update(const Vector3& RailPos);
 
     // Set関数
     void SetDefaultPosition(const Vector3& pos) { defaultCameraPos_ = pos; }

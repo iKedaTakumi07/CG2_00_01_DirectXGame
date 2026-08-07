@@ -160,6 +160,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Game\Enemy\Bullet\EnemyHomingBullet.cpp" />
     <ClCompile Include="Engine\3d\CameraManager.cpp" />
     <ClCompile Include="Game\Camera\CameraController.cpp" />
     <ClCompile Include="Game\OnCollison\CollisionManager.cpp" />
@@ -221,6 +222,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Game\Particle\HitParticle.cpp" />
     <ClCompile Include="Engine\3d\GPUParticleManager.cpp" />
     <ClCompile Include="Engine\base\LevelLoader.cpp" />
+    <ClCompile Include="Game\Enemy\Normal\HomingEnemy.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -262,6 +264,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\scene\gameScene\SelectScene.cpp" />
     <ClCompile Include="Engine\scene\gameScene\resultScene.cpp" />
     <ClCompile Include="Game\stage\stageObject.cpp" />
+    <ClCompile Include="Game\stage\StageManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\EmitParticle.CS.hlsl">
@@ -512,6 +515,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Game\Enemy\Bullet\EnemyHomingBullet.h" />
     <ClInclude Include="Engine\3d\CameraManager.h" />
     <ClInclude Include="Game\Camera\CameraController.h" />
     <ClInclude Include="Game\OnCollison\CollisionManager.h" />
@@ -610,6 +614,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\base\LevelLoader.h" />
     <ClInclude Include="Game\Player\PlayerBullet.h" />
     <ClInclude Include="Game\OnCollison\Collider.h" />
+    <ClInclude Include="Game\Enemy\Normal\HomingEnemy.h" />
     <ClInclude Include="resources\nlohmann\json.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -620,6 +625,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\scene\gameScene\SelectScene.h" />
     <ClInclude Include="Engine\scene\gameScene\resultScene.h" />
     <ClInclude Include="Game\stage\stageObject.h" />
+    <ClInclude Include="Game\stage\StageManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

@@ -17,7 +17,7 @@ void CameraController::Initialize(const Player* player)
     }
 }
 
-void CameraController::Update()
+void CameraController::Update(const Vector3& railPos)
 {
     float deltaTime_ = SceneManager::GetInstance()->GetDeltaTime();
 
@@ -28,6 +28,10 @@ void CameraController::Update()
 
     // プレイヤーの座標を入手
     Vector3 playerPos = player_->GetTranslate();
+    // レール座標を取り除く
+    float localPlayerX = playerPos.x - railPos.x;
+    float localPlayerY = playerPos.y - railPos.y;
+
     float pLimitX = player_->GetLimitX();
     float pLimitY = player_->GetLimitY();
 
@@ -35,15 +39,15 @@ void CameraController::Update()
     float deadZoneX = 0.0f;
     float deadZoneY = 0.0f;
 
-    if (playerPos.x > baseDeadZoneX_) {
-        deadZoneX = playerPos.x - baseDeadZoneX_;
-    } else if (playerPos.x < -baseDeadZoneX_) {
-        deadZoneX = playerPos.x + baseDeadZoneX_;
+    if (localPlayerX > baseDeadZoneX_) {
+        deadZoneX = localPlayerX - baseDeadZoneX_;
+    } else if (localPlayerX < -baseDeadZoneX_) {
+        deadZoneX = localPlayerX + baseDeadZoneX_;
     }
-    if (playerPos.y > baseDeadZoneY_) {
-        deadZoneY = playerPos.y - baseDeadZoneY_;
-    } else if (playerPos.y < -baseDeadZoneY_) {
-        deadZoneY = playerPos.y + baseDeadZoneY_;
+    if (localPlayerY > baseDeadZoneY_) {
+        deadZoneY = localPlayerY - baseDeadZoneY_;
+    } else if (localPlayerY < -baseDeadZoneY_) {
+        deadZoneY = localPlayerY + baseDeadZoneY_;
     }
 
     float rangeX = deadZoneX / (pLimitX - baseDeadZoneX_);
@@ -56,17 +60,16 @@ void CameraController::Update()
     Vector3 targetCameraPos = defaultCameraPos_;
     Vector3 currentPos = camera_->GetTranslate();
 
-    targetCameraPos.x += rangeX * maxShiftX_;
-    targetCameraPos.y += rangeY * maxShiftY_;
+    targetCameraPos.x = railPos.x + defaultCameraPos_.x + (rangeX * maxShiftX_);
+    targetCameraPos.y = railPos.y + defaultCameraPos_.y + (rangeY * maxShiftY_);
+    targetCameraPos.z = railPos.z + defaultOffsetZ_;
 
-    targetCameraPos.z = playerPos.z + defaultOffsetZ_;
-
-    float t = 1.0f - std::exp(-followSpeed_ * deltaTime_);
+    float t = 1.0f - std::exp(-followSpeed_ * deltaTime_); // イージング
 
     Vector3 newPos;
     newPos.x = currentPos.x + (targetCameraPos.x - currentPos.x) * t;
     newPos.y = currentPos.y + (targetCameraPos.y - currentPos.y) * t;
-    newPos.z = targetCameraPos.z; // 補完しない(ステージが終わるまでzが加算されるから)
+    newPos.z = targetCameraPos.z; // ブースト実装まで補間抜き
 
     // カメラ座標の設定と行列計算の更新
     camera_->SetTranslate(newPos);

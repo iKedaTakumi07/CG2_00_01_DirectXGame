@@ -6,7 +6,7 @@ class Camera;
 
 class baseEnemyBullet : public Collider {
 public:
-    virtual void Initialize(Camera* camera, Vector3 pos, const Vector3& rotation);
+    virtual void Initialize(Vector3 pos, const Vector3& rotation);
 
     virtual void Update(float deltaTime);
 
@@ -14,4 +14,6 @@ public:
 
     // Get関数
     virtual bool GetIsDead() const = 0;
+    // set関数
+    virtual void SetPlayerPos(Vector3 pos) { };
 };

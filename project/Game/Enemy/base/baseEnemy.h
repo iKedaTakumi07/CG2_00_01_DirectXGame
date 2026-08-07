@@ -10,7 +10,7 @@ class Player;
 
 class baseEnemy : public Collider {
 public:
-    virtual void Initialize(Camera* camera, Vector3 pos);
+    virtual void Initialize(Vector3 pos);
 
     virtual void Update();
 

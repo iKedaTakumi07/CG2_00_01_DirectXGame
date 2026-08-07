@@ -7,7 +7,7 @@
 #include "../base/TextureManager.h"
 #include "../base/WinApp.h"
 #include "../scene/SceneManager.h"
-
+#include "CameraManager.h"
 #include <memory>
 #include <numbers>
 
@@ -63,6 +63,7 @@ void GPUParticleManager::Update()
         eitterSphere->emit = 0;
     }
 
+    Camera_ = CameraManager::GetInstance()->GetActiveCamera();
     const Matrix4x4& viewProjection = Camera_->GetViewProjectionMatrix();
 
     // ビルボード行列の計算

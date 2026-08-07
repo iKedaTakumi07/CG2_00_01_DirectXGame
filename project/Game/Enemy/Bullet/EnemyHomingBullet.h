@@ -1,14 +1,15 @@
 #pragma once
+#include "../base/baseEnemyBullet.h"
+
 #include "../../../Engine/3d/Model.h"
 #include "../../../Engine/3d/Object3d.h"
 #include "../../../Engine/base/Math.h"
 #include "../../Particle/LaserParticle.h"
-#include "../base/baseEnemyBullet.h"
 #include <memory>
 
-#include "../../Player/Player.h"
+class Player;
 
-class TargetBullet : public baseEnemyBullet {
+class EnemyHomingBullet : public baseEnemyBullet {
 public:
     void Initialize(Vector3 pos, const Vector3& rotation) override;
 
@@ -28,10 +29,12 @@ public:
     // Set関数
     void SetTargetPosition(Vector3 Pos);
     void SetIsDead(bool num) { isDead_ = num; }
+    void SetPlayerPos(Vector3 pos) override { targetPos_ = pos; }
 
 private:
     void MoveUpdate();
     void RoateUpdate();
+    void CheckCameraCulling(); // カリング処理
 
 private:
     Transform transform_;
@@ -44,6 +47,8 @@ private:
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 移動ベクトル
     static inline const float maxSpeed = 0.80f; // 弾の最高速度(青天井でおk)
     float deathTimer_ = 3.0f; // 弾の寿命（秒）
+    float LockOnTimer_ = 2.0f; // 弾の捕捉時間
+    float homingPower = 0.10f; // 捕捉力
     bool isDead_ = false;
 
     float particleTimer_ = 0.0f; // 経過時間タイマー
