@@ -28,6 +28,7 @@ public:
     // Set関数
     void SetTargetPosition(Vector3 Pos);
     void SetIsDead(bool num) { isDead_ = num; }
+    void SetPlayerPos(Vector3 pos) override { pos; }
 
 private:
     void MoveUpdate();

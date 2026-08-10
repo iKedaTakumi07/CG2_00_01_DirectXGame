@@ -10,14 +10,19 @@ class Player;
 
 class baseEnemy : public Collider {
 public:
-    virtual void Initialize(Vector3 pos);
+    virtual void Initialize(Vector3 pos) = 0;
 
-    virtual void Update();
+    virtual void Update() = 0;
 
-    virtual void Draw();
+    virtual void Draw() = 0;
 
     /* Set関数 */
     virtual void SetTargetPlayer(Player* target) { }; // 対象に向かわせる
+    virtual void SetHp(int num) { };
+    virtual void SetUseBullet(int num) { };
+    virtual void SetHomingPower(float num) { };
+    virtual void SetMove(Vector3 num) { }
+    virtual void SetbasePos(Vector3 num) { }
 
     /* Get関数 */
     const std::vector<std::unique_ptr<baseEnemyBullet>>& GetBullets() const { return enemyBullet_; }

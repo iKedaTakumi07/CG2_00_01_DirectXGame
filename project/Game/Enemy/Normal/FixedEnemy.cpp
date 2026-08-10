@@ -1,4 +1,4 @@
-#include "TargetEnemy.h"
+#include "FixedEnemy.h"
 
 #include "../../../Engine/3d/CameraManager.h"
 #include "../../../Engine/3d/Model.h"
@@ -10,13 +10,16 @@
 
 #include "../Bullet/TargetBullet.h"
 
-void TargetEnemy::Initialize(Vector3 pos)
+void FixedEnemy::Initialize(Vector3 pos)
 {
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
     ModelManager::GetInstance()->LoadModel("test/test.obj");
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
+
+    isAvile_ = true; 
+    isDead_ = false; 
 
     model = std::make_unique<Model>();
     model->Initialize("resources/test", "test.obj");
@@ -28,15 +31,9 @@ void TargetEnemy::Initialize(Vector3 pos)
     transform_.translate = pos;
 }
 
-void TargetEnemy::Update()
+void FixedEnemy::Update()
 {
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
-
-    transform_.translate.x += move;
-
-    if (transform_.translate.x + move >= 10.0f || transform_.translate.x + move <= -10.0f) {
-        move = -move;
-    }
 
     BulletUpdate();
 
@@ -45,7 +42,7 @@ void TargetEnemy::Update()
     object3d->Update();
 }
 
-void TargetEnemy::Draw()
+void FixedEnemy::Draw()
 {
     object3d->Draw();
 
@@ -54,7 +51,7 @@ void TargetEnemy::Draw()
     }
 }
 
-AABB TargetEnemy::GetAABB() const
+AABB FixedEnemy::GetAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
@@ -62,7 +59,7 @@ AABB TargetEnemy::GetAABB() const
     return aabb;
 }
 
-void TargetEnemy::OnCollision(Collider* other)
+void FixedEnemy::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
@@ -78,7 +75,7 @@ void TargetEnemy::OnCollision(Collider* other)
     }
 }
 
-void TargetEnemy::BulletUpdate()
+void FixedEnemy::BulletUpdate()
 {
     interval -= SceneManager::GetInstance()->GetDeltaTime();
 

@@ -225,7 +225,7 @@
     <ClCompile Include="Game\Enemy\EnemyManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Game\Enemy\Normal\TargetEnemy.cpp">
+    <ClCompile Include="Game\Enemy\Normal\FixedEnemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Game\Enemy\Bullet\TargetBullet.cpp">
@@ -252,7 +252,7 @@
     <ClCompile Include="Game\stage\stageObject.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Game\Enemy\Normal\HomingEnemy.cpp">
+    <ClCompile Include="Game\Enemy\Normal\NormalMoveEnemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Game\Enemy\Bullet\EnemyHomingBullet.cpp">
@@ -464,7 +464,7 @@
     <ClInclude Include="Game\Enemy\EnemyManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Game\Enemy\Normal\TargetEnemy.h">
+    <ClInclude Include="Game\Enemy\Normal\FixedEnemy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Game\Enemy\Bullet\TargetBullet.h">
@@ -491,7 +491,7 @@
     <ClInclude Include="Game\stage\stageObject.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Game\Enemy\Normal\HomingEnemy.h">
+    <ClInclude Include="Game\Enemy\Normal\NormalMoveEnemy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Game\Enemy\Bullet\EnemyHomingBullet.h">

@@ -5,12 +5,13 @@
 #include "../../../Engine/3d/Object3d.h"
 #include "../../../Engine/base/Math.h"
 
-class Player;
+#include "../../Player/Player.h"
+
 class Model;
 
-class HomingEnemy : public baseEnemy {
+class FixedEnemy : public baseEnemy {
 public:
-    void Initialize(Vector3 posh) override;
+    void Initialize(Vector3 pos) override;
 
     void Update() override;
 
@@ -27,6 +28,9 @@ public:
     // set関数
     void SetTargetPlayer(Player* target) override { player_ = target; }
     void SetIsDead(bool num) { isDead_ = num; }
+    void SetUseBullet(int num) override { useBullet = num; }
+    void SetHomingPower(float num) override { homingPower = num; }
+    void SetHp(int num) override { health_ = num; }
 
 private:
     void BulletUpdate();
@@ -41,17 +45,19 @@ private:
 
     // 当たり判定
     float size = 0.5f; // OBBに移植後は知らん。
+    int useBullet = 0; // 使う弾
+    float homingPower = 0.0f;
 
     Transform transform_ = { 0.0f }; // 座標系
 
     int health_ = 5; // 体力(jsonで設定予定)
-    int dameg_ = 3;
+    int dameg_ = 5;
 
-    float interval = 3.0f; // 弾を発射する間隔
-    static inline const float maxInterval = 3.0f; // 間隔
+    float interval = 2.0f; // 弾を発射する間隔
+    static inline const float maxInterval = 2.0f; // 間隔
 
     // 削除予定 //
-    float move = 1.0f / 60.0f;
+    Vector3 move = { 0.0f };
     // 移動地点はjson形式予定。 //
 
     bool isAvile_ = true; // 存在しているか

@@ -222,7 +222,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Game\Particle\HitParticle.cpp" />
     <ClCompile Include="Engine\3d\GPUParticleManager.cpp" />
     <ClCompile Include="Engine\base\LevelLoader.cpp" />
-    <ClCompile Include="Game\Enemy\Normal\HomingEnemy.cpp" />
+    <ClCompile Include="Game\Enemy\Normal\NormalMoveEnemy.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -258,7 +258,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\scene\base\SceneFactory.cpp" />
     <ClCompile Include="Game\Player\Player.cpp" />
     <ClCompile Include="Game\Player\PlayerBullet.cpp" />
-    <ClCompile Include="Game\Enemy\Normal\TargetEnemy.cpp" />
+    <ClCompile Include="Game\Enemy\Normal\FixedEnemy.cpp" />
     <ClCompile Include="Game\Enemy\Bullet\TargetBullet.cpp" />
     <ClCompile Include="Game\OnCollison\Collider.cpp" />
     <ClCompile Include="Engine\scene\gameScene\SelectScene.cpp" />
@@ -614,13 +614,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\base\LevelLoader.h" />
     <ClInclude Include="Game\Player\PlayerBullet.h" />
     <ClInclude Include="Game\OnCollison\Collider.h" />
-    <ClInclude Include="Game\Enemy\Normal\HomingEnemy.h" />
+    <ClInclude Include="Game\Enemy\Normal\NormalMoveEnemy.h" />
     <ClInclude Include="resources\nlohmann\json.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Game\Enemy\Normal\TargetEnemy.h" />
+    <ClInclude Include="Game\Enemy\Normal\FixedEnemy.h" />
     <ClInclude Include="Game\Enemy\Bullet\TargetBullet.h" />
     <ClInclude Include="Engine\scene\gameScene\SelectScene.h" />
     <ClInclude Include="Engine\scene\gameScene\resultScene.h" />
