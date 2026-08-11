@@ -1,18 +1,23 @@
-#include "FixedEnemy.h"
+#include "CircleMoveEnemy.h"
+
+#include <numbers>
 
 #include "../../../Engine/3d/CameraManager.h"
 #include "../../../Engine/3d/Model.h"
 #include "../../../Engine/3d/ModelManager.h"
 
 #include "../../../Engine/base/TextureManager.h"
+#include "../../Player/Player.h"
 
 #include "../../../Engine/scene/SceneManager.h"
-
 #include "../Bullet/EnemyHomingBullet.h"
 #include "../Bullet/TargetBullet.h"
 
-void FixedEnemy::Initialize(Vector3 pos)
+void CircleMoveEnemy::Initialize(Vector3 pos)
 {
+    // スポーン位置を中心座標としてセット
+    centerPos_ = pos;
+
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
     ModelManager::GetInstance()->LoadModel("test/test.obj");
 
@@ -29,12 +34,24 @@ void FixedEnemy::Initialize(Vector3 pos)
 
     transform_.scale = { 1.0f, 1.0f, 1.0f };
     transform_.rotate = { 0.0f, 0.0f, 0.0f };
-    transform_.translate = pos;
+    transform_.translate.x = centerPos_.x + radius_ * std::cos(angle_);
+    transform_.translate.y = centerPos_.y + radius_ * std::sin(angle_);
+    transform_.translate.z = centerPos_.z;
 }
-
-void FixedEnemy::Update()
+void CircleMoveEnemy::Update()
 {
+    float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
+
+    angle_ += speed_ * deltaTime;
+
+    if (angle_ >= std::numbers::pi * 2.0f) {
+        angle_ -= 6.283185f;
+    }
+
+    transform_.translate.x = centerPos_.x + radius_ * std::cos(angle_);
+    transform_.translate.y = centerPos_.y + radius_ * std::sin(angle_);
+    transform_.translate.z = centerPos_.z;
 
     BulletUpdate();
 
@@ -43,7 +60,7 @@ void FixedEnemy::Update()
     object3d->Update();
 }
 
-void FixedEnemy::Draw()
+void CircleMoveEnemy::Draw()
 {
     object3d->Draw();
 
@@ -52,7 +69,7 @@ void FixedEnemy::Draw()
     }
 }
 
-AABB FixedEnemy::GetAABB() const
+AABB CircleMoveEnemy::GetAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
@@ -60,7 +77,7 @@ AABB FixedEnemy::GetAABB() const
     return aabb;
 }
 
-void FixedEnemy::OnCollision(Collider* other)
+void CircleMoveEnemy::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
@@ -73,10 +90,16 @@ void FixedEnemy::OnCollision(Collider* other)
         }
     } else if (other->GetCollisionGroup() == CollisionGroup::kPlayer) {
         // お互いダメージ処理
+        health_ -= 1;
+
+        if (health_ <= 0) {
+            isAvile_ = false; // 死亡演出作ったならそっちに移行
+            isDead_ = true; // 死亡演出トリガー用
+        }
     }
 }
 
-void FixedEnemy::BulletUpdate()
+void CircleMoveEnemy::BulletUpdate()
 {
     interval -= SceneManager::GetInstance()->GetDeltaTime();
 

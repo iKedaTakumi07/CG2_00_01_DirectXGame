@@ -1,4 +1,5 @@
 #include "EnemyManager.h"
+#include "Normal/CircleMoveEnemy.h"
 #include "Normal/FixedEnemy.h"
 #include "Normal/NormalMoveEnemy.h"
 #include "base/baseEnemy.h"
@@ -124,6 +125,8 @@ void EnemyManager::PopEnemyCheck(const EnemyPopData& data)
         newEnemy = std::make_unique<FixedEnemy>();
     } else if (data.enemyPopType == "NormalMoveEnemy") {
         newEnemy = std::make_unique<NormalMoveEnemy>();
+    } else if (data.enemyPopType == "CircleMoveEnemy") {
+        newEnemy = std::make_unique<CircleMoveEnemy>();
     } else {
         // 万が一のエラー対策
         newEnemy = std::make_unique<FixedEnemy>();

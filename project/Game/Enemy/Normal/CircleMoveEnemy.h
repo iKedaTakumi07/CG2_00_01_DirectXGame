@@ -8,12 +8,10 @@
 class Player;
 class Model;
 
-class NormalMoveEnemy : public baseEnemy {
+class CircleMoveEnemy : public baseEnemy {
 public:
-    void Initialize(Vector3 posh) override;
-
+    void Initialize(Vector3 pos) override;
     void Update() override;
-
     void Draw() override;
 
 public:
@@ -27,8 +25,9 @@ public:
     // set関数
     void SetTargetPlayer(Player* target) override { player_ = target; }
     void SetIsDead(bool num) { isDead_ = num; }
-    void SetMove(Vector3 num) override { move = num; }
-    void SetbasePos(Vector3 num) override { basePos = num; } // 折り返し地点の中心位置
+    void SetMove(Vector3 num) override { num; }
+    void SetbasePos(Vector3 num) override { centerPos_ = num; } // 中心位置
+
     void SetUseBullet(int num) override { useBullet = num; }
     void SetHomingPower(float num) override { homingPower = num; }
     void SetHp(int num) override { health_ = num; }
@@ -57,9 +56,10 @@ private:
     float interval = 3.0f; // 弾を発射する間隔
     static inline const float maxInterval = 3.0f; // 間隔
 
-    Vector3 move = { 0.0f };
-    Vector3 basePos = { 0.0f }; // 折り返し地点の中心位置
-    float maxBaseMove = 5.0f; // どこまで進むか
+    Vector3 centerPos_ = { 0.0f }; // 中心位置
+    float radius_ = 5.0f; // 回転半径
+    float speed_ = 1.0f; // 回転速度 (ラジアン/秒)
+    float angle_ = 0.0f; // 現在の角度 (ラジアン)
 
     bool isAvile_ = true; // 存在しているか
     bool isDead_ = false; // 死んでいるか
