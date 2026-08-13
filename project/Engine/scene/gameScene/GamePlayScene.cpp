@@ -96,6 +96,13 @@ void GamePlayScene::Update()
     if (input->TriggerKey(DIK_1)) {
         SceneManager::GetInstance()->ChangeScene("TITLE");
     }
+
+    // 終了条件
+    if (enemyManager_->IsAllEnemiesCleared()) {
+        SceneManager::GetInstance()->ChangeScene("RESULT");
+        return;
+    }
+
     if (input->TriggerKey(DIK_9)) {
         CameraManager::GetInstance()->SetActiveCamera("PlayMain");
     }

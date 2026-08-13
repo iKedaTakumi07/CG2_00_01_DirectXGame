@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 class baseEnemy;
 class FixedEnemy;
@@ -35,6 +35,8 @@ public:
 public:
     // Get関数
     const std::vector<std::unique_ptr<baseEnemy>>& GetEnemyes() const { return enemies_; } // 弾の入手
+    bool IsAllPopFinished() const { return currentSpawnIndex_ >= popDatas_.size(); } // 全てpopしたか
+    bool IsAllEnemiesCleared() const { return IsAllPopFinished() && enemies_.empty(); } // なおかつ敵が全滅しているか。
 
     void LoadJsonPopData();
 
