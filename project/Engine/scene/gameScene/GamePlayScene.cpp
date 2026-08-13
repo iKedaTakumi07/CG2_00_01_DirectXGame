@@ -75,6 +75,7 @@ void GamePlayScene::Initialize()
 
     enemyManager_ = std::make_unique<EnemyManager>();
     enemyManager_->Initialize(player_.get(), "resources/StageData/enemyPopData1.json"); // 読み込むファイルを決めるクラス(インスタンス化)で作成する
+    player_->SetEnemyManager(enemyManager_.get());
 
     collisionManager_ = std::make_unique<CollisionManager>();
 

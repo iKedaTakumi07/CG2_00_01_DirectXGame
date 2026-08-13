@@ -12,6 +12,8 @@
 #include "../../Engine/io/Input.h"
 #include "../../Engine/scene/SceneManager.h"
 
+#include "../Enemy/EnemyManager.h"
+#include "../Enemy/base/baseEnemy.h"
 #include "../Enemy/base/baseEnemyBullet.h"
 #include "PlayerBullet.h"
 
@@ -228,17 +230,72 @@ void Player::BulletUpdate()
 {
     float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
 
-    if (coolTime <= 0.0f) {
-        if (Input::getInstance()->PushKey(DIK_SPACE)) {
-            auto playerbullet = std::make_unique<PlayerBullet>();
-            playerbullet->Initialize(camera_, basetransform_.translate, basetransform_.rotate);
+    // べく鳥
+    Vector3 forwardDir;
+    forwardDir.x = -std::sin(basetransform_.rotate.z);
+    forwardDir.y = -std::sin(basetransform_.rotate.x);
+    forwardDir.z = std::cos(basetransform_.rotate.z);
 
-            // リストに挿入
-            playerBullets_.push_back(std::move(playerbullet));
+    bool isSpacePushed = Input::getInstance()->PushKey(DIK_SPACE);
+    if (isSpacePushed) {
+        // チャージ
+        chargeTimer_ += deltaTime;
 
-            coolTime = kCoolTime;
+        lockonTarget_ = nullptr;
+        float maxDot = kLockonAngleThreshold;
+        for (const auto& enemy : enemyManager_->GetEnemyes()) {
+            if (!enemy->GetIsAvile_())
+                continue; // 死んでいるやつはする―
+
+            // ベクトル
+            Vector3 toEnemy = {
+                enemy->GetTranslate().x - basetransform_.translate.x,
+                enemy->GetTranslate().y - basetransform_.translate.y,
+                enemy->GetTranslate().z - basetransform_.translate.z
+            };
+
+            // 正規化
+
+            float dist = std::sqrt(toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y + toEnemy.z * toEnemy.z);
+            if (dist > 0.0f) {
+                toEnemy.x /= dist;
+                toEnemy.y /= dist;
+                toEnemy.z /= dist;
+            }
+
+            // 内積で近い敵を探し
+            float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
+            if (dot > maxDot) {
+                maxDot = dot;
+                lockonTarget_ = enemy.get();
+            }
         }
     } else {
+        // チャージ時間が満たしているならちゃ―初
+        if (chargeTimer_ >= kChargeTime) {
+            auto playerbullet = std::make_unique<PlayerBullet>();
+            playerbullet->Initialize(camera_, basetransform_.translate, basetransform_.rotate);
+            // ロックオン対象がいればセット
+            if (lockonTarget_) {
+                playerbullet->SetTarget(lockonTarget_);
+            }
+            playerBullets_.push_back(std::move(playerbullet));
+            coolTime = kCoolTime;
+        } else if (chargeTimer_ > 0.0f && coolTime <= 0.0f) {
+            // チャージ時間未達なら通常化
+            auto playerbullet = std::make_unique<PlayerBullet>();
+            playerbullet->Initialize(camera_, basetransform_.translate, basetransform_.rotate);
+            playerBullets_.push_back(std::move(playerbullet));
+            coolTime = kCoolTime;
+        }
+
+        // リセット
+        chargeTimer_ = 0.0f;
+        lockonTarget_ = nullptr;
+    }
+
+    // クールタイム
+    if (coolTime > 0.0f) {
         coolTime -= deltaTime;
     }
 

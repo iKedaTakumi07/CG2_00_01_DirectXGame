@@ -21,6 +21,7 @@ public:
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }
     bool GetIsAvile_() override { return isAvile_; }
+    Vector3 GetTranslate() override { return transform_.translate; }
 
     // set関数
     void SetTargetPlayer(Player* target) override { player_ = target; }

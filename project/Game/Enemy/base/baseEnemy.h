@@ -26,6 +26,7 @@ public:
 
     /* Get関数 */
     const std::vector<std::unique_ptr<baseEnemyBullet>>& GetBullets() const { return enemyBullet_; }
+    virtual Vector3 GetTranslate() = 0;
     virtual bool GetIsAvile_() = 0;
 
 protected:
