@@ -40,6 +40,7 @@ void EnemyHomingBullet::Initialize(Vector3 pos, const Vector3& rotation)
 void EnemyHomingBullet::Update(float deltaTime)
 {
     MoveUpdate();
+    CheckCameraCulling();
 
     deathTimer_ -= deltaTime;
     if (deathTimer_ <= 0.0f) {
@@ -169,7 +170,7 @@ void EnemyHomingBullet::CheckCameraCulling()
     float dotProduct = cameraForward.x * toBullet.x + cameraForward.y * toBullet.y + cameraForward.z * toBullet.z;
 
     // カメラから離れているなら(後で検証)
-    if (dotProduct < 0.0f) {
-        isDead_ = false;
+    if (dotProduct < 6.0f) {
+        isDead_ = true;
     }
 }

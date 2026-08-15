@@ -1,22 +1,26 @@
-#include "HomingEnemy.h"
+#include "FixedEnemy.h"
 
 #include "../../../Engine/3d/CameraManager.h"
 #include "../../../Engine/3d/Model.h"
 #include "../../../Engine/3d/ModelManager.h"
 
 #include "../../../Engine/base/TextureManager.h"
-#include "../../Player/Player.h"
 
 #include "../../../Engine/scene/SceneManager.h"
-#include "../Bullet/EnemyHomingBullet.h"
 
-void HomingEnemy::Initialize(Vector3 pos)
+#include "../Bullet/EnemyHomingBullet.h"
+#include "../Bullet/TargetBullet.h"
+
+void FixedEnemy::Initialize(Vector3 pos)
 {
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
     ModelManager::GetInstance()->LoadModel("test/test.obj");
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
+
+    isAvile_ = true;
+    isDead_ = false;
 
     model = std::make_unique<Model>();
     model->Initialize("resources/test", "test.obj");
@@ -28,15 +32,9 @@ void HomingEnemy::Initialize(Vector3 pos)
     transform_.translate = pos;
 }
 
-void HomingEnemy::Update()
+void FixedEnemy::Update()
 {
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
-
-    transform_.translate.x += move;
-
-    if (transform_.translate.x + move >= 10.0f || transform_.translate.x + move <= -10.0f) {
-        move = -move;
-    }
 
     BulletUpdate();
 
@@ -45,7 +43,7 @@ void HomingEnemy::Update()
     object3d->Update();
 }
 
-void HomingEnemy::Draw()
+void FixedEnemy::Draw()
 {
     object3d->Draw();
 
@@ -54,7 +52,7 @@ void HomingEnemy::Draw()
     }
 }
 
-AABB HomingEnemy::GetAABB() const
+AABB FixedEnemy::GetAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
@@ -62,7 +60,7 @@ AABB HomingEnemy::GetAABB() const
     return aabb;
 }
 
-void HomingEnemy::OnCollision(Collider* other)
+void FixedEnemy::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
@@ -78,18 +76,27 @@ void HomingEnemy::OnCollision(Collider* other)
     }
 }
 
-void HomingEnemy::BulletUpdate()
+void FixedEnemy::BulletUpdate()
 {
     interval -= SceneManager::GetInstance()->GetDeltaTime();
 
     if (interval <= 0.0f) {
         // 弾の生成
-        std::unique_ptr<EnemyHomingBullet> newBulletEnemy = std::make_unique<EnemyHomingBullet>();
-        newBulletEnemy->Initialize(transform_.translate, transform_.rotate);
-        newBulletEnemy->SetTargetPosition(player_->GetTranslate());
+        if (useBullet == 0) {
+            std::unique_ptr<TargetBullet> newBulletEnemy = std::make_unique<TargetBullet>();
+            newBulletEnemy->Initialize(transform_.translate, transform_.rotate);
+            newBulletEnemy->SetTargetPosition(player_->GetTranslate());
 
-        enemyBullet_.push_back(std::move(newBulletEnemy));
-        interval = maxInterval;
+            enemyBullet_.push_back(std::move(newBulletEnemy));
+            interval = maxInterval;
+        } else if (useBullet == 1) {
+            std::unique_ptr<EnemyHomingBullet> newBulletEnemy = std::make_unique<EnemyHomingBullet>();
+            newBulletEnemy->Initialize(transform_.translate, transform_.rotate);
+            newBulletEnemy->SetTargetPosition(player_->GetTranslate());
+
+            enemyBullet_.push_back(std::move(newBulletEnemy));
+            interval = maxInterval;
+        }
     }
 
     float currentDeltaTime = SceneManager::GetInstance()->GetDeltaTime();

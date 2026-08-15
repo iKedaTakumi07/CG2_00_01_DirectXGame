@@ -74,7 +74,8 @@ void GamePlayScene::Initialize()
     player_->Initialize();
 
     enemyManager_ = std::make_unique<EnemyManager>();
-    enemyManager_->Initialize(player_.get(), BaseScene::GetCamera());
+    enemyManager_->Initialize(player_.get(), "resources/StageData/enemyPopData1.json"); // 読み込むファイルを決めるクラス(インスタンス化)で作成する
+    player_->SetEnemyManager(enemyManager_.get());
 
     collisionManager_ = std::make_unique<CollisionManager>();
 
@@ -96,6 +97,13 @@ void GamePlayScene::Update()
     if (input->TriggerKey(DIK_1)) {
         SceneManager::GetInstance()->ChangeScene("TITLE");
     }
+
+    // 終了条件
+    if (enemyManager_->IsAllEnemiesCleared()) {
+        SceneManager::GetInstance()->ChangeScene("RESULT");
+        return;
+    }
+
     if (input->TriggerKey(DIK_9)) {
         CameraManager::GetInstance()->SetActiveCamera("PlayMain");
     }

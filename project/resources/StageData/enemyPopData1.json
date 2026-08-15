@@ -1,0 +1,45 @@
+{
+  "enemies": [
+    {
+      "type": "FixedEnemy",
+      "spawn_z": 0.0,
+      "pos": { "x": 0.0, "y": 0.0, "z": 50.0 },
+      "UseBullet" : "TargetBullet",
+      "hp": 3
+    },
+    {
+      "type": "NormalMoveEnemy",
+      "spawn_z": 0.0,
+      "pos": { "x": 3.0, "y": 0.0, "z": 50.0 },
+      "UseBullet" : "HomingBullet",
+      "MoveDirection": { "x": 0.0, "y": 5.0, "z": 0.0},
+      "homingPower": 0.1,
+      "hp": 5
+    },
+    {
+      "type": "NormalMoveEnemy",
+      "spawn_z": 0.0,
+      "pos": { "x": 0.0, "y": 5.0, "z": 50.0 },
+      "UseBullet" : "TargetBullet",
+      "MoveDirection": { "x": 5.0, "y": 0.0, "z": 0.0},
+      "hp": 5
+    },
+    {
+      "type": "CircleMoveEnemy",
+      "spawn_z": 0.0,
+      "pos": { "x": 5.0, "y": 5.0, "z": 50.0 },
+      "UseBullet" : "HomingBullet",
+      "MoveDirection": { "x": 5.0, "y": 0.0, "z": 0.0},
+      "homingPower": 0.1,
+      "hp": 3
+    },
+    {
+      "type": "FixedEnemy",
+      "spawn_z": 6.0,
+      "pos": { "x": 0.0, "y": 0.0, "z": 56.0 },
+      "UseBullet" : "HomingBullet",
+      "homingPower": 0.1,
+      "hp": 3
+    }
+  ]
+}

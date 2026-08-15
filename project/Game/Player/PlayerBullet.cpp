@@ -6,6 +6,7 @@
 #include "../../Engine/base/Math.h"
 #include "../../Engine/base/TextureManager.h"
 #include "../../Engine/io/Input.h"
+#include "../Enemy/base/baseEnemy.h"
 
 #include "../Particle/LaserParticle.h"
 
@@ -16,7 +17,6 @@ void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vec
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    
 
     model = std::make_unique<Model>();
     model->Initialize("resources/test", "test.obj");
@@ -51,6 +51,47 @@ void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vec
 
 void PlayerBullet::Update(float deltaTime)
 {
+    if (target_ && target_->GetIsAvile_()) { // ターゲットが存在し、生きている場合
+        Vector3 targetPos = target_->GetTranslate();
+
+        // ベクトル計算
+        Vector3 toTarget = {
+            targetPos.x - transform_.translate.x,
+            targetPos.y - transform_.translate.y,
+            targetPos.z - transform_.translate.z
+        };
+
+        // 正規化
+        float dist = std::sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y + toTarget.z * toTarget.z);
+        if (dist > 0.0f) {
+            toTarget.x /= dist;
+            toTarget.y /= dist;
+            toTarget.z /= dist;
+        }
+
+        // 速度ベクトルを正規化
+        Vector3 currentDir = velocity_;
+        float currentSpeed = std::sqrt(currentDir.x * currentDir.x + currentDir.y * currentDir.y + currentDir.z * currentDir.z);
+        if (currentSpeed > 0.0f) {
+            currentDir.x /= currentSpeed;
+            currentDir.y /= currentSpeed;
+            currentDir.z /= currentSpeed;
+        }
+
+        // 現在の進行方向とターゲット方向を線形補間(Lerp)して曲げる
+        currentDir.x = std::lerp(currentDir.x, toTarget.x, homingStrength_);
+        currentDir.y = std::lerp(currentDir.y, toTarget.y, homingStrength_);
+        currentDir.z = std::lerp(currentDir.z, toTarget.z, homingStrength_);
+
+        // 再度正規化して速度を掛け直す
+        float newDirLen = std::sqrt(currentDir.x * currentDir.x + currentDir.y * currentDir.y + currentDir.z * currentDir.z);
+        if (newDirLen > 0.0f) {
+            velocity_.x = (currentDir.x / newDirLen) * speed_;
+            velocity_.y = (currentDir.y / newDirLen) * speed_;
+            velocity_.z = (currentDir.z / newDirLen) * speed_;
+        }
+    }
+
     // 弾の移動
     transform_.translate.x += velocity_.x * deltaTime;
     transform_.translate.y += velocity_.y * deltaTime;
@@ -61,9 +102,14 @@ void PlayerBullet::Update(float deltaTime)
         isDead_ = true;
     }
 
-    transform_.rotate.y = std::atan2(velocity_.x, velocity_.z);
+    // 弾の向きをベクトルにする
+    Vector3 rotate;
+    rotate.y = atan2(velocity_.x, velocity_.z);
+    // 横軸方向の長さを求める
     float hypotXZ = std::hypot(velocity_.x, velocity_.z);
-    transform_.rotate.x = std::atan2(-velocity_.y, hypotXZ);
+    rotate.x = atan2(-velocity_.y, hypotXZ);
+    rotate.z = 0.0f;
+    transform_.rotate = rotate;
 
     object3d->SetTranslate(transform_.translate);
     object3d->SetRotate(transform_.rotate);

@@ -9,6 +9,8 @@
 #include "../OnCollison/Collider.h"
 
 #include "PlayerBullet.h"
+class EnemyManager;
+class baseEnemy;
 
 class Player : public Collider {
 public:
@@ -35,6 +37,7 @@ public:
 
     // set
     void SetBasePosition(const Vector3& pos) { railBasePos_ = pos; }
+    void SetEnemyManager(EnemyManager* enemyManager) { enemyManager_ = enemyManager; }
 
 private:
     // 更新系列
@@ -89,6 +92,12 @@ private:
     int dameg_ = 10;
     int chargeDameg_ = 15;
 
+    // チャージショット
+    float chargeTimer_ = 0.0f; // チャージ時間
+    const float kChargeTime = 1.0f; // チャージ完了までの時間
+    const float kLockonAngleThreshold = 0.1f; // ロックオン範囲(円錐)
+    baseEnemy* lockonTarget_ = nullptr; // ロックオン対象
+
     // 3d照準の距離
     const float kLongDistancePlayerTo3DReticle = 50.0f; // 最長射程
     const float kShortDistancePlayerTo3DReticle = 25.0f; // 半分ぐらいの距離
@@ -105,6 +114,7 @@ private:
 
     // カメラ
     Camera* camera_;
+    EnemyManager* enemyManager_ = nullptr;
 
     // 弾
     std::list<std::unique_ptr<PlayerBullet>> playerBullets_;

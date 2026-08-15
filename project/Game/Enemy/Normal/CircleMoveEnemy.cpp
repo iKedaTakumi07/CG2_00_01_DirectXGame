@@ -1,22 +1,31 @@
-#include "TargetEnemy.h"
+#include "CircleMoveEnemy.h"
+
+#include <numbers>
 
 #include "../../../Engine/3d/CameraManager.h"
 #include "../../../Engine/3d/Model.h"
 #include "../../../Engine/3d/ModelManager.h"
 
 #include "../../../Engine/base/TextureManager.h"
+#include "../../Player/Player.h"
 
 #include "../../../Engine/scene/SceneManager.h"
-
+#include "../Bullet/EnemyHomingBullet.h"
 #include "../Bullet/TargetBullet.h"
 
-void TargetEnemy::Initialize(Vector3 pos)
+void CircleMoveEnemy::Initialize(Vector3 pos)
 {
+    // スポーン位置を中心座標としてセット
+    centerPos_ = pos;
+
     TextureManager::getInstance()->LoadTexture("resources/test/uvChecker.png");
     ModelManager::GetInstance()->LoadModel("test/test.obj");
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
+
+    isAvile_ = true;
+    isDead_ = false;
 
     model = std::make_unique<Model>();
     model->Initialize("resources/test", "test.obj");
@@ -25,18 +34,24 @@ void TargetEnemy::Initialize(Vector3 pos)
 
     transform_.scale = { 1.0f, 1.0f, 1.0f };
     transform_.rotate = { 0.0f, 0.0f, 0.0f };
-    transform_.translate = pos;
+    transform_.translate.x = centerPos_.x + radius_ * std::cos(angle_);
+    transform_.translate.y = centerPos_.y + radius_ * std::sin(angle_);
+    transform_.translate.z = centerPos_.z;
 }
-
-void TargetEnemy::Update()
+void CircleMoveEnemy::Update()
 {
+    float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
-    transform_.translate.x += move;
+    angle_ += speed_ * deltaTime;
 
-    if (transform_.translate.x + move >= 10.0f || transform_.translate.x + move <= -10.0f) {
-        move = -move;
+    if (angle_ >= std::numbers::pi * 2.0f) {
+        angle_ -= 6.283185f;
     }
+
+    transform_.translate.x = centerPos_.x + radius_ * std::cos(angle_);
+    transform_.translate.y = centerPos_.y + radius_ * std::sin(angle_);
+    transform_.translate.z = centerPos_.z;
 
     BulletUpdate();
 
@@ -45,7 +60,7 @@ void TargetEnemy::Update()
     object3d->Update();
 }
 
-void TargetEnemy::Draw()
+void CircleMoveEnemy::Draw()
 {
     object3d->Draw();
 
@@ -54,7 +69,7 @@ void TargetEnemy::Draw()
     }
 }
 
-AABB TargetEnemy::GetAABB() const
+AABB CircleMoveEnemy::GetAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
@@ -62,7 +77,7 @@ AABB TargetEnemy::GetAABB() const
     return aabb;
 }
 
-void TargetEnemy::OnCollision(Collider* other)
+void CircleMoveEnemy::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
@@ -75,26 +90,42 @@ void TargetEnemy::OnCollision(Collider* other)
         }
     } else if (other->GetCollisionGroup() == CollisionGroup::kPlayer) {
         // お互いダメージ処理
+        health_ -= 1;
+
+        if (health_ <= 0) {
+            isAvile_ = false; // 死亡演出作ったならそっちに移行
+            isDead_ = true; // 死亡演出トリガー用
+        }
     }
 }
 
-void TargetEnemy::BulletUpdate()
+void CircleMoveEnemy::BulletUpdate()
 {
     interval -= SceneManager::GetInstance()->GetDeltaTime();
 
     if (interval <= 0.0f) {
         // 弾の生成
-        std::unique_ptr<TargetBullet> newBulletEnemy = std::make_unique<TargetBullet>();
-        newBulletEnemy->Initialize(transform_.translate, transform_.rotate);
-        newBulletEnemy->SetTargetPosition(player_->GetTranslate());
+        if (useBullet == 0) {
+            std::unique_ptr<TargetBullet> newBulletEnemy = std::make_unique<TargetBullet>();
+            newBulletEnemy->Initialize(transform_.translate, transform_.rotate);
+            newBulletEnemy->SetTargetPosition(player_->GetTranslate());
 
-        enemyBullet_.push_back(std::move(newBulletEnemy));
-        interval = maxInterval;
+            enemyBullet_.push_back(std::move(newBulletEnemy));
+            interval = maxInterval;
+        } else if (useBullet == 1) {
+            std::unique_ptr<EnemyHomingBullet> newBulletEnemy = std::make_unique<EnemyHomingBullet>();
+            newBulletEnemy->Initialize(transform_.translate, transform_.rotate);
+            newBulletEnemy->SetTargetPosition(player_->GetTranslate());
+
+            enemyBullet_.push_back(std::move(newBulletEnemy));
+            interval = maxInterval;
+        }
     }
 
     float currentDeltaTime = SceneManager::GetInstance()->GetDeltaTime();
     // 更新処理
     for (auto& bullet : enemyBullet_) {
+        bullet->SetPlayerPos(player_->GetTranslate());
         bullet->Update(currentDeltaTime);
     }
 
