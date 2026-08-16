@@ -82,7 +82,8 @@ void NormalMoveEnemy::OnCollision(Collider* other)
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
         // ダメージ処理
-        health_ -= 1;
+
+        health_ -= other->GetDamage();
 
         if (health_ <= 0) {
             isAvile_ = false; // 死亡演出作ったならそっちに移行

@@ -53,6 +53,8 @@ private:
     // 当たり半テオ
     std::unique_ptr<CollisionManager> collisionManager_;
 
+    bool isSceneFinished_ = false;
+
     // 音声データ
     Sound fanfare;
     Sound clearSe;

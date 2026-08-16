@@ -23,13 +23,15 @@ public:
     virtual void SetHomingPower(float num) { };
     virtual void SetMove(Vector3 num) { }
     virtual void SetbasePos(Vector3 num) { }
-
+    virtual void SetId(uint32_t id) { id_ = id; }
     /* Get関数 */
     const std::vector<std::unique_ptr<baseEnemyBullet>>& GetBullets() const { return enemyBullet_; }
     virtual Vector3 GetTranslate() = 0;
     virtual bool GetIsAvile_() = 0;
+    virtual uint32_t GetId() const { return id_; }
 
 protected:
     // 弾
     std::vector<std::unique_ptr<baseEnemyBullet>> enemyBullet_;
+    uint32_t id_ = 0;
 };

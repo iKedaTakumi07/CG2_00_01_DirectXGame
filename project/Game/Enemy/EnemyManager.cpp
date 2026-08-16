@@ -51,6 +51,22 @@ void EnemyManager::Draw()
     }
 }
 
+baseEnemy* EnemyManager::GetEnemyById(uint32_t id) const
+{
+    if (id == 0)
+        return nullptr;
+
+    // 対象のIDを検索
+    for (const auto& enemy : enemies_) {
+        if (enemy->GetId() == id) {
+            return enemy.get();
+        }
+    }
+
+    // 破棄されている場合はnullptr
+    return nullptr;
+}
+
 void EnemyManager::LoadJsonPopData()
 {
     std::ifstream file(PopEnemyFilePath_);
@@ -138,7 +154,8 @@ void EnemyManager::PopEnemyCheck(const EnemyPopData& data)
         newEnemy->SetTargetPlayer(player_);
         newEnemy->SetMove(data.moveDirection);
         newEnemy->SetHp(data.hp);
-
+        // ID割り当て
+        newEnemy->SetId(nextEnemyId_++);
         // 今後弾を追加したなら変更
         if (data.useBullet == "HomingBullet") {
             newEnemy->SetHomingPower(data.homingPower);

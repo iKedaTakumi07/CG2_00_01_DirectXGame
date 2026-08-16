@@ -94,14 +94,13 @@ void GamePlayScene::Update()
 {
     auto* input = Input::getInstance();
 
-    if (input->TriggerKey(DIK_1)) {
-        SceneManager::GetInstance()->ChangeScene("TITLE");
+    if (isSceneFinished_) {
+        return;
     }
 
-    // 終了条件
-    if (enemyManager_->IsAllEnemiesCleared()) {
-        SceneManager::GetInstance()->ChangeScene("RESULT");
-        return;
+    if (input->TriggerKey(DIK_1)) {
+        isSceneFinished_ = true;
+        SceneManager::GetInstance()->ChangeScene("TITLE");
     }
 
     if (input->TriggerKey(DIK_9)) {
@@ -136,6 +135,12 @@ void GamePlayScene::Update()
         }
     }
     collisionManager_->CheckAllCollisions();
+
+    // 終了条件
+    if (enemyManager_->IsAllEnemiesCleared()) {
+        isSceneFinished_ = true;
+        SceneManager::GetInstance()->ChangeScene("RESULT");
+    }
 }
 
 void GamePlayScene::Draw()

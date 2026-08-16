@@ -6,6 +6,7 @@
 #include "../../Engine/base/Math.h"
 #include "../../Engine/base/TextureManager.h"
 #include "../../Engine/io/Input.h"
+#include "../Enemy/EnemyManager.h"
 #include "../Enemy/base/baseEnemy.h"
 
 #include "../Particle/LaserParticle.h"
@@ -51,8 +52,13 @@ void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vec
 
 void PlayerBullet::Update(float deltaTime)
 {
-    if (target_ && target_->GetIsAvile_()) { // ターゲットが存在し、生きている場合
-        Vector3 targetPos = target_->GetTranslate();
+    baseEnemy* target = nullptr;
+    if (targetId_ != 0 && enemyManager_) {
+        target = enemyManager_->GetEnemyById(targetId_);
+    }
+
+    if (target && target->GetIsAvile_()) { // ターゲットが存在し、生きている場合
+        Vector3 targetPos = target->GetTranslate();
 
         // ベクトル計算
         Vector3 toTarget = {
@@ -147,4 +153,13 @@ void PlayerBullet::OnCollision(Collider* other)
 
         // チャージショット実装するなら消滅しない例外が必要かも
     }
+}
+
+int PlayerBullet::GetDamage() const
+{
+    if (isChargeBullet) {
+        return ChageDameg;
+    }
+
+    return Dameg;
 }
