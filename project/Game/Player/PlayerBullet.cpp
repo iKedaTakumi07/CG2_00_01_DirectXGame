@@ -55,6 +55,10 @@ void PlayerBullet::Update(float deltaTime)
     baseEnemy* target = nullptr;
     if (targetId_ != 0 && enemyManager_) {
         target = enemyManager_->GetEnemyById(targetId_);
+        float HomingUp = 0.002f; // 時間経過で追尾強化
+        if (homingStrength_ <= 1.0f) {
+            homingStrength_ += HomingUp;
+        }
     }
 
     if (target && target->GetIsAvile_()) { // ターゲットが存在し、生きている場合

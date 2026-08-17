@@ -53,7 +53,7 @@ private:
 
     uint32_t targetId_ = 0;
     EnemyManager* enemyManager_ = nullptr;
-    float homingStrength_ = 0.2f; // 追ビ性能(ほぼ必中で良い)
+    float homingStrength_ = 0.01f; // 追ビ性能(ほぼ必中で良い)
     bool isChargeBullet = false;
     int Dameg = 1;
     int ChageDameg = 5;

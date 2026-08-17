@@ -257,7 +257,7 @@ void Player::BulletUpdate()
         chargeTimer_ += deltaTime;
 
         lockonTargetId_ = 0;
-        uint32_t PreLookId = ChageLookId_;
+
         uint32_t bestCandidateId = 0;
         float maxDot = kLockonAngleThreshold;
 
@@ -289,7 +289,6 @@ void Player::BulletUpdate()
                 float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
                 if (dot > maxDot) {
                     maxDot = dot;
-                    PreLookId = ChageLookId_;
 
                     bestCandidateId = enemy->GetId();
                 }
