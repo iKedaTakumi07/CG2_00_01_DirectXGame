@@ -48,6 +48,8 @@ private:
     // 弾の制御
     void BulletUpdate();
 
+    void BulletCharge();
+
 private:
     Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // モデル座標
     Transform basetransform_ = { { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 揺れ成分を含まない座標他
@@ -95,12 +97,14 @@ private:
     // チャージショット
     float chargeTimer_ = 0.0f; // チャージ時間
     const float kChargeTime = 1.0f; // チャージ完了までの時間
-    const float kLockonAngleThreshold = 0.1f; // ロックオン範囲(円錐)
+    const float kLockonAngleThreshold = 0.99f; // ロックオン範囲(円錐)<0.0fが90°,0.99fが約11°>
     uint32_t lockonTargetId_ = 0; // ロックオン対象
+    uint32_t ChageLookId_ = 0; // ロックオン対象
 
     // 3d照準の距離
     const float kLongDistancePlayerTo3DReticle = 50.0f; // 最長射程
     const float kShortDistancePlayerTo3DReticle = 25.0f; // 半分ぐらいの距離
+    bool ChageLook_ = false;
 
     // 3dモデル
     std::unique_ptr<Model> playerModel;
@@ -111,6 +115,9 @@ private:
 
     std::unique_ptr<Model> LongReticleModel;
     std::unique_ptr<Object3d> LongReticleObject3d;
+
+    std::unique_ptr<Model> ChargeReticleModel;
+    std::unique_ptr<Object3d> ChargeReticleObject3d;
 
     // カメラ
     Camera* camera_;

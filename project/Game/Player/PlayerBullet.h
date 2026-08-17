@@ -33,9 +33,9 @@ public:
     {
         targetId_ = targetId;
         enemyManager_ = manager;
-        isChargeBullet = true;
 
     } // 対象をセット
+    void SetisChargeBullet(bool num) { isChargeBullet = num; }
 
 private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
