@@ -117,6 +117,9 @@ void EnemyHomingBullet::MoveUpdate()
 
     // 正規化/方向転換
     direction = Normalize(direction);
+    if (direction.z > 0.0f) {
+        direction.z = 0.0f; // 後ろの攻撃を除外
+    }
     acceleration_ = direction * homingPower * accelerationScalar;
 
     velocity_ += acceleration_;
@@ -128,6 +131,7 @@ void EnemyHomingBullet::MoveUpdate()
     if (currentSpeed >= totalMaxSpeed) {
         // 現在の進行方向（長さ1）を計算し、それに最高速度を掛ける
         Vector3 currentDir = Normalize(velocity_);
+
         velocity_ = currentDir * totalMaxSpeed;
     }
 

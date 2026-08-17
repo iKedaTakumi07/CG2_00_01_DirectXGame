@@ -96,6 +96,9 @@ void TargetBullet::SetTargetPosition(Vector3 Pos)
 
     // directionを「長さが1のベクトル（正規化ベクトル）」にする
     direction = Normalize(direction);
+    if (direction.z > 0.0f) {
+        direction.z = 0.0f; // 後ろの攻撃を除外
+    }
 
     velocity_ = { 0.0f, 0.0f, 0.0f };
 
