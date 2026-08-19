@@ -98,13 +98,16 @@ void Player::SpritDraw()
 {
 }
 
-AABB Player::GetAABB() const
+AllAABB Player::GetAllAABB() const
 {
-    AABB aabb;
+    AABB box;
+    box.min = { basetransform_.translate.x - size, basetransform_.translate.y - size, basetransform_.translate.z - size };
+    box.max = { basetransform_.translate.x + size, basetransform_.translate.y + size, basetransform_.translate.z + size };
 
-    aabb.min = { basetransform_.translate.x - size, basetransform_.translate.y - size, basetransform_.translate.z - size };
-    aabb.max = { basetransform_.translate.x + size, basetransform_.translate.y + size, basetransform_.translate.z + size };
-    return aabb;
+    AllAABB compound;
+    compound.wholeBox = box;
+    compound.dividBoxes.push_back(box); // 単一コライダーでも配列に1つ入れることで共通化
+    return compound;
 }
 
 void Player::OnCollision(Collider* other)

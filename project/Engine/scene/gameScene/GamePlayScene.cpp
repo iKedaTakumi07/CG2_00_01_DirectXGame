@@ -27,7 +27,7 @@
 #include "../../../Game/OnCollison/CollisionManager.h"
 #include "../../../Game/Player/Player.h"
 #include "../../../Game/stage/StageManager.h"
-#include "../../../Game/stage/stageObject.h"
+#include "../../../Game/stage/stageObjectManager.h"
 
 #include "math.h"
 
@@ -82,8 +82,8 @@ void GamePlayScene::Initialize()
     cameraController_ = std::make_unique<CameraController>();
     cameraController_->Initialize(player_.get());
 
-    stageObject_ = std::make_unique<stageObject>();
-    stageObject_->Initialize();
+    stageObject_ = std::make_unique<stageObjectManager>();
+    stageObject_->Initialize("resources/StageData/stageObjectData1.json");
 
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);

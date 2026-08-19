@@ -4,6 +4,7 @@
 
 #include "../../../Engine/3d/Object3d.h"
 #include "../../../Engine/base/Math.h"
+#include "../../OnCollison/Collider.h"
 
 class Player;
 class Model;
@@ -16,7 +17,7 @@ public:
 
 public:
     // Get関数
-    AABB GetAABB() const override;
+    AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kEnenmy; }
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }

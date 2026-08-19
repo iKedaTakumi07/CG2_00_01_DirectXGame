@@ -1,10 +1,13 @@
 #pragma once
-#include "../../Engine/3d/Camera.h"
-#include "../../Engine/3d/Model.h"
-#include "../../Engine/3d/Object3d.h"
 #include "../../Engine/base/Math.h"
+#include "../OnCollison/Collider.h"
+#include <memory>
 
-class stageObject {
+class Model;
+class Object3d;
+class Camera;
+
+class stageObject : public Collider {
 public:
     void Initialize();
 
@@ -12,9 +15,15 @@ public:
 
     void Draw();
 
-private:
-    Transform grauondtransform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 座標
+public:
+    AllAABB GetAllAABB() const override;
+    CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kStageObject; }
+    void OnCollision(Collider* other) override;
 
-    std::unique_ptr<Model> grauondModel;
-    std::unique_ptr<Object3d> grauond3d;
+private:
+private:
+    Camera* camera_ = nullptr; // カメラポインタ
+
+    std::unique_ptr<Model> ObjectModel;
+    std::unique_ptr<Object3d> Object3d;
 };

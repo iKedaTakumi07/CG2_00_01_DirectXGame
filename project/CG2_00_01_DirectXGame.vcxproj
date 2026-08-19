@@ -264,8 +264,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Game\OnCollison\Collider.cpp" />
     <ClCompile Include="Engine\scene\gameScene\SelectScene.cpp" />
     <ClCompile Include="Engine\scene\gameScene\resultScene.cpp" />
-    <ClCompile Include="Game\stage\stageObject.cpp" />
+    <ClCompile Include="Game\stage\stageObjectManager.cpp" />
     <ClCompile Include="Game\stage\StageManager.cpp" />
+    <ClCompile Include="Game\stage\stageObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\EmitParticle.CS.hlsl">
@@ -626,8 +627,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Game\Enemy\Bullet\TargetBullet.h" />
     <ClInclude Include="Engine\scene\gameScene\SelectScene.h" />
     <ClInclude Include="Engine\scene\gameScene\resultScene.h" />
-    <ClInclude Include="Game\stage\stageObject.h" />
+    <ClInclude Include="Game\stage\stageObjectManager.h" />
     <ClInclude Include="Game\stage\StageManager.h" />
+    <ClInclude Include="Game\stage\stageObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">

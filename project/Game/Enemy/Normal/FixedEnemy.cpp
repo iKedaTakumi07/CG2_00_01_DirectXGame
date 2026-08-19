@@ -52,12 +52,16 @@ void FixedEnemy::Draw()
     }
 }
 
-AABB FixedEnemy::GetAABB() const
+AllAABB FixedEnemy::GetAllAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
     aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
-    return aabb;
+
+    AllAABB compound;
+    compound.wholeBox = aabb;
+    compound.dividBoxes.push_back(aabb); // 単一コライダーでも配列に1つ入れることで共通化
+    return compound;
 }
 
 void FixedEnemy::OnCollision(Collider* other)

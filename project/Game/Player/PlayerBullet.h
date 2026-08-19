@@ -23,7 +23,7 @@ public:
     bool IsDead() const { return isDead_; }
     bool IsChargBullet() const { return isChargeBullet; }
 
-    AABB GetAABB() const override;
+    AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kPlayerBullet; }
     void OnCollision(Collider* other) override;
     int GetDamage() const override;
