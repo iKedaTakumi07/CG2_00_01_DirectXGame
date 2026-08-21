@@ -7,26 +7,18 @@
 
 #include <memory>
 #include <vector>
+class Player;
 
 struct stageObjectPopData {
-    std::string enemyPopType; // 敵の種類
+    std::string ObjectPatan; // 敵の種類
     float spawn_Z; // 出現するタイミング
     Vector3 popPosition; // 出現場所
-    std::string useBullet; // 使う弾の種類
-    int hp; // 体力
-
-    // 動く系のみ
-    Vector3 moveDirection; // 進行方向
-    //
-
-    // 追尾弾のみ
-    float homingPower;
-    //
+    Vector3 sizeScale; // 大きさ
 };
 
 class stageObjectManager {
 public:
-    void Initialize(const std::string& filePath);
+    void Initialize(const std::string& filePath, Player* player);
 
     void Update();
 
@@ -34,6 +26,9 @@ public:
 
 public:
     void LoadJsonPopData(const std::string& filePath);
+
+    // get
+    const std::vector<std::unique_ptr<stageObject>>& GetstageObjects() const { return stageObjects_; };
 
 private:
     void PopEnemyCheck(const stageObjectPopData& data);
@@ -43,9 +38,11 @@ private:
     std::vector<std::unique_ptr<stageObject>> stageObjects_; // 生きている敵のリスト
 
     size_t currentSpawnIndex_ = 0; // 次に出現させる敵のインデックス
-    std::string PopEnemyFilePath_; // 現在読み込んでいるファイル
+    std::string PopObjFilePath_; // 現在読み込んでいるファイル
 
     Transform grauondtransform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 座標
+
+    Player* player_ = nullptr; // ポインタ
 
     std::unique_ptr<Model> grauondModel;
     std::unique_ptr<Object3d> grauond3d;

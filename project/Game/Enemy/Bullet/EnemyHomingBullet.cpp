@@ -86,6 +86,9 @@ void EnemyHomingBullet::OnCollision(Collider* other)
     } else if (other->GetCollisionGroup() == CollisionGroup::kPlayer) {
         // 弾削除
         isDead_ = true;
+    } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
+        // 弾削除
+        isDead_ = true;
     }
 }
 

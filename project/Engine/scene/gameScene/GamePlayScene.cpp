@@ -83,7 +83,7 @@ void GamePlayScene::Initialize()
     cameraController_->Initialize(player_.get());
 
     stageObject_ = std::make_unique<stageObjectManager>();
-    stageObject_->Initialize("resources/StageData/stageObjectData1.json");
+    stageObject_->Initialize("resources/StageData/stageObjectData1.json", player_.get());
 
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
@@ -134,6 +134,10 @@ void GamePlayScene::Update()
             collisionManager_->AddCollider(enemyBullet.get());
         }
     }
+    for (auto& stageObj : stageObject_->GetstageObjects()) {
+        collisionManager_->AddCollider(stageObj.get());
+    }
+
     collisionManager_->CheckAllCollisions();
 
     // 終了条件

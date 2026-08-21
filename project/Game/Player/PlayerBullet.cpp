@@ -159,6 +159,9 @@ void PlayerBullet::OnCollision(Collider* other)
         isDead_ = true;
 
         // チャージショット実装するなら消滅しない例外が必要かも
+    } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
+        // 弾削除
+        isDead_ = true;
     }
 }
 

@@ -65,7 +65,16 @@ void Player::Initialize()
 
 void Player::Update()
 {
+    float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
+
+    // 無敵時間の処理
+    if (isinvincible) {
+        invincibleTime -= deltaTime;
+        if (invincibleTime <= 0.0f) {
+            isinvincible = false;
+        }
+    }
 
     MoveUpdate();
     BulletUpdate();
@@ -84,7 +93,10 @@ void Player::Draw()
         bullet_->Draw();
     }
 
-    playerObject3d->Draw();
+    if (!isinvincible) {
+
+        playerObject3d->Draw();
+    }
 
     ShortReticleObject3d->Draw();
     LongReticleObject3d->Draw();
@@ -118,6 +130,17 @@ void Player::OnCollision(Collider* other)
         hp_ -= damege;
 
         // 無敵時間のフラグ実行
+        /*isinvincible = true;
+        invincibleTime = KinvincibleTime;*/
+    } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
+        int damege = other->GetDamage();
+        hp_ -= damege;
+
+        // 無敵時間のフラグ実行
+        isinvincible = true;
+        invincibleTime = KinvincibleTime;
+
+        // 押し出し処理
     }
 }
 

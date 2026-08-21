@@ -66,6 +66,11 @@ private:
     int hp_ = 100; // 現体力
     int Maxhp_ = 100; // 最大体力
 
+    // 被弾時の無敵時間
+    const float KinvincibleTime = 1.0f;
+    float invincibleTime = 1.0f;
+    bool isinvincible = false;
+
     // 移動系パラメータ
     const float kCharacterSpeed = 0.4f; // 最高速度
     const float kAcceleration = 0.02f; // 加速度
