@@ -4,6 +4,7 @@
 #include <d3d12.h>
 #include <string>
 #include <wrl.h>
+#include <algorithm>
 
 class SpriteCommon;
 class WinApp;
@@ -62,6 +63,11 @@ public:
         this->textureSize = textureSize;
         TransferVertices();
     }
+    void SetGaugeRate(float rate)
+    {
+        this->gaugeRate_ = std::clamp(rate, 0.0f, 1.0f);
+        TransferVertices();
+    }
 
 private:
     void VertexResourceInitialize();
@@ -100,6 +106,7 @@ private:
     Vector2 position = { 0.0f, 0.0f };
     float rotation = 0.0f;
     Vector2 size { 640.0f, 360.0f };
+    float gaugeRate_ = 1.0f; // 右側のクロップ
 
     uint32_t textureIndex = 0;
 

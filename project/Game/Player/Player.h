@@ -1,4 +1,5 @@
 #pragma once
+#include "../../Engine/2d/Sprite.h"
 #include "../../Engine/3d/Camera.h"
 #include "../../Engine/3d/Model.h"
 #include "../../Engine/3d/Object3d.h"
@@ -47,8 +48,10 @@ private:
 
     // 弾の制御
     void BulletUpdate();
-
     void BulletCharge();
+    
+    // 体力UIの制御
+    void UIUpdate();
 
 private:
     Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // モデル座標
@@ -123,6 +126,10 @@ private:
 
     std::unique_ptr<Model> ChargeReticleModel;
     std::unique_ptr<Object3d> ChargeReticleObject3d;
+
+    // UI(スプライト)
+    std::unique_ptr<Sprite> PlayerMaxHpUI;
+    std::unique_ptr<Sprite> PlayerHpUI;
 
     // カメラ
     Camera* camera_;

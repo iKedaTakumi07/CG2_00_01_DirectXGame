@@ -28,6 +28,8 @@ void Player::Initialize()
     ModelManager::GetInstance()->LoadModel("player/playerReticle.obj");
     TextureManager::getInstance()->LoadTexture("resources/player/ChargeReticle.png");
     ModelManager::GetInstance()->LoadModel("player/playerChargeReticle.obj");
+    TextureManager::getInstance()->LoadTexture("resources/player/playerHpUI2.png");
+    TextureManager::getInstance()->LoadTexture("resources/player/playerHpUI3.png");
 
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
@@ -61,6 +63,14 @@ void Player::Initialize()
     ChargeReticleModel->Initialize("resources/player", "playerChargeReticle.obj");
     ChargeReticleObject3d->SetModel(ChargeReticleModel.get());
     ChargeReticleObject3d->SetScale(Vector3(1.0f, 1.0f, 1.0f));
+
+    PlayerMaxHpUI = std::make_unique<Sprite>();
+    PlayerMaxHpUI->Initialize("resources/player/playerHpUI2.png");
+    PlayerMaxHpUI->SetPosition(Vector2(0.0f, 0.0f));
+
+    PlayerHpUI = std::make_unique<Sprite>();
+    PlayerHpUI->Initialize("resources/player/playerHpUI3.png");
+    PlayerHpUI->SetPosition(Vector2(8.0f, 0.0f));
 }
 
 void Player::Update()
@@ -85,6 +95,8 @@ void Player::Update()
 
     playerObject3d->Update();
     playerObject3d->DrawImGui("Player");
+
+    UIUpdate();
 }
 
 void Player::Draw()
@@ -108,6 +120,8 @@ void Player::Draw()
 
 void Player::SpritDraw()
 {
+    PlayerMaxHpUI->Draw();
+    PlayerHpUI->Draw();
 }
 
 AllAABB Player::GetAllAABB() const
@@ -124,14 +138,18 @@ AllAABB Player::GetAllAABB() const
 
 void Player::OnCollision(Collider* other)
 {
+    // 無敵状態はスルー
+    if (isinvincible)
+        return;
+
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kEnemyBullet || other->GetCollisionGroup() == CollisionGroup::kEnenmy) {
         int damege = other->GetDamage();
         hp_ -= damege;
 
         // 無敵時間のフラグ実行
-        /*isinvincible = true;
-        invincibleTime = KinvincibleTime;*/
+        isinvincible = true;
+        invincibleTime = KinvincibleTime;
     } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
         int damege = other->GetDamage();
         hp_ -= damege;
@@ -420,4 +438,15 @@ void Player::BulletCharge()
     }
 
     ChargeReticleObject3d->Update();
+}
+
+void Player::UIUpdate()
+{
+    float hpRate = static_cast<float>(hp_) / static_cast<float>(Maxhp_);
+    hpRate = std::clamp(hpRate, 0.0f, 1.0f);
+
+    PlayerHpUI->SetGaugeRate(hpRate);
+
+    PlayerMaxHpUI->Update();
+    PlayerHpUI->Update();
 }

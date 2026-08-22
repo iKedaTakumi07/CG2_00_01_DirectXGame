@@ -167,6 +167,7 @@ void GamePlayScene::Draw()
     // 2d/スプライト
     //
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
+    player_->SpritDraw();
 
     CPUParticleManager::getInstance()->Draw();
 }
