@@ -63,12 +63,16 @@ void TargetBullet::Draw()
     }
 }
 
-AABB TargetBullet::GetAABB() const
+AllAABB TargetBullet::GetAllAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
     aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
-    return aabb;
+
+    AllAABB compound;
+    compound.wholeBox = aabb;
+    compound.dividBoxes.push_back(aabb); // 単一コライダーでも配列に1つ入れることで共通化
+    return compound;
 }
 
 void TargetBullet::OnCollision(Collider* other)
@@ -78,6 +82,9 @@ void TargetBullet::OnCollision(Collider* other)
         // お互い抹消
         isDead_ = true;
     } else if (other->GetCollisionGroup() == CollisionGroup::kPlayer) {
+        // 弾削除
+        isDead_ = true;
+    } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
         // 弾削除
         isDead_ = true;
     }
@@ -96,6 +103,9 @@ void TargetBullet::SetTargetPosition(Vector3 Pos)
 
     // directionを「長さが1のベクトル（正規化ベクトル）」にする
     direction = Normalize(direction);
+    if (direction.z > 0.0f) {
+        direction.z = 0.0f; // 後ろの攻撃を除外
+    }
 
     velocity_ = { 0.0f, 0.0f, 0.0f };
 

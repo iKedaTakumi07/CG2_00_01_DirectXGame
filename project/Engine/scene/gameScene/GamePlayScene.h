@@ -12,7 +12,7 @@ class Player;
 class EnemyManager;
 class CollisionManager;
 class CameraController;
-class stageObject;
+class stageObjectManager;
 class StageManager;
 
 class GamePlayScene : public BaseScene {
@@ -47,11 +47,13 @@ private:
     std::unique_ptr<Camera> BossCamera_; // ボス演出用
 
     // ステージ置物
-    std::unique_ptr<stageObject> stageObject_;
+    std::unique_ptr<stageObjectManager> stageObject_;
     std::unique_ptr<StageManager> StageManager_;
 
     // 当たり半テオ
     std::unique_ptr<CollisionManager> collisionManager_;
+
+    bool isSceneFinished_ = false;
 
     // 音声データ
     Sound fanfare;

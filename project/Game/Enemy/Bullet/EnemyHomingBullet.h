@@ -6,6 +6,7 @@
 #include "../../../Engine/base/Math.h"
 #include "../../Particle/LaserParticle.h"
 #include <memory>
+#include "../../OnCollison/Collider.h"
 
 class Player;
 
@@ -21,7 +22,7 @@ public:
     // Get関数
     bool GetIsDead() const override { return isDead_; };
 
-    AABB GetAABB() const override;
+    AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kEnemyBullet; }
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }

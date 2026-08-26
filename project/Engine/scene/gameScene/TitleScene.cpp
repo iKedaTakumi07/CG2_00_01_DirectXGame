@@ -150,7 +150,7 @@ void TitleScene::Update()
     // skydox->SetCamera(camera);
 
     if (input->TriggerKey(DIK_1)) {
-        SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
+        SceneManager::GetInstance()->ChangeScene("SELECT");
     }
 
     if (input->TriggerKey(DIK_9)) {

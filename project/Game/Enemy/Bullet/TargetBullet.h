@@ -6,6 +6,7 @@
 #include "../base/baseEnemyBullet.h"
 #include <memory>
 
+#include "../../OnCollison/Collider.h"
 #include "../../Player/Player.h"
 
 class TargetBullet : public baseEnemyBullet {
@@ -20,7 +21,7 @@ public:
     // Get関数
     bool GetIsDead() const override { return isDead_; };
 
-    AABB GetAABB() const override;
+    AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kEnemyBullet; }
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }

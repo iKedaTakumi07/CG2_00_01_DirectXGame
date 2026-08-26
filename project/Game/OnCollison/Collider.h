@@ -7,6 +7,12 @@ enum class CollisionGroup {
     kPlayerBullet,
     kEnenmy,
     kEnemyBullet,
+    kStageObject,
+};
+
+struct AllAABB {
+    AABB wholeBox; // 分割しないオブジェクト自体の大きさ
+    std::vector<AABB> dividBoxes; // 分割した判定
 };
 
 class Collider {
@@ -15,7 +21,7 @@ public:
 
     virtual ~Collider() = default;
 
-    virtual AABB GetAABB() const = 0;
+    virtual AllAABB GetAllAABB() const = 0;
 
     virtual CollisionGroup GetCollisionGroup() const = 0;
 

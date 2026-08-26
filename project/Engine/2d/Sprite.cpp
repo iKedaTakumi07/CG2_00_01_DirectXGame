@@ -83,7 +83,8 @@ void Sprite::IndexResourceInitialize()
 void Sprite::TransferVertices()
 {
     float left = 0.0f - anchorPoint.x;
-    float rigth = 1.0f - anchorPoint.x;
+    float fullRight = 1.0f - anchorPoint.x;
+    float rigth = left + (fullRight - left) * gaugeRate_;
     float top = 0.0f - anchorPoint.y;
     float bottom = 1.0f - anchorPoint.y;
 
@@ -99,7 +100,7 @@ void Sprite::TransferVertices()
 
     const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(texturefilePath_);
     float tex_left = textureLeftTop.x / metadata.width;
-    float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
+    float tex_right = (textureLeftTop.x + textureSize.x * gaugeRate_) / metadata.width;
     float tex_top = textureLeftTop.y / metadata.height;
     float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height;
 
@@ -131,10 +132,6 @@ void Sprite::AdjustTextureSize(std::string texturefilePath)
 
 void Sprite::Update()
 {
-#ifdef USE_IMGUI
-    ImGui::SliderFloat2("pos", &position.x, 0.0f, 1280.0f, "%06.1f");
-#endif // USE_IMGUI
-
     // sprite用
     transform.translate = { position.x, position.y, 0.0f };
     transform.rotate = { 0.0f, 0.0f, rotation };

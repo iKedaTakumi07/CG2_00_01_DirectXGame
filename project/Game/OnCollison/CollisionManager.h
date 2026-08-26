@@ -14,5 +14,7 @@ public:
 private:
     bool CheckAABB(const AABB& a, const AABB& b) const;
 
+    bool CheckAllAABBCollision(const AllAABB& a, const AllAABB& b) const;
+
     std::list<Collider*> colliders_;
 };

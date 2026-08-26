@@ -1,20 +1,41 @@
 #pragma once
-#include "../../Engine/3d/Camera.h"
-#include "../../Engine/3d/Model.h"
-#include "../../Engine/3d/Object3d.h"
 #include "../../Engine/base/Math.h"
+#include "../OnCollison/Collider.h"
+#include <memory>
+#include <string>
 
-class stageObject {
+class Model;
+class Object3d;
+class Camera;
+
+class stageObject : public Collider {
 public:
-    void Initialize();
+    void Initialize(const std::string& patan, const Vector3& pos, const Vector3& scale);
 
     void Update();
 
     void Draw();
 
-private:
-    Transform grauondtransform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 座標
+public:
+    // Get
+    AllAABB GetAllAABB() const override;
+    CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kStageObject; }
+    void OnCollision(Collider* other) override;
+    int GetDamage() const override { return dameg_; }
 
-    std::unique_ptr<Model> grauondModel;
-    std::unique_ptr<Object3d> grauond3d;
+    // Set
+    void setPatan(std::string patan) { objPatan_ = patan; }
+
+private:
+private:
+    Camera* camera_ = nullptr; // カメラポインタ
+    std::string objPatan_; // オブジェクトバターン
+
+    Transform transform_;
+
+    float baseSize_ = 1.0f; // sclaeが1.0fなら2mなのでsclaeと同じにする
+    int dameg_ = 5; // 衝突ダメージ
+
+    std::unique_ptr<Model> ObjectModel;
+    std::unique_ptr<Object3d> Object3d_;
 };

@@ -27,7 +27,8 @@
 #include "../../../Game/OnCollison/CollisionManager.h"
 #include "../../../Game/Player/Player.h"
 #include "../../../Game/stage/StageManager.h"
-#include "../../../Game/stage/stageObject.h"
+#include "../../../Game/stage/stageDataLoad.h"
+#include "../../../Game/stage/stageObjectManager.h"
 
 #include "math.h"
 
@@ -68,13 +69,13 @@ void GamePlayScene::Initialize()
     clearSe.SoundLoadFile("resources/stage.mp3");
 
     StageManager_ = std::make_unique<StageManager>();
-    StageManager_->Initialize("resources/StageData/stageData1.json");
+    StageManager_->Initialize(stageDataLoad::GetInstance()->GetStageData());
 
     player_ = std::make_unique<Player>();
     player_->Initialize();
 
     enemyManager_ = std::make_unique<EnemyManager>();
-    enemyManager_->Initialize(player_.get(), "resources/StageData/enemyPopData1.json"); // 読み込むファイルを決めるクラス(インスタンス化)で作成する
+    enemyManager_->Initialize(player_.get(), stageDataLoad::GetInstance()->GetEnemyPopData()); // 読み込むファイルを決めるクラス(インスタンス化)で作成する
     player_->SetEnemyManager(enemyManager_.get());
 
     collisionManager_ = std::make_unique<CollisionManager>();
@@ -82,8 +83,8 @@ void GamePlayScene::Initialize()
     cameraController_ = std::make_unique<CameraController>();
     cameraController_->Initialize(player_.get());
 
-    stageObject_ = std::make_unique<stageObject>();
-    stageObject_->Initialize();
+    stageObject_ = std::make_unique<stageObjectManager>();
+    stageObject_->Initialize(stageDataLoad::GetInstance()->GetStageObjectData(), player_.get());
 
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
@@ -94,14 +95,13 @@ void GamePlayScene::Update()
 {
     auto* input = Input::getInstance();
 
-    if (input->TriggerKey(DIK_1)) {
-        SceneManager::GetInstance()->ChangeScene("TITLE");
+    if (isSceneFinished_) {
+        return;
     }
 
-    // 終了条件
-    if (enemyManager_->IsAllEnemiesCleared()) {
-        SceneManager::GetInstance()->ChangeScene("RESULT");
-        return;
+    if (input->TriggerKey(DIK_1)) {
+        isSceneFinished_ = true;
+        SceneManager::GetInstance()->ChangeScene("TITLE");
     }
 
     if (input->TriggerKey(DIK_9)) {
@@ -135,7 +135,17 @@ void GamePlayScene::Update()
             collisionManager_->AddCollider(enemyBullet.get());
         }
     }
+    for (auto& stageObj : stageObject_->GetstageObjects()) {
+        collisionManager_->AddCollider(stageObj.get());
+    }
+
     collisionManager_->CheckAllCollisions();
+
+    // 終了条件
+    if (enemyManager_->IsAllEnemiesCleared()) {
+        isSceneFinished_ = true;
+        SceneManager::GetInstance()->ChangeScene("RESULT");
+    }
 }
 
 void GamePlayScene::Draw()
@@ -158,6 +168,7 @@ void GamePlayScene::Draw()
     // 2d/スプライト
     //
     SpriteCommon::GetInstance()->PrepareSpriteDraw();
+    player_->SpritDraw();
 
     CPUParticleManager::getInstance()->Draw();
 }

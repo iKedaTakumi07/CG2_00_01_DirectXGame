@@ -8,7 +8,7 @@
 #include "../OnCollison/Collider.h"
 
 class Camera;
-class baseEnemy;
+class EnemyManager;
 
 class PlayerBullet : public Collider {
 public:
@@ -21,13 +21,21 @@ public:
 public:
     // Get関数
     bool IsDead() const { return isDead_; }
+    bool IsChargBullet() const { return isChargeBullet; }
 
-    AABB GetAABB() const override;
+    AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kPlayerBullet; }
     void OnCollision(Collider* other) override;
+    int GetDamage() const override;
 
     // set
-    void SetTarget(baseEnemy* target) { target_ = target; } // 対象をセット
+    void SetTarget(uint32_t targetId, EnemyManager* manager)
+    {
+        targetId_ = targetId;
+        enemyManager_ = manager;
+
+    } // 対象をセット
+    void SetisChargeBullet(bool num) { isChargeBullet = num; }
 
 private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
@@ -43,8 +51,12 @@ private:
     float particleTimer_ = 0.0f; // 経過時間タイマー
     const float kParticleInterval_ = 0.025f; // パーティクル発生間隔
 
-    baseEnemy* target_ = nullptr;
-    float homingStrength_ = 0.2f; // 追ビ性能(ほぼ必中で良い)
+    uint32_t targetId_ = 0;
+    EnemyManager* enemyManager_ = nullptr;
+    float homingStrength_ = 0.01f; // 追ビ性能(ほぼ必中で良い)
+    bool isChargeBullet = false;
+    int Dameg = 1;
+    int ChageDameg = 5;
 
     // 3dモデル
     std::unique_ptr<Model> model;

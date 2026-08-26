@@ -30,11 +30,8 @@ void CollisionManager::CheckAllCollisions()
             if (colA->GetCollisionGroup() == CollisionGroup::kPlayerBullet && colB->GetCollisionGroup() == CollisionGroup::kPlayer)
                 continue;
 
-            AABB aabbA = colA->GetAABB();
-            AABB aabbB = colB->GetAABB();
-
-            if (CheckAABB(aabbA, aabbB)) {
-                // 交差していれば、お互いのオーバーライドされたOnCollisionを呼び出す
+            // 交差していれば、お互いのオーバーライドされたOnCollisionを呼び出す
+            if (CheckAllAABBCollision(colA->GetAllAABB(), colB->GetAllAABB())) {
                 colA->OnCollision(colB);
                 colB->OnCollision(colA);
             }
@@ -47,6 +44,23 @@ bool CollisionManager::CheckAABB(const AABB& a, const AABB& b) const
     // AABB
     if (a.min.x <= b.max.x && a.max.x >= b.min.x && a.min.y <= b.max.y && a.max.y >= b.min.y && a.min.z <= b.max.z && a.max.z >= b.min.z) {
         return true;
+    }
+    return false;
+}
+
+bool CollisionManager::CheckAllAABBCollision(const AllAABB& a, const AllAABB& b) const
+{
+    // 本体自体が当たってないなら早期リターン
+    if (!CheckAABB(a.wholeBox, b.wholeBox)) {
+        return false;
+    }
+
+    for (const auto& boxA : a.dividBoxes) {
+        for (const auto& boxB : b.dividBoxes) {
+            if (CheckAABB(boxA, boxB)) {
+                return true;
+            }
+        }
     }
     return false;
 }

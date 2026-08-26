@@ -65,12 +65,16 @@ void EnemyHomingBullet::Draw()
     }
 }
 
-AABB EnemyHomingBullet::GetAABB() const
+AllAABB EnemyHomingBullet::GetAllAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
     aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
-    return aabb;
+
+    AllAABB compound;
+    compound.wholeBox = aabb;
+    compound.dividBoxes.push_back(aabb); // 単一コライダーでも配列に1つ入れることで共通化
+    return compound;
 }
 
 void EnemyHomingBullet::OnCollision(Collider* other)
@@ -80,6 +84,9 @@ void EnemyHomingBullet::OnCollision(Collider* other)
         // お互い抹消
         isDead_ = true;
     } else if (other->GetCollisionGroup() == CollisionGroup::kPlayer) {
+        // 弾削除
+        isDead_ = true;
+    } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
         // 弾削除
         isDead_ = true;
     }
@@ -117,6 +124,9 @@ void EnemyHomingBullet::MoveUpdate()
 
     // 正規化/方向転換
     direction = Normalize(direction);
+    if (direction.z > 0.0f) {
+        direction.z = 0.0f; // 後ろの攻撃を除外
+    }
     acceleration_ = direction * homingPower * accelerationScalar;
 
     velocity_ += acceleration_;
@@ -128,6 +138,7 @@ void EnemyHomingBullet::MoveUpdate()
     if (currentSpeed >= totalMaxSpeed) {
         // 現在の進行方向（長さ1）を計算し、それに最高速度を掛ける
         Vector3 currentDir = Normalize(velocity_);
+
         velocity_ = currentDir * totalMaxSpeed;
     }
 

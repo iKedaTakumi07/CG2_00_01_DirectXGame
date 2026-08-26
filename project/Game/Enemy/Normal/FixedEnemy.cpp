@@ -52,12 +52,16 @@ void FixedEnemy::Draw()
     }
 }
 
-AABB FixedEnemy::GetAABB() const
+AllAABB FixedEnemy::GetAllAABB() const
 {
     AABB aabb;
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
     aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
-    return aabb;
+
+    AllAABB compound;
+    compound.wholeBox = aabb;
+    compound.dividBoxes.push_back(aabb); // 単一コライダーでも配列に1つ入れることで共通化
+    return compound;
 }
 
 void FixedEnemy::OnCollision(Collider* other)
@@ -65,7 +69,7 @@ void FixedEnemy::OnCollision(Collider* other)
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kPlayerBullet) {
         // ダメージ処理
-        health_ -= 1;
+        health_ -= other->GetDamage();
 
         if (health_ <= 0) {
             isAvile_ = false; // 死亡演出作ったならそっちに移行

@@ -6,6 +6,7 @@
 #include "../../Engine/base/Math.h"
 #include "../../Engine/base/TextureManager.h"
 #include "../../Engine/io/Input.h"
+#include "../Enemy/EnemyManager.h"
 #include "../Enemy/base/baseEnemy.h"
 
 #include "../Particle/LaserParticle.h"
@@ -51,8 +52,17 @@ void PlayerBullet::Initialize(Camera* camera, const Vector3& position, const Vec
 
 void PlayerBullet::Update(float deltaTime)
 {
-    if (target_ && target_->GetIsAvile_()) { // ターゲットが存在し、生きている場合
-        Vector3 targetPos = target_->GetTranslate();
+    baseEnemy* target = nullptr;
+    if (targetId_ != 0 && enemyManager_) {
+        target = enemyManager_->GetEnemyById(targetId_);
+        float HomingUp = 0.002f; // 時間経過で追尾強化
+        if (homingStrength_ <= 1.0f) {
+            homingStrength_ += HomingUp;
+        }
+    }
+
+    if (target && target->GetIsAvile_()) { // ターゲットが存在し、生きている場合
+        Vector3 targetPos = target->GetTranslate();
 
         // ベクトル計算
         Vector3 toTarget = {
@@ -129,13 +139,16 @@ void PlayerBullet::Draw()
     }
 }
 
-AABB PlayerBullet::GetAABB() const
+AllAABB PlayerBullet::GetAllAABB() const
 {
     AABB aabb;
-
     aabb.min = { transform_.translate.x - size, transform_.translate.y - size, transform_.translate.z - size };
     aabb.max = { transform_.translate.x + size, transform_.translate.y + size, transform_.translate.z + size };
-    return aabb;
+
+    AllAABB compound;
+    compound.wholeBox = aabb;
+    compound.dividBoxes.push_back(aabb); // 単一コライダーでも配列に1つ入れることで共通化
+    return compound;
 }
 
 void PlayerBullet::OnCollision(Collider* other)
@@ -146,5 +159,17 @@ void PlayerBullet::OnCollision(Collider* other)
         isDead_ = true;
 
         // チャージショット実装するなら消滅しない例外が必要かも
+    } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
+        // 弾削除
+        isDead_ = true;
     }
+}
+
+int PlayerBullet::GetDamage() const
+{
+    if (isChargeBullet) {
+        return ChageDameg;
+    }
+
+    return Dameg;
 }

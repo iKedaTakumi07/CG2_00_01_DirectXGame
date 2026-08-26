@@ -18,7 +18,7 @@ public:
 
 public:
     // Get関数
-    AABB GetAABB() const override;
+    AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kEnenmy; }
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }

@@ -1,4 +1,5 @@
 #pragma once
+#include "../../Engine/2d/Sprite.h"
 #include "../../Engine/3d/Camera.h"
 #include "../../Engine/3d/Model.h"
 #include "../../Engine/3d/Object3d.h"
@@ -30,7 +31,7 @@ public:
     float GetLimitX() const { return kMoveLimitX; }
     float GetLimitY() const { return kMoveLimitY; }
 
-    AABB GetAABB() const override;
+    AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kPlayer; }
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }
@@ -47,6 +48,10 @@ private:
 
     // 弾の制御
     void BulletUpdate();
+    void BulletCharge();
+    
+    // 体力UIの制御
+    void UIUpdate();
 
 private:
     Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // モデル座標
@@ -63,6 +68,11 @@ private:
     // 体力
     int hp_ = 100; // 現体力
     int Maxhp_ = 100; // 最大体力
+
+    // 被弾時の無敵時間
+    const float KinvincibleTime = 1.0f;
+    float invincibleTime = 1.0f;
+    bool isinvincible = false;
 
     // 移動系パラメータ
     const float kCharacterSpeed = 0.4f; // 最高速度
@@ -95,12 +105,14 @@ private:
     // チャージショット
     float chargeTimer_ = 0.0f; // チャージ時間
     const float kChargeTime = 1.0f; // チャージ完了までの時間
-    const float kLockonAngleThreshold = 0.1f; // ロックオン範囲(円錐)
-    baseEnemy* lockonTarget_ = nullptr; // ロックオン対象
+    const float kLockonAngleThreshold = 0.99f; // ロックオン範囲(円錐)<0.0fが90°,0.99fが約11°>
+    uint32_t lockonTargetId_ = 0; // ロックオン対象
+    uint32_t ChageLookId_ = 0; // ロックオン対象
 
     // 3d照準の距離
     const float kLongDistancePlayerTo3DReticle = 50.0f; // 最長射程
     const float kShortDistancePlayerTo3DReticle = 25.0f; // 半分ぐらいの距離
+    bool ChageLook_ = false;
 
     // 3dモデル
     std::unique_ptr<Model> playerModel;
@@ -111,6 +123,13 @@ private:
 
     std::unique_ptr<Model> LongReticleModel;
     std::unique_ptr<Object3d> LongReticleObject3d;
+
+    std::unique_ptr<Model> ChargeReticleModel;
+    std::unique_ptr<Object3d> ChargeReticleObject3d;
+
+    // UI(スプライト)
+    std::unique_ptr<Sprite> PlayerMaxHpUI;
+    std::unique_ptr<Sprite> PlayerHpUI;
 
     // カメラ
     Camera* camera_;

@@ -37,6 +37,7 @@ public:
     const std::vector<std::unique_ptr<baseEnemy>>& GetEnemyes() const { return enemies_; } // 弾の入手
     bool IsAllPopFinished() const { return currentSpawnIndex_ >= popDatas_.size(); } // 全てpopしたか
     bool IsAllEnemiesCleared() const { return IsAllPopFinished() && enemies_.empty(); } // なおかつ敵が全滅しているか。
+    baseEnemy* GetEnemyById(uint32_t id) const;
 
     void LoadJsonPopData();
 
@@ -51,4 +52,6 @@ private:
     size_t currentSpawnIndex_ = 0; // 次に出現させる敵のインデックス
     std::string PopEnemyFilePath_; // 現在読み込んでいるファイル
     std::vector<EnemyPopData> popDatas_; // 読み込んだデータ
+
+    uint32_t nextEnemyId_ = 1; // 敵のIDカウンター
 };

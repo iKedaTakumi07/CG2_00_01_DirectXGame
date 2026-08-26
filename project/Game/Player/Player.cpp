@@ -3,6 +3,7 @@
 #include "Player.h"
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 #include "../../Engine/3d/CameraManager.h"
 #include "../../Engine/3d/ModelManager.h"
@@ -25,6 +26,10 @@ void Player::Initialize()
     ModelManager::GetInstance()->LoadModel("player/Player.obj");
     TextureManager::getInstance()->LoadTexture("resources/player/playerReticle.png");
     ModelManager::GetInstance()->LoadModel("player/playerReticle.obj");
+    TextureManager::getInstance()->LoadTexture("resources/player/ChargeReticle.png");
+    ModelManager::GetInstance()->LoadModel("player/playerChargeReticle.obj");
+    TextureManager::getInstance()->LoadTexture("resources/player/playerHpUI2.png");
+    TextureManager::getInstance()->LoadTexture("resources/player/playerHpUI3.png");
 
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
@@ -50,11 +55,36 @@ void Player::Initialize()
     LongReticleModel = std::make_unique<Model>();
     LongReticleModel->Initialize("resources/player", "playerReticle.obj");
     LongReticleObject3d->SetModel(LongReticleModel.get());
+
+    ChargeReticleObject3d = std::make_unique<Object3d>();
+    ChargeReticleObject3d->Initialize();
+
+    ChargeReticleModel = std::make_unique<Model>();
+    ChargeReticleModel->Initialize("resources/player", "playerChargeReticle.obj");
+    ChargeReticleObject3d->SetModel(ChargeReticleModel.get());
+    ChargeReticleObject3d->SetScale(Vector3(1.0f, 1.0f, 1.0f));
+
+    PlayerMaxHpUI = std::make_unique<Sprite>();
+    PlayerMaxHpUI->Initialize("resources/player/playerHpUI2.png");
+    PlayerMaxHpUI->SetPosition(Vector2(0.0f, 0.0f));
+
+    PlayerHpUI = std::make_unique<Sprite>();
+    PlayerHpUI->Initialize("resources/player/playerHpUI3.png");
+    PlayerHpUI->SetPosition(Vector2(8.0f, 0.0f));
 }
 
 void Player::Update()
 {
+    float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
+
+    // 無敵時間の処理
+    if (isinvincible) {
+        invincibleTime -= deltaTime;
+        if (invincibleTime <= 0.0f) {
+            isinvincible = false;
+        }
+    }
 
     MoveUpdate();
     BulletUpdate();
@@ -65,6 +95,8 @@ void Player::Update()
 
     playerObject3d->Update();
     playerObject3d->DrawImGui("Player");
+
+    UIUpdate();
 }
 
 void Player::Draw()
@@ -73,33 +105,60 @@ void Player::Draw()
         bullet_->Draw();
     }
 
-    playerObject3d->Draw();
+    if (!isinvincible) {
+
+        playerObject3d->Draw();
+    }
 
     ShortReticleObject3d->Draw();
     LongReticleObject3d->Draw();
+
+    if (ChageLook_) {
+        ChargeReticleObject3d->Draw();
+    }
 }
 
 void Player::SpritDraw()
 {
+    PlayerMaxHpUI->Draw();
+    PlayerHpUI->Draw();
 }
 
-AABB Player::GetAABB() const
+AllAABB Player::GetAllAABB() const
 {
-    AABB aabb;
+    AABB box;
+    box.min = { basetransform_.translate.x - size, basetransform_.translate.y - size, basetransform_.translate.z - size };
+    box.max = { basetransform_.translate.x + size, basetransform_.translate.y + size, basetransform_.translate.z + size };
 
-    aabb.min = { basetransform_.translate.x - size, basetransform_.translate.y - size, basetransform_.translate.z - size };
-    aabb.max = { basetransform_.translate.x + size, basetransform_.translate.y + size, basetransform_.translate.z + size };
-    return aabb;
+    AllAABB compound;
+    compound.wholeBox = box;
+    compound.dividBoxes.push_back(box); // 単一コライダーでも配列に1つ入れることで共通化
+    return compound;
 }
 
 void Player::OnCollision(Collider* other)
 {
+    // 無敵状態はスルー
+    if (isinvincible)
+        return;
+
     // 当たったもの次第で分岐
     if (other->GetCollisionGroup() == CollisionGroup::kEnemyBullet || other->GetCollisionGroup() == CollisionGroup::kEnenmy) {
         int damege = other->GetDamage();
         hp_ -= damege;
 
         // 無敵時間のフラグ実行
+        isinvincible = true;
+        invincibleTime = KinvincibleTime;
+    } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
+        int damege = other->GetDamage();
+        hp_ -= damege;
+
+        // 無敵時間のフラグ実行
+        isinvincible = true;
+        invincibleTime = KinvincibleTime;
+
+        // 押し出し処理
     }
 }
 
@@ -241,43 +300,63 @@ void Player::BulletUpdate()
         // チャージ
         chargeTimer_ += deltaTime;
 
-        lockonTarget_ = nullptr;
+        lockonTargetId_ = 0;
+
+        uint32_t bestCandidateId = 0;
         float maxDot = kLockonAngleThreshold;
-        for (const auto& enemy : enemyManager_->GetEnemyes()) {
-            if (!enemy->GetIsAvile_())
-                continue; // 死んでいるやつはする―
 
-            // ベクトル
-            Vector3 toEnemy = {
-                enemy->GetTranslate().x - basetransform_.translate.x,
-                enemy->GetTranslate().y - basetransform_.translate.y,
-                enemy->GetTranslate().z - basetransform_.translate.z
-            };
+        // エラー回避
+        if (enemyManager_ != nullptr) {
+            for (const auto& enemy : enemyManager_->GetEnemyes()) {
+                if (!enemy->GetIsAvile_())
+                    continue; // 死んでいるやつはする―
 
-            // 正規化
+                // ベクトル
+                Vector3 toEnemy = {
+                    enemy->GetTranslate().x - basetransform_.translate.x,
+                    enemy->GetTranslate().y - basetransform_.translate.y,
+                    enemy->GetTranslate().z - basetransform_.translate.z
+                };
 
-            float dist = std::sqrt(toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y + toEnemy.z * toEnemy.z);
-            if (dist > 0.0f) {
+                // 正規化
+
+                float dist = std::sqrt(toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y + toEnemy.z * toEnemy.z);
+                if (dist > kLongDistancePlayerTo3DReticle || dist <= 0.0f) {
+                    continue;
+                }
+
                 toEnemy.x /= dist;
                 toEnemy.y /= dist;
                 toEnemy.z /= dist;
-            }
 
-            // 内積で近い敵を探し
-            float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
-            if (dot > maxDot) {
-                maxDot = dot;
-                lockonTarget_ = enemy.get();
+                // 内積で近い敵を探し
+                float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
+                if (dot > maxDot) {
+                    maxDot = dot;
+
+                    bestCandidateId = enemy->GetId();
+                }
             }
         }
+
+        if (bestCandidateId != 0) {
+            ChageLookId_ = bestCandidateId;
+            lockonTargetId_ = bestCandidateId;
+
+        } else {
+            lockonTargetId_ = ChageLookId_;
+        }
+
+        BulletCharge();
     } else {
         // チャージ時間が満たしているならちゃ―初
         if (chargeTimer_ >= kChargeTime) {
             auto playerbullet = std::make_unique<PlayerBullet>();
             playerbullet->Initialize(camera_, basetransform_.translate, basetransform_.rotate);
+            playerbullet->SetisChargeBullet(true); // チャージショット扱い
             // ロックオン対象がいればセット
-            if (lockonTarget_) {
-                playerbullet->SetTarget(lockonTarget_);
+            if (lockonTargetId_ != 0) {
+                playerbullet->SetTarget(lockonTargetId_, enemyManager_);
             }
             playerBullets_.push_back(std::move(playerbullet));
             coolTime = kCoolTime;
@@ -291,7 +370,9 @@ void Player::BulletUpdate()
 
         // リセット
         chargeTimer_ = 0.0f;
-        lockonTarget_ = nullptr;
+        lockonTargetId_ = 0;
+        ChageLookId_ = 0;
+        ChageLook_ = false;
     }
 
     // クールタイム
@@ -306,4 +387,66 @@ void Player::BulletUpdate()
     std::erase_if(playerBullets_, [](const std::unique_ptr<PlayerBullet>& bullet) {
         return bullet->IsDead();
     });
+}
+
+void Player::BulletCharge()
+{
+    // ロックオンをした敵がいるか
+    if (ChageLookId_ != 0 && enemyManager_ != nullptr) {
+        baseEnemy* target = enemyManager_->GetEnemyById(ChageLookId_);
+
+        // 対象が生きているなら
+        if (target != nullptr && target->GetIsAvile_()) {
+            Vector3 pos = target->GetTranslate();
+            ChargeReticleObject3d->SetTranslate(pos);
+            ChageLook_ = true;
+        } else {
+            ChargeReticleObject3d->SetTranslate(Vector3(0.0f, 0.0f, 0.0f));
+            ChageLook_ = false;
+            ChageLookId_ = 0;
+            lockonTargetId_ = 0;
+        }
+    } else {
+        ChargeReticleObject3d->SetTranslate(Vector3(0.0f, 0.0f, 0.0f));
+        ChageLook_ = false;
+    }
+
+    // イージングもどき
+    if (ChageLook_) {
+        float progress = chargeTimer_ / kChargeTime;
+
+        if (progress > 1.0f)
+            progress = 1.0f; // t
+
+        // 0.15f未満なら表示しない
+        if (progress > 0.15f) {
+            float easeT = progress * progress * progress; // EaseInCubic
+
+            const float kStartScale = 1.5f;
+            const float kEndScale = 1.0f;
+            float currentScale = kStartScale + (kEndScale - kStartScale) * easeT;
+
+            // 回転
+            const float kMaxRotateZ = static_cast<float>(std::numbers::pi) * 2.0f;
+            float currentRotateZ = (1.0f - easeT) * kMaxRotateZ;
+
+            ChargeReticleObject3d->SetScale(Vector3(currentScale, currentScale, currentScale));
+            ChargeReticleObject3d->SetRotate(Vector3(0.0f, 0.0f, currentRotateZ));
+        } else {
+            ChageLook_ = false;
+        }
+    }
+
+    ChargeReticleObject3d->Update();
+}
+
+void Player::UIUpdate()
+{
+    float hpRate = static_cast<float>(hp_) / static_cast<float>(Maxhp_);
+    hpRate = std::clamp(hpRate, 0.0f, 1.0f);
+
+    PlayerHpUI->SetGaugeRate(hpRate);
+
+    PlayerMaxHpUI->Update();
+    PlayerHpUI->Update();
 }
