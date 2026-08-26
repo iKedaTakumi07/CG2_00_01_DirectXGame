@@ -27,6 +27,7 @@
 #include "../../../Game/OnCollison/CollisionManager.h"
 #include "../../../Game/Player/Player.h"
 #include "../../../Game/stage/StageManager.h"
+#include "../../../Game/stage/stageDataLoad.h"
 #include "../../../Game/stage/stageObjectManager.h"
 
 #include "math.h"
@@ -68,13 +69,13 @@ void GamePlayScene::Initialize()
     clearSe.SoundLoadFile("resources/stage.mp3");
 
     StageManager_ = std::make_unique<StageManager>();
-    StageManager_->Initialize("resources/StageData/stageData1.json");
+    StageManager_->Initialize(stageDataLoad::GetInstance()->GetStageData());
 
     player_ = std::make_unique<Player>();
     player_->Initialize();
 
     enemyManager_ = std::make_unique<EnemyManager>();
-    enemyManager_->Initialize(player_.get(), "resources/StageData/enemyPopData1.json"); // 読み込むファイルを決めるクラス(インスタンス化)で作成する
+    enemyManager_->Initialize(player_.get(), stageDataLoad::GetInstance()->GetEnemyPopData()); // 読み込むファイルを決めるクラス(インスタンス化)で作成する
     player_->SetEnemyManager(enemyManager_.get());
 
     collisionManager_ = std::make_unique<CollisionManager>();
@@ -83,7 +84,7 @@ void GamePlayScene::Initialize()
     cameraController_->Initialize(player_.get());
 
     stageObject_ = std::make_unique<stageObjectManager>();
-    stageObject_->Initialize("resources/StageData/stageObjectData1.json", player_.get());
+    stageObject_->Initialize(stageDataLoad::GetInstance()->GetStageObjectData(), player_.get());
 
     // 音がうるさいので停止中
     // Audio::GetInstance()->Play(fanfare);
