@@ -18,6 +18,7 @@
 #include "../Enemy/base/baseEnemyBullet.h"
 #include "PlayerBullet.h"
 
+#include <cstdlib>
 #include <utility>
 
 void Player::Initialize()
@@ -159,6 +160,7 @@ void Player::OnCollision(Collider* other)
         invincibleTime = KinvincibleTime;
 
         // 押し出し処理
+        ColliderUpdate(other);
     }
 }
 
@@ -449,4 +451,36 @@ void Player::UIUpdate()
 
     PlayerMaxHpUI->Update();
     PlayerHpUI->Update();
+}
+
+void Player::ColliderUpdate(Collider* other)
+{
+    AABB myBox = this->GetAllAABB().wholeBox; // プレイヤーは全体の範囲
+
+    // トンネル形状のボックスもあるので厳密な当たり判定
+    for (size_t i = 0; i < other->GetAllAABB().dividBoxes.size(); i++) {
+        AABB otherBox = other->GetAllAABB().dividBoxes[i];
+
+        float overlapX_left = myBox.max.x - otherBox.min.x;
+        float overlapX_right = otherBox.max.x - myBox.min.x;
+        float overlapY_bottom = myBox.max.y - otherBox.min.y;
+        float overlapY_top = otherBox.max.y - myBox.min.y;
+
+        // めり込んでいる中の最小値を求める
+        float overlapX = (overlapX_left < overlapX_right) ? overlapX_left : -overlapX_right;
+        float overlapY = (overlapY_bottom < overlapY_top) ? overlapY_bottom : -overlapY_top;
+
+        // x,yの最小値から小さい方に押し出す(もしかしたらxオンリーに修正するかも?)
+        if (std::abs(overlapX) < std::abs(overlapY)) {
+            localPos_.x -= overlapX;
+            velocity_.x = 0.0f;
+        } else {
+            localPos_.y -= overlapY;
+            velocity_.y = 0.0f;
+        }
+
+        // 補正した座標を即座にワールド座標系に反映させる
+        basetransform_.translate.x = railBasePos_.x + localPos_.x;
+        basetransform_.translate.y = railBasePos_.y + localPos_.y;
+    }
 }

@@ -55,7 +55,7 @@ void PlayerBullet::Update(float deltaTime)
     baseEnemy* target = nullptr;
     if (targetId_ != 0 && enemyManager_) {
         target = enemyManager_->GetEnemyById(targetId_);
-        float HomingUp = 0.002f; // 時間経過で追尾強化
+        float HomingUp = 0.005f; // 時間経過で追尾強化
         if (homingStrength_ <= 1.0f) {
             homingStrength_ += HomingUp;
         }

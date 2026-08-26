@@ -49,9 +49,12 @@ private:
     // 弾の制御
     void BulletUpdate();
     void BulletCharge();
-    
+
     // 体力UIの制御
     void UIUpdate();
+
+    // 押し出し処理
+    void ColliderUpdate(Collider* other);
 
 private:
     Transform transform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // モデル座標
