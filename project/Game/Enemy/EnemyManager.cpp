@@ -3,6 +3,7 @@
 #include "Normal/FixedEnemy.h"
 #include "Normal/NormalMoveEnemy.h"
 #include "base/baseEnemy.h"
+#include "boss/FourEyesBoss.h"
 
 #include "../../Engine/3d/CameraManager.h"
 #include "../../resources/nlohmann/json.hpp"
@@ -143,6 +144,8 @@ void EnemyManager::PopEnemyCheck(const EnemyPopData& data)
         newEnemy = std::make_unique<NormalMoveEnemy>();
     } else if (data.enemyPopType == "CircleMoveEnemy") {
         newEnemy = std::make_unique<CircleMoveEnemy>();
+    } else if (data.enemyPopType == "FourEyesBoss") {
+        newEnemy = std::make_unique<FourEyesBoss>();
     } else {
         // 万が一のエラー対策
         newEnemy = std::make_unique<FixedEnemy>();

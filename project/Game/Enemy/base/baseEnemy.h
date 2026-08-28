@@ -16,6 +16,8 @@ public:
 
     virtual void Draw() = 0;
 
+    virtual void SpriteDraw() { }; // (ほぼ)ボス専用
+
     /* Set関数 */
     virtual void SetTargetPlayer(Player* target) { }; // 対象に向かわせる
     virtual void SetHp(int num) { };

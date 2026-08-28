@@ -33,6 +33,9 @@ public:
 private:
     void PopEnemyCheck(const stageObjectPopData& data);
 
+    void GrauondInitialize();
+    void GrauondUpdate();
+
 private:
     std::vector<stageObjectPopData> popDatas_; // 読み込んだデータ
     std::vector<std::unique_ptr<stageObject>> stageObjects_; // 生きている敵のリスト
@@ -41,9 +44,15 @@ private:
     std::string PopObjFilePath_; // 現在読み込んでいるファイル
 
     Transform grauondtransform_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }; // 座標
+    Transform grauondtransform2_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+    Transform grauondtransform3_ = { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+    const float grauondSize = 200.0f;
+    int section = 0;
 
     Player* player_ = nullptr; // ポインタ
 
     std::unique_ptr<Model> grauondModel;
     std::unique_ptr<Object3d> grauond3d;
+    std::unique_ptr<Object3d> grauond3d2;
+    std::unique_ptr<Object3d> grauond3d3;
 };

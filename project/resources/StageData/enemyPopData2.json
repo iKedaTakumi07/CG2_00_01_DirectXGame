@@ -54,6 +54,13 @@
       "pos": { "x": 0.0, "y": 0.0, "z": 50.0 },
       "UseBullet" : "TargetBullet",
       "hp": 3
-    } 
+    },
+    {
+      "type": "FourEyesBoss",
+      "spawn_z": 300.0,
+      "pos": { "x": 0.0, "y": 0.0, "z": 350.0 },
+      "UseBullet" : "TargetBullet",
+      "hp": 1200
+    }
   ]
 }

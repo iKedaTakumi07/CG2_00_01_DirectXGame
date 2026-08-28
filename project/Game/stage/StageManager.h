@@ -37,4 +37,7 @@ private:
     // 進行制御用
     float currentZ_ = 0.0f; // 現在の進行Z座標
     const float kScrollSpeed = 5.0f; // 前進する速度(ブースト頭で切り替わるカモメ)
+
+    bool isBossCutscene_ = false; // 演出
+    bool isBossBattle_ = false; // ボス戦中フラグ
 };
