@@ -8,9 +8,11 @@
 #include "../../../Engine/base/TextureManager.h"
 #include "../../Player/Player.h"
 
+#include "../../../Engine/3d/Object3d.h"
 #include "../../../Engine/scene/SceneManager.h"
 #include "../Bullet/EnemyHomingBullet.h"
 #include "../Bullet/TargetBullet.h"
+#include <memory>
 
 void FourEyesBoss::Initialize(Vector3 pos)
 {
@@ -33,6 +35,7 @@ void FourEyesBoss::Initialize(Vector3 pos)
 
     transform_.scale = { 1.0f, 1.0f, 1.0f };
     transform_.rotate = { 0.0f, 0.0f, 0.0f };
+    transform_.translate = centerPos_;
 }
 
 void FourEyesBoss::Update()
@@ -41,16 +44,21 @@ void FourEyesBoss::Update()
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
     // 発射処理
+    MoveUpdate();
     FireFourWayBullets();
 
-    object3d->SetTranslate(transform_.translate);
-    object3d->SetRotate(transform_.rotate);
     object3d->Update();
 }
 
 void FourEyesBoss::Draw()
 {
     object3d->Draw();
+
+    for (const auto& bullet : enemyBullet_) {
+        if (bullet) {
+            bullet->Draw();
+        }
+    }
 }
 
 void FourEyesBoss::SpriteDraw()
@@ -90,6 +98,19 @@ AllAABB FourEyesBoss::GetAllAABB() const
     return compound;
 }
 
+std::vector<Vector3> FourEyesBoss::GetTargetPositions()
+{
+    std::vector<Vector3> positions;
+
+    // 各目の位置を座標に登録
+    for (const auto& offset : muzzleOffsets_) {
+        positions.push_back({ transform_.translate.x + offset.x,
+            transform_.translate.y + offset.y,
+            transform_.translate.z + offset.z });
+    }
+    return positions;
+}
+
 void FourEyesBoss::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
@@ -122,4 +143,44 @@ void FourEyesBoss::UpdateAppearance(float deltaTime)
 
 void FourEyesBoss::FireFourWayBullets()
 {
+    float currentDeltaTime = SceneManager::GetInstance()->GetDeltaTime();
+    interval -= currentDeltaTime;
+
+    if (interval <= 0.0f) {
+        // 弾の生成
+        for (int i = 0; i < 4; i++) {
+            std::unique_ptr<EnemyHomingBullet> newBulletEnemy = std::make_unique<EnemyHomingBullet>();
+            Vector3 pos = {
+                transform_.translate.x + muzzleOffsets_[i].x,
+                transform_.translate.y + muzzleOffsets_[i].y,
+                transform_.translate.z + muzzleOffsets_[i].z
+            };
+            newBulletEnemy->Initialize(pos, transform_.rotate);
+            newBulletEnemy->SetTargetPosition(player_->GetTranslate());
+
+            enemyBullet_.push_back(std::move(newBulletEnemy));
+        }
+        interval = maxInterval;
+    }
+
+    // 更新処理
+    for (auto& bullet : enemyBullet_) {
+        bullet->SetPlayerPos(player_->GetTranslate());
+        bullet->Update(currentDeltaTime);
+    }
+
+    // 弾の削除
+    std::erase_if(enemyBullet_, [](const std::unique_ptr<baseEnemyBullet>& bullet) {
+        return bullet->GetIsDead(); // GetIsDead が true なら削除
+    });
+}
+
+void FourEyesBoss::MoveUpdate()
+{
+    Vector3 pos = CameraManager::GetInstance()->GetActiveCamera()->GetTranslate();
+    pos.z = pos.z + offsetPosZ;
+    transform_.translate.z = pos.z;
+
+    object3d->SetTranslate(transform_.translate);
+    object3d->SetRotate(transform_.rotate);
 }

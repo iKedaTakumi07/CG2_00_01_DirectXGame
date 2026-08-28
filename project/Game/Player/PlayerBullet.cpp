@@ -62,7 +62,13 @@ void PlayerBullet::Update(float deltaTime)
     }
 
     if (target && target->GetIsAvile_()) { // ターゲットが存在し、生きている場合
-        Vector3 targetPos = target->GetTranslate();
+        std::vector<Vector3> targetPositions = target->GetTargetPositions();
+        Vector3 targetPos = targetPositions[0];
+
+        // 指定された番号の座標を取得
+        if (targetIndex_ >= 0 && targetIndex_ < targetPositions.size()) {
+            targetPos = targetPositions[targetIndex_];
+        }
 
         // ベクトル計算
         Vector3 toTarget = {
@@ -154,14 +160,19 @@ AllAABB PlayerBullet::GetAllAABB() const
 void PlayerBullet::OnCollision(Collider* other)
 {
     // 当たったもの次第で分岐
-    if (other->GetCollisionGroup() == CollisionGroup::kEnemyBullet || other->GetCollisionGroup() == CollisionGroup::kEnenmy) {
-        // 消滅
+    if (other->GetCollisionGroup() == CollisionGroup::kEnenmy) {
         isDead_ = true;
-
-        // チャージショット実装するなら消滅しない例外が必要かも
     } else if (other->GetCollisionGroup() == CollisionGroup::kStageObject) {
         // 弾削除
         isDead_ = true;
+    } else if (other->GetCollisionGroup() == CollisionGroup::kEnemyBullet) {
+        // 耐久力を消費
+        life--;
+
+        // 0なら消滅
+        if (life <= 0) {
+            isDead_ = true;
+        }
     }
 }
 

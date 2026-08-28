@@ -29,13 +29,18 @@ public:
     int GetDamage() const override;
 
     // set
-    void SetTarget(uint32_t targetId, EnemyManager* manager)
+    void SetTarget(uint32_t targetId, int targetIndex, EnemyManager* manager)
     {
         targetId_ = targetId;
+        targetIndex_ = targetIndex;
         enemyManager_ = manager;
 
     } // 対象をセット
-    void SetisChargeBullet(bool num) { isChargeBullet = num; }
+    void SetisChargeBullet(bool num)
+    {
+        isChargeBullet = num;
+        life = 5;
+    }
 
 private:
     Transform transform_ = { 0.0f, 0.0f, 0.0f }; // 座標
@@ -51,12 +56,15 @@ private:
     float particleTimer_ = 0.0f; // 経過時間タイマー
     const float kParticleInterval_ = 0.025f; // パーティクル発生間隔
 
-    uint32_t targetId_ = 0;
+    uint32_t targetId_ = 0; // 追尾する対象
+    int targetIndex_ = 0; // 追尾する部位の番号
+
     EnemyManager* enemyManager_ = nullptr;
     float homingStrength_ = 0.01f; // 追ビ性能(ほぼ必中で良い)
     bool isChargeBullet = false;
     int Dameg = 1;
     int ChageDameg = 5;
+    int life = 1;
 
     // 3dモデル
     std::unique_ptr<Model> model;

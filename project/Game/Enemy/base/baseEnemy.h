@@ -31,6 +31,7 @@ public:
     virtual Vector3 GetTranslate() = 0;
     virtual bool GetIsAvile_() = 0;
     virtual uint32_t GetId() const { return id_; }
+    virtual std::vector<Vector3> GetTargetPositions() { return { GetTranslate() }; }
 
 protected:
     // 弾

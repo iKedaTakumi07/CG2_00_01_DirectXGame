@@ -14,22 +14,32 @@ public:
     void Draw() override;
     void SpriteDraw() override;
 
+public:
+    void SetTargetPlayer(Player* target) override { player_ = target; }
+    void SetIsDead(bool num) { isDead_ = num; }
+    void SetMove(Vector3 num) override { num; }
+    void SetbasePos(Vector3 num) override { centerPos_ = num; } // 中心位置
+    void SetHp(int num) override { currentHp_ = num; }
+
     float GetHpRate() const override { return static_cast<float>(currentHp_) / maxHp_; }
     int GetCurrentPhase() const override { return currentPhase_; }
 
     AllAABB GetAllAABB() const override;
     CollisionGroup GetCollisionGroup() const override { return CollisionGroup::kEnenmy; }
+    std::vector<Vector3> GetTargetPositions() override; // ホーミング用の座標渡し
     void OnCollision(Collider* other) override;
     int GetDamage() const override { return dameg_; }
     bool GetIsAvile_() override { return isAvile_; }
     Vector3 GetTranslate() override { return transform_.translate; }
 
+public:
     void StartAppearance() override;
     void UpdateAppearance(float deltaTime) override;
     bool IsAppearing() const override { return isAppearing_; }
 
 private:
     void FireFourWayBullets();
+    void MoveUpdate();
 
 private:
     Camera* camera_ = nullptr; // カメラ(ポインタ)
@@ -49,11 +59,15 @@ private:
     bool isAvile_ = true; // 存在しているか
     bool isDead_ = false; // 死んでいるか
 
+    float interval = 3.0f; // 弾を発射する間隔
+    static inline const float maxInterval = 3.0f; // 間隔
+    const float offsetPosZ = 50.0f; // カメラと離す距離
+
     // 発射位置(各頂点の中心位置)
     std::array<Vector3, 4> muzzleOffsets_ = {
-        Vector3 { -6.0f, 3.0f, 0.0f },
-        Vector3 { 6.0f, 3.0f, 0.0f },
-        Vector3 { -6.0f, -3.0f, 0.0f },
-        Vector3 { 6.0f, -3.0f, 0.0f }
+        Vector3 { 0.0f, -6.0f, 3.0f },
+        Vector3 { 0.0f, 6.0f, 3.0f },
+        Vector3 { -6.0f, 0.0f, -3.0f },
+        Vector3 { 6.0f, 0.0f, -3.0f }
     };
 };

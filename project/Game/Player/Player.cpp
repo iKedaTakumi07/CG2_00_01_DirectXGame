@@ -302,6 +302,7 @@ void Player::BulletUpdate()
         lockonTargetId_ = 0;
 
         uint32_t bestCandidateId = 0;
+        int bestCandidateIndex = 0;
         float maxDot = kLockonAngleThreshold;
 
         // エラー回避
@@ -310,40 +311,47 @@ void Player::BulletUpdate()
                 if (!enemy->GetIsAvile_())
                     continue; // 死んでいるやつはする―
 
-                // ベクトル
-                Vector3 toEnemy = {
-                    enemy->GetTranslate().x - basetransform_.translate.x,
-                    enemy->GetTranslate().y - basetransform_.translate.y,
-                    enemy->GetTranslate().z - basetransform_.translate.z
-                };
+                std::vector<Vector3> targetPositions = enemy->GetTargetPositions();
+                for (int i = 0; i < targetPositions.size(); ++i) {
+                    // ベクトル
+                    Vector3 toEnemy = {
+                        targetPositions[i].x - basetransform_.translate.x,
+                        targetPositions[i].y - basetransform_.translate.y,
+                        targetPositions[i].z - basetransform_.translate.z
+                    };
 
-                // 正規化
+                    // 正規化
 
-                float dist = std::sqrt(toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y + toEnemy.z * toEnemy.z);
-                if (dist > kLongDistancePlayerTo3DReticle || dist <= 0.0f) {
-                    continue;
-                }
+                    float dist = std::sqrt(toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y + toEnemy.z * toEnemy.z);
+                    if (dist > kLongDistancePlayerTo3DReticle || dist <= 0.0f) {
+                        continue;
+                    }
 
-                toEnemy.x /= dist;
-                toEnemy.y /= dist;
-                toEnemy.z /= dist;
+                    toEnemy.x /= dist;
+                    toEnemy.y /= dist;
+                    toEnemy.z /= dist;
 
-                // 内積で近い敵を探し
-                float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
-                if (dot > maxDot) {
-                    maxDot = dot;
+                    // 内積で近い敵を探し
+                    float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
+                    if (dot > maxDot) {
+                        maxDot = dot;
 
-                    bestCandidateId = enemy->GetId();
+                        bestCandidateId = enemy->GetId();
+                        bestCandidateIndex = i; // 対象のパーツ番号を保存
+                    }
                 }
             }
         }
 
+        // ロックオン対象の更新
         if (bestCandidateId != 0) {
             ChageLookId_ = bestCandidateId;
+            ChageLookIndex_ = bestCandidateIndex;
             lockonTargetId_ = bestCandidateId;
-
+            lockonTargetIndex_ = bestCandidateIndex;
         } else {
             lockonTargetId_ = ChageLookId_;
+            lockonTargetIndex_ = ChageLookIndex_;
         }
 
         BulletCharge();
@@ -355,7 +363,7 @@ void Player::BulletUpdate()
             playerbullet->SetisChargeBullet(true); // チャージショット扱い
             // ロックオン対象がいればセット
             if (lockonTargetId_ != 0) {
-                playerbullet->SetTarget(lockonTargetId_, enemyManager_);
+                playerbullet->SetTarget(lockonTargetId_, lockonTargetIndex_, enemyManager_);
             }
             playerBullets_.push_back(std::move(playerbullet));
             coolTime = kCoolTime;

@@ -110,7 +110,9 @@ private:
     const float kChargeTime = 1.0f; // チャージ完了までの時間
     const float kLockonAngleThreshold = 0.99f; // ロックオン範囲(円錐)<0.0fが90°,0.99fが約11°>
     uint32_t lockonTargetId_ = 0; // ロックオン対象
+    int lockonTargetIndex_ = 0; // ロックオン対象のパーツ番号
     uint32_t ChageLookId_ = 0; // ロックオン対象
+    int ChageLookIndex_ = 0; // ロックオン対象のパーツ番号
 
     // 3d照準の距離
     const float kLongDistancePlayerTo3DReticle = 50.0f; // 最長射程
