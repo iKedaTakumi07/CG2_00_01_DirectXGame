@@ -32,6 +32,8 @@ public:
 
     void Draw();
 
+    void SpriteDraw();
+
 public:
     // Get関数
     const std::vector<std::unique_ptr<baseEnemy>>& GetEnemyes() const { return enemies_; } // 弾の入手

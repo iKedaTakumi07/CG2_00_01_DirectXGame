@@ -18,6 +18,7 @@
 #include "../Enemy/base/baseEnemyBullet.h"
 #include "PlayerBullet.h"
 
+#include <cstdlib>
 #include <utility>
 
 void Player::Initialize()
@@ -81,8 +82,18 @@ void Player::Update()
     // 無敵時間の処理
     if (isinvincible) {
         invincibleTime -= deltaTime;
+        const float kBlinkInterval = 0.1f; // 点滅周期
+
+        
+        if (std::fmod(invincibleTime, kBlinkInterval * 2.0f) > kBlinkInterval) {
+            playerModel->SetMaterialColor(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
+        } else {
+            playerModel->SetMaterialColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        }
+
         if (invincibleTime <= 0.0f) {
             isinvincible = false;
+            playerModel->SetMaterialColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         }
     }
 
@@ -105,10 +116,7 @@ void Player::Draw()
         bullet_->Draw();
     }
 
-    if (!isinvincible) {
-
-        playerObject3d->Draw();
-    }
+    playerObject3d->Draw();
 
     ShortReticleObject3d->Draw();
     LongReticleObject3d->Draw();
@@ -159,6 +167,7 @@ void Player::OnCollision(Collider* other)
         invincibleTime = KinvincibleTime;
 
         // 押し出し処理
+        ColliderUpdate(other);
     }
 }
 
@@ -303,6 +312,7 @@ void Player::BulletUpdate()
         lockonTargetId_ = 0;
 
         uint32_t bestCandidateId = 0;
+        int bestCandidateIndex = 0;
         float maxDot = kLockonAngleThreshold;
 
         // エラー回避
@@ -311,40 +321,47 @@ void Player::BulletUpdate()
                 if (!enemy->GetIsAvile_())
                     continue; // 死んでいるやつはする―
 
-                // ベクトル
-                Vector3 toEnemy = {
-                    enemy->GetTranslate().x - basetransform_.translate.x,
-                    enemy->GetTranslate().y - basetransform_.translate.y,
-                    enemy->GetTranslate().z - basetransform_.translate.z
-                };
+                std::vector<Vector3> targetPositions = enemy->GetTargetPositions();
+                for (int i = 0; i < targetPositions.size(); ++i) {
+                    // ベクトル
+                    Vector3 toEnemy = {
+                        targetPositions[i].x - basetransform_.translate.x,
+                        targetPositions[i].y - basetransform_.translate.y,
+                        targetPositions[i].z - basetransform_.translate.z
+                    };
 
-                // 正規化
+                    // 正規化
 
-                float dist = std::sqrt(toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y + toEnemy.z * toEnemy.z);
-                if (dist > kLongDistancePlayerTo3DReticle || dist <= 0.0f) {
-                    continue;
-                }
+                    float dist = std::sqrt(toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y + toEnemy.z * toEnemy.z);
+                    if (dist > kLongDistancePlayerTo3DReticle || dist <= 0.0f) {
+                        continue;
+                    }
 
-                toEnemy.x /= dist;
-                toEnemy.y /= dist;
-                toEnemy.z /= dist;
+                    toEnemy.x /= dist;
+                    toEnemy.y /= dist;
+                    toEnemy.z /= dist;
 
-                // 内積で近い敵を探し
-                float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
-                if (dot > maxDot) {
-                    maxDot = dot;
+                    // 内積で近い敵を探し
+                    float dot = forwardDir.x * toEnemy.x + forwardDir.y * toEnemy.y + forwardDir.z * toEnemy.z;
+                    if (dot > maxDot) {
+                        maxDot = dot;
 
-                    bestCandidateId = enemy->GetId();
+                        bestCandidateId = enemy->GetId();
+                        bestCandidateIndex = i; // 対象のパーツ番号を保存
+                    }
                 }
             }
         }
 
+        // ロックオン対象の更新
         if (bestCandidateId != 0) {
             ChageLookId_ = bestCandidateId;
+            ChageLookIndex_ = bestCandidateIndex;
             lockonTargetId_ = bestCandidateId;
-
+            lockonTargetIndex_ = bestCandidateIndex;
         } else {
             lockonTargetId_ = ChageLookId_;
+            lockonTargetIndex_ = ChageLookIndex_;
         }
 
         BulletCharge();
@@ -356,7 +373,7 @@ void Player::BulletUpdate()
             playerbullet->SetisChargeBullet(true); // チャージショット扱い
             // ロックオン対象がいればセット
             if (lockonTargetId_ != 0) {
-                playerbullet->SetTarget(lockonTargetId_, enemyManager_);
+                playerbullet->SetTarget(lockonTargetId_, lockonTargetIndex_, enemyManager_);
             }
             playerBullets_.push_back(std::move(playerbullet));
             coolTime = kCoolTime;
@@ -445,8 +462,53 @@ void Player::UIUpdate()
     float hpRate = static_cast<float>(hp_) / static_cast<float>(Maxhp_);
     hpRate = std::clamp(hpRate, 0.0f, 1.0f);
 
-    PlayerHpUI->SetGaugeRate(hpRate);
+    PlayerHpUI->SetGaugeRateRight(hpRate);
 
     PlayerMaxHpUI->Update();
     PlayerHpUI->Update();
+}
+
+void Player::ColliderUpdate(Collider* other)
+{
+    AllAABB otherAllAABB = other->GetAllAABB();
+    // トンネル形状のボックスもあるので厳密な当たり判定
+    for (const auto& otherBox : otherAllAABB.dividBoxes) {
+        AABB myBox = this->GetAllAABB().wholeBox; // プレイヤーは全体の範囲
+
+        bool isIntersect = (myBox.min.x < otherBox.max.x && myBox.max.x > otherBox.min.x) && (myBox.min.y < otherBox.max.y && myBox.max.y > otherBox.min.y) && (myBox.min.z < otherBox.max.z && myBox.max.z > otherBox.min.z);
+        if (!isIntersect) {
+            continue; // 関係のないパーツは処理しない
+        }
+
+        float overlapX_left = myBox.max.x - otherBox.min.x;
+        float overlapX_right = otherBox.max.x - myBox.min.x;
+        float overlapY_bottom = myBox.max.y - otherBox.min.y;
+        float overlapY_top = otherBox.max.y - myBox.min.y;
+
+        // めり込んでいる中の最小値を求める
+        float overlapX = (overlapX_left < overlapX_right) ? overlapX_left : -overlapX_right;
+        float overlapY = (overlapY_bottom < overlapY_top) ? overlapY_bottom : -overlapY_top;
+
+        // x,yの最小値から小さい方に押し出す(もしかしたらxオンリーに修正するかも?)
+        Vector3 prePos = localPos_; // 押し出し前の座標
+        if (std::abs(overlapX) < std::abs(overlapY)) {
+            localPos_.x -= overlapX;
+            velocity_.x = 0.0f;
+        } else {
+            localPos_.y -= overlapY;
+            velocity_.y = 0.0f;
+        }
+
+        float clampedX = std::clamp(localPos_.x, -kMoveLimitX, kMoveLimitX);
+        float clampedY = std::clamp(localPos_.y, -kMoveLimitY, kMoveLimitY);
+
+        // 押し出し位置がレール範囲外なら
+        if (clampedX != localPos_.x || clampedY != localPos_.y) {
+            localPos_ = prePos; // 押し出し処理をしない
+        } else {
+            // 補正した座標を即座にワールド座標系に反映させる
+            basetransform_.translate.x = railBasePos_.x + localPos_.x;
+            basetransform_.translate.y = railBasePos_.y + localPos_.y;
+        }
+    }
 }

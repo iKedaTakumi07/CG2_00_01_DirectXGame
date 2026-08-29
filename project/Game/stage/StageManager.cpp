@@ -11,12 +11,18 @@ using json = nlohmann::json;
 void StageManager::Initialize(const std::string& filePath)
 {
     jsonFilePath_ = filePath;
+    isBossCutscene_ = false;
+    isBossBattle_ = false;
 
     LoadStageData(jsonFilePath_);
 }
 
 void StageManager::Update()
 {
+    if (isBossCutscene_) {
+        return;
+    }
+
     float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
 
     currentZ_ += kScrollSpeed * deltaTime;
@@ -55,7 +61,7 @@ Vector3 StageManager::CalcRailPosition()
         }
     }
 
-    // 
+    //
     const Vector3& lastP = points.back();
     return { lastP.x, lastP.y, currentZ_ };
 }

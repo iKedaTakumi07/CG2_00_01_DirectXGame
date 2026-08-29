@@ -21,14 +21,7 @@ void stageObjectManager::Initialize(const std::string& filePath, Player* player)
     PopObjFilePath_ = filePath;
     player_ = player;
 
-    grauond3d = std::make_unique<Object3d>();
-    grauond3d->Initialize();
-
-    grauondModel = std::make_unique<Model>();
-    grauondModel->Initialize("resources/stage", "stageGraunod.obj");
-    grauond3d->SetModel(grauondModel.get());
-    grauond3d->SetScale(grauondtransform_.scale);
-
+    GrauondInitialize();
     LoadJsonPopData(PopObjFilePath_);
 }
 
@@ -46,15 +39,14 @@ void stageObjectManager::Update()
         obj->Update();
     }
 
-    grauond3d->SetTranslate(grauondtransform_.translate);
-    grauond3d->SetRotate(grauondtransform_.rotate);
-
-    grauond3d->Update();
+    GrauondUpdate();
 }
 
 void stageObjectManager::Draw()
 {
     grauond3d->Draw();
+    grauond3d2->Draw();
+    grauond3d3->Draw();
 
     for (auto& obj : stageObjects_) {
         obj->Draw();
@@ -117,4 +109,51 @@ void stageObjectManager::PopEnemyCheck(const stageObjectPopData& data)
     auto newObj = std::make_unique<stageObject>();
     newObj->Initialize(data.ObjectPatan, data.popPosition, data.sizeScale);
     stageObjects_.push_back(std::move(newObj));
+}
+
+void stageObjectManager::GrauondInitialize()
+{
+    grauond3d = std::make_unique<Object3d>();
+    grauond3d2 = std::make_unique<Object3d>();
+    grauond3d3 = std::make_unique<Object3d>();
+    grauond3d->Initialize();
+    grauond3d2->Initialize();
+    grauond3d3->Initialize();
+
+    grauondModel = std::make_unique<Model>();
+    grauondModel->Initialize("resources/stage", "stageGraunod.obj");
+    grauond3d->SetModel(grauondModel.get());
+    grauond3d2->SetModel(grauondModel.get());
+    grauond3d3->SetModel(grauondModel.get());
+    grauond3d->SetScale(grauondtransform_.scale);
+    grauond3d2->SetScale(grauondtransform_.scale);
+    grauond3d3->SetScale(grauondtransform_.scale);
+
+    section = 0;
+    grauondtransform_.translate.z = 0.0f;
+    grauondtransform2_.translate.z = grauondSize;
+    grauondtransform3_.translate.z = grauondSize * 2;
+}
+
+void stageObjectManager::GrauondUpdate()
+{
+    Vector3 pos = player_->GetTranslate();
+    if (pos.z >= grauondtransform_.translate.z + grauondSize) {
+        grauondtransform_.translate.z = grauondtransform3_.translate.z + grauondSize;
+    } else if (pos.z >= grauondtransform2_.translate.z + grauondSize) {
+        grauondtransform2_.translate.z = grauondtransform_.translate.z + grauondSize;
+    } else if (pos.z >= grauondtransform3_.translate.z + grauondSize) {
+        grauondtransform3_.translate.z = grauondtransform2_.translate.z + grauondSize;
+    }
+
+    grauond3d->SetTranslate(grauondtransform_.translate);
+    grauond3d2->SetTranslate(grauondtransform2_.translate);
+    grauond3d3->SetTranslate(grauondtransform3_.translate);
+    grauond3d->SetRotate(grauondtransform_.rotate);
+    grauond3d2->SetRotate(grauondtransform_.rotate);
+    grauond3d3->SetRotate(grauondtransform_.rotate);
+
+    grauond3d->Update();
+    grauond3d2->Update();
+    grauond3d3->Update();
 }

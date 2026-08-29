@@ -44,12 +44,12 @@ private:
     float defaultOffsetZ_ = -15.0f; // プレイヤーから離す範囲
 
     // プレイヤーが移動してもカメラが動かない範囲
-    float baseDeadZoneX_ = 4.0f;
-    float baseDeadZoneY_ = 3.5f;
+    float baseDeadZoneX_ = 3.0f;
+    float baseDeadZoneY_ = 3.0f;
 
     // 画面端に寄った際のカメラ最大移動量
-    float maxShiftX_ = 2.5f;
-    float maxShiftY_ = 2.2f;
+    float maxShiftX_ = 3.75f;
+    float maxShiftY_ = 2.5f;
 
     float followSpeed_ = 6.0f; // 移動補間
 };

@@ -43,6 +43,10 @@ void CircleMoveEnemy::Update()
     float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
+    if (camera_->GetTranslate().z >= transform_.translate.z) {
+        isDead_ = true;
+    }
+
     angle_ += speed_ * deltaTime;
 
     if (angle_ >= std::numbers::pi * 2.0f) {

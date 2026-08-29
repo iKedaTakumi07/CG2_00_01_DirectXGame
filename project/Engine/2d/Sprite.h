@@ -63,9 +63,14 @@ public:
         this->textureSize = textureSize;
         TransferVertices();
     }
-    void SetGaugeRate(float rate)
+    void SetGaugeRateRight(float rate)
     {
-        this->gaugeRate_ = std::clamp(rate, 0.0f, 1.0f);
+        this->gaugeRateRiget_ = std::clamp(rate, 0.0f, 1.0f);
+        TransferVertices();
+    }
+    void SetGaugeRateTop(float rate)
+    {
+        this->gaugeRateTop_ = std::clamp(rate, 0.0f, 1.0f);
         TransferVertices();
     }
 
@@ -106,7 +111,8 @@ private:
     Vector2 position = { 0.0f, 0.0f };
     float rotation = 0.0f;
     Vector2 size { 640.0f, 360.0f };
-    float gaugeRate_ = 1.0f; // 右側のクロップ
+    float gaugeRateTop_ = 1.0f; // 上のフロップ
+    float gaugeRateRiget_ = 1.0f; // 右側のクロップ
 
     uint32_t textureIndex = 0;
 

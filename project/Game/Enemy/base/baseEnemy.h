@@ -16,6 +16,8 @@ public:
 
     virtual void Draw() = 0;
 
+    virtual void SpriteDraw() { }; // (ほぼ)ボス専用
+
     /* Set関数 */
     virtual void SetTargetPlayer(Player* target) { }; // 対象に向かわせる
     virtual void SetHp(int num) { };
@@ -29,6 +31,7 @@ public:
     virtual Vector3 GetTranslate() = 0;
     virtual bool GetIsAvile_() = 0;
     virtual uint32_t GetId() const { return id_; }
+    virtual std::vector<Vector3> GetTargetPositions() { return { GetTranslate() }; }
 
 protected:
     // 弾

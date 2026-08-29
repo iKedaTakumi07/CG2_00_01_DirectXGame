@@ -84,9 +84,10 @@ void Sprite::TransferVertices()
 {
     float left = 0.0f - anchorPoint.x;
     float fullRight = 1.0f - anchorPoint.x;
-    float rigth = left + (fullRight - left) * gaugeRate_;
-    float top = 0.0f - anchorPoint.y;
+    float rigth = left + (fullRight - left) * gaugeRateRiget_;
+    float fulltop = 0.0f - anchorPoint.y;
     float bottom = 1.0f - anchorPoint.y;
+    float top = bottom + (fulltop - bottom) * gaugeRateTop_;
 
     // 左右反転,上下反転
     if (isFlipX_) {
@@ -100,8 +101,8 @@ void Sprite::TransferVertices()
 
     const DirectX::TexMetadata& metadata = TextureManager::getInstance()->GetMetadata(texturefilePath_);
     float tex_left = textureLeftTop.x / metadata.width;
-    float tex_right = (textureLeftTop.x + textureSize.x * gaugeRate_) / metadata.width;
-    float tex_top = textureLeftTop.y / metadata.height;
+    float tex_right = (textureLeftTop.x + textureSize.x * gaugeRateRiget_) / metadata.width;
+    float tex_top = (textureLeftTop.y + textureSize.y * (1.0f - gaugeRateTop_)) / metadata.height;
     float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height;
 
     // 頂点リソースにデータを書き込む

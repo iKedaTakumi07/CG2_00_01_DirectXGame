@@ -36,6 +36,10 @@ void FixedEnemy::Update()
 {
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
+    if (camera_->GetTranslate().z >= transform_.translate.z) {
+        isDead_ = true;
+    }
+
     BulletUpdate();
 
     object3d->SetTranslate(transform_.translate);
