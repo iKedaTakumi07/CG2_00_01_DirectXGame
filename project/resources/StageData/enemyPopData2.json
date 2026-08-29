@@ -60,7 +60,7 @@
       "spawn_z": 300.0,
       "pos": { "x": 0.0, "y": 0.0, "z": 350.0 },
       "UseBullet" : "TargetBullet",
-      "hp": 1200
+      "hp": 400
     }
   ]
 }

@@ -82,8 +82,18 @@ void Player::Update()
     // 無敵時間の処理
     if (isinvincible) {
         invincibleTime -= deltaTime;
+        const float kBlinkInterval = 0.1f; // 点滅周期
+
+        
+        if (std::fmod(invincibleTime, kBlinkInterval * 2.0f) > kBlinkInterval) {
+            playerModel->SetMaterialColor(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
+        } else {
+            playerModel->SetMaterialColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        }
+
         if (invincibleTime <= 0.0f) {
             isinvincible = false;
+            playerModel->SetMaterialColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         }
     }
 
@@ -452,7 +462,7 @@ void Player::UIUpdate()
     float hpRate = static_cast<float>(hp_) / static_cast<float>(Maxhp_);
     hpRate = std::clamp(hpRate, 0.0f, 1.0f);
 
-    PlayerHpUI->SetGaugeRate(hpRate);
+    PlayerHpUI->SetGaugeRateRight(hpRate);
 
     PlayerMaxHpUI->Update();
     PlayerHpUI->Update();

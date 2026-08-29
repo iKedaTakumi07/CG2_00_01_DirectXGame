@@ -20,6 +20,9 @@ void FourEyesBoss::Initialize(Vector3 pos)
     centerPos_ = pos;
 
     TextureManager::getInstance()->LoadTexture("resources/baseEnemy/uvChecker.png");
+    TextureManager::getInstance()->LoadTexture("resources/EnemyUI/bossHpBar.png");
+    TextureManager::getInstance()->LoadTexture("resources/EnemyUI/bossHpTank.png");
+    TextureManager::getInstance()->LoadTexture("resources/EnemyUI/WARNING.png");
     ModelManager::GetInstance()->LoadModel("baseEnemy/bossEnemy.obj");
 
     object3d = std::make_unique<Object3d>();
@@ -36,6 +39,18 @@ void FourEyesBoss::Initialize(Vector3 pos)
     transform_.scale = { 1.0f, 1.0f, 1.0f };
     transform_.rotate = { 0.0f, 0.0f, 0.0f };
     transform_.translate = centerPos_;
+
+    BossMaxHpUI = std::make_unique<Sprite>();
+    BossMaxHpUI->Initialize("resources/EnemyUI/bossHpTank.png");
+    BossMaxHpUI->SetPosition(Vector2(5.0f, 200.0f));
+
+    BossHpUI = std::make_unique<Sprite>();
+    BossHpUI->Initialize("resources/EnemyUI/bossHpBar.png");
+    BossHpUI->SetPosition(Vector2(5.0f, 200.0f));
+
+    BossWarning = std::make_unique<Sprite>();
+    BossWarning->Initialize("resources/EnemyUI/WARNING.png");
+    BossWarning->SetPosition(Vector2(0.0f, 0.0f));
 }
 
 void FourEyesBoss::Update()
@@ -43,9 +58,16 @@ void FourEyesBoss::Update()
     float deltaTime = SceneManager::GetInstance()->GetDeltaTime();
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
 
+    if (isAppearing_) {
+        // 出現演出中は演出ロジックのみを更新（攻撃は行わない）
+        UpdateAppearance(deltaTime);
+        return;
+    }
+
     // 発射処理
     MoveUpdate();
     FireFourWayBullets();
+    UIUpdate();
 
     object3d->Update();
 }
@@ -63,6 +85,15 @@ void FourEyesBoss::Draw()
 
 void FourEyesBoss::SpriteDraw()
 {
+    BossMaxHpUI->Draw();
+    BossHpUI->Draw();
+
+    if (isAppearing_) {
+        const float kBlinkInterval = 0.1f; // 点滅周期
+        if (std::fmod(appearanceTimer_, kBlinkInterval * 2.0f) > kBlinkInterval) {
+            BossWarning->Draw();
+        }
+    }
 }
 
 AllAABB FourEyesBoss::GetAllAABB() const
@@ -135,10 +166,43 @@ void FourEyesBoss::OnCollision(Collider* other)
 
 void FourEyesBoss::StartAppearance()
 {
+    isAppearing_ = true;
+    appearanceTimer_ = 0.0f;
+
+    transform_.translate = centerPos_;
+    transform_.translate.y = centerPos_.y + kStartOffsetY;
+    transform_.rotate.y = kStartRotateY;
+
+    object3d->SetTranslate(transform_.translate);
+    object3d->SetRotate(transform_.rotate);
 }
 
 void FourEyesBoss::UpdateAppearance(float deltaTime)
 {
+    appearanceTimer_ += deltaTime;
+
+    float t = appearanceTimer_ / kAppearanceDuration;
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    float easeT = 1 - (1 - t) * (1 - t);
+
+    float currentOffsetY = kStartOffsetY * (1.0f - easeT);
+    transform_.translate.y = centerPos_.y + currentOffsetY;
+
+    transform_.rotate.y = kStartRotateY * (1.0f - easeT);
+
+    Vector3 pos = CameraManager::GetInstance()->GetActiveCamera()->GetTranslate();
+    pos.z = pos.z + offsetPosZ;
+    transform_.translate.z = pos.z;
+
+    UIUpdate();
+    object3d->SetTranslate(transform_.translate);
+    object3d->SetRotate(transform_.rotate);
+    object3d->Update();
+
+    if (appearanceTimer_ >= kAppearanceDuration) {
+        isAppearing_ = false; // 演出終了、通常戦闘状態へ遷移
+    }
 }
 
 void FourEyesBoss::FireFourWayBullets()
@@ -183,4 +247,16 @@ void FourEyesBoss::MoveUpdate()
 
     object3d->SetTranslate(transform_.translate);
     object3d->SetRotate(transform_.rotate);
+}
+
+void FourEyesBoss::UIUpdate()
+{
+    float hpRate = static_cast<float>(currentHp_) / static_cast<float>(maxHp_);
+    hpRate = std::clamp(hpRate, 0.0f, 1.0f);
+
+    BossHpUI->SetGaugeRateTop(hpRate);
+
+    BossMaxHpUI->Update();
+    BossHpUI->Update();
+    BossWarning->Update();
 }

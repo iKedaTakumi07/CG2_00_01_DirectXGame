@@ -52,6 +52,13 @@ void EnemyManager::Draw()
     }
 }
 
+void EnemyManager::SpriteDraw()
+{
+    for (auto& enemy : enemies_) {
+        enemy->SpriteDraw();
+    }
+}
+
 baseEnemy* EnemyManager::GetEnemyById(uint32_t id) const
 {
     if (id == 0)

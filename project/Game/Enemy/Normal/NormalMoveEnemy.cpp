@@ -39,6 +39,10 @@ void NormalMoveEnemy::Update()
     camera_ = CameraManager::GetInstance()->GetActiveCamera();
     Vector3 velocity = { move.x * deltaTime, move.y * deltaTime, move.z * deltaTime };
 
+    if (camera_->GetTranslate().z >= transform_.translate.z) {
+        isDead_ = true;
+    }
+
     transform_.translate.x += velocity.x;
     transform_.translate.y += velocity.y;
     transform_.translate.z += velocity.z;

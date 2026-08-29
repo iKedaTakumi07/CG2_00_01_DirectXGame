@@ -23,6 +23,7 @@ public:
     // Set
     void SetEvnTexturefilePath(std::string texturefilePath) { texturefilePath_ = texturefilePath; }
     void SetMaterialDataEvnironmentCoefficient(float num) { materialData->evnironmentCoefficient = num; }
+    void SetMaterialColor(Vector4 color) { materialData->color = color; }
 
     SkinCluster CreateSkinCluster(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Skeleton& skeleton, const ModelData& modelData,
         const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize);

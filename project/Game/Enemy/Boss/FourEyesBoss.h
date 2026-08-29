@@ -2,10 +2,12 @@
 #include "../../OnCollison/Collider.h"
 #include "../base/baseBossEnemy.h "
 #include <memory>
+#include <numbers>
 
 class Player;
 class Model;
 class Object3d;
+class Sprite;
 
 class FourEyesBoss : public baseBossEnemy {
 public:
@@ -19,7 +21,11 @@ public:
     void SetIsDead(bool num) { isDead_ = num; }
     void SetMove(Vector3 num) override { num; }
     void SetbasePos(Vector3 num) override { centerPos_ = num; } // 中心位置
-    void SetHp(int num) override { currentHp_ = num; }
+    void SetHp(int num) override
+    {
+        currentHp_ = num;
+        maxHp_ = currentHp_;
+    }
 
     float GetHpRate() const override { return static_cast<float>(currentHp_) / maxHp_; }
     int GetCurrentPhase() const override { return currentPhase_; }
@@ -40,6 +46,7 @@ public:
 private:
     void FireFourWayBullets();
     void MoveUpdate();
+    void UIUpdate();
 
 private:
     Camera* camera_ = nullptr; // カメラ(ポインタ)
@@ -49,8 +56,15 @@ private:
     std::unique_ptr<Model> model;
     std::unique_ptr<Object3d> object3d;
 
+    // UI(スプライト)
+    std::unique_ptr<Sprite> BossMaxHpUI;
+    std::unique_ptr<Sprite> BossHpUI;
+    std::unique_ptr<Sprite> BossWarning;
+
     float appearanceTimer_ = 0.0f;
     const float kAppearanceDuration = 3.0f;
+    const float kStartOffsetY = 40.0f;
+    const float kStartRotateY = std::numbers::pi_v<float>;
 
     Transform transform_ = { 0.0f }; // 座標系
     Vector3 centerPos_ = { 0.0f }; // 中心位置
